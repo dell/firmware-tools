@@ -1,0 +1,15 @@
+#!/bin/sh
+
+# this is for backwards compatibility until everything transitions
+
+echo
+echo "The apply_updates program has been renamed and should be called using the new name: update_firmware"
+echo
+echo "This script will be removed in firmware-tools 1.2."
+echo
+echo "continuing with execution of 'update_firmware' in 5 seconds..."
+
+sleep 5
+
+exec update_firmware $*
+

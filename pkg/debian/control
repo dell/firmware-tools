@@ -1,0 +1,20 @@
+Source: firmware-tools
+Section: admin
+Priority: extra
+Maintainer: Sadhana B <sadhana_b@dell.com>
+Build-Depends: debhelper (>= 5), python-all-dev (>= 2.3.5-11), cdbs (>= 0.4.43), python-support (>= 0.5.3)
+XS-Python-Version: all
+Standards-Version: 3.7.2
+
+Package: firmware-tools
+Architecture: all
+Depends: ${python:Depends}
+Provides: ${python:Provides}
+XB-Python-Version: ${python:Versions}
+Description: Scripts and tools to manage firmware and BIOS updates
+ The firmware-tools project provides tools to inventory hardware and a plugin
+ architecture so that different OEM vendors can provide different inventory
+ components. It is intended to tie to the package system to enable seamless
+ installation of updated firmware via your package manager, as well as provide
+ a framework for BIOS and firmware updates.
+

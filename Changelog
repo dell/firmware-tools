@@ -1,0 +1,2 @@
+* Wed, 02 May 2007 17:58:05 -0500 Michael Brown <michael_e_brown@dell.com> 1.2.6
+- changes to fix debian. they have lspci at a different path.

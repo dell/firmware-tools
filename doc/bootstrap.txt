@@ -1,0 +1,91 @@
+
+1) Run dell-repository bootstrap:
+    # wget -q -O - http://linux.dell.com/yum/software/bootstrap.sh | bash
+
+2) Run firmware bootstrap
+    # wget -q -O - http://linux.dell.com/yum/firmware/bootstrap.sh | bash
+
+
+
+
+
+Firmware bootstrap does the following:
+    1) Install firmware-tools (which pulls libsmbios-bin, libsmbios-libs)
+
+    2) Install firmware-raw-inventory pkgs. These are packages that "provide:"
+        a virtual package named "firmware_inventory(*capability*)", where
+        "*capability*" varies.
+        proposed packages:
+            - firmware_inventory(bios)   *included in firmware-tools*
+            - firmware_inventory(bmc)    *included in firmware-tools*
+            - firmware_inventory(pci)    *included in firmware-tools*
+            - firmware_inventory(scsi)   *optional*
+            - firmware_inventory(sas)    *optional*
+            - firmware_inventory(rac)    *optional*
+        For optional modules, cmdline option to pull in all unconditionally, 
+        or hints module to pull in based on, eg. sysid.
+
+    3) run 'inventory-firmware --bootstrap'
+        output:
+            system_bios(ven_0x1028_dev_0x0152)
+            system_firmware(ven_0x1028_dev_0x0152)
+            pci_firmware(ven_0x8086_dev_0x3580_subven_0x1028_subdev_0x0152)
+            pci_firmware(ven_0x8086_dev_0x2448)
+            scsi_enclosure_firmware(ven_0x9999_dev_0x9999) 
+            sas_enclosure_firmware(ven_0x9999_dev_0x9999) 
+             ... etc ...
+
+    4) Install the RPMs that 'provide' the above raw output.
+        This pulls in the firmware data RPM, plus any execution/inventory RPMs
+        that may be necessary.
+
+    5) run 'apply-updates'
+
+
+firmware-tools RPM has the skeleton for everything:
+    1) system-raw-inventory
+    2) system-inventory
+    2) apply-updates
+
+
+apply-updates
+    1) get complete system inventory
+    2) get installed firmware update list
+    3) calculate list of updates to install
+    4) check prereqs for each update
+
+
+prereqs:
+    Each update is composed of a firmware data file, plus an optional prereq file. Prereqs have the following format:
+
+        src_pkg: REQTYPE pkg [op version] [if Condition]
+
+    REQTYPE:
+        Requires:
+        Conflicts: src_pkg cannot be installed if pkg meets op version and
+            condition
+        PreRequires: Target pkg must be running required level before src_pkg
+            can go. Implies reboot if pkg must be updated first and cannot be
+            updated without reboot (like rbu).
+
+    Condition:
+        match_sysid SYSID
+        pci_present PCI_ID
+        match_pkg   PKG_NAME [op version]
+
+    op:
+        > >= = <= < != <>
+
+    examples:
+        lsi_fw_upd: Requires backplane
+
+
+
+
+
+
+
+
+
+
+
