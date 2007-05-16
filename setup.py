@@ -22,7 +22,7 @@ import os
 RELEASE_MAJOR="1"
 RELEASE_MINOR="2"
 RELEASE_SUBLEVEL="5"
-RELEASE_EXTRALEVEL=""
+RELEASE_EXTRALEVEL=".1_BETA"
 #
 # END = Do not edit manually
 #
@@ -49,7 +49,7 @@ for i in doc_files:
 
 MANIFEST.write("include doc/firmware.conf\n" )
 MANIFEST.write("include version.mk\n" )
-MANIFEST.write("include firmware-tools.spec\n" )
+MANIFEST.write("include pkg/firmware-tools.spec\n" )
 MANIFEST.write( "#END AUTOGEN\n" )
 MANIFEST.close()
 
