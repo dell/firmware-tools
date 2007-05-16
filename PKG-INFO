@@ -1,0 +1,10 @@
+Metadata-Version: 1.0
+Name: firmware-tools
+Version: 1.0.21
+Summary: Scripts and tools to manage firmware and BIOS updates.
+Home-page: http://linux.dell.com/libsmbios/main/
+Author: Libsmbios team
+Author-email: libsmbios-devel@lists.us.dell.com
+License: UNKNOWN
+Description: UNKNOWN
+Platform: UNKNOWN

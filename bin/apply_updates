@@ -1,0 +1,227 @@
+#!/usr/bin/python
+# vim:expandtab:autoindent:tabstop=4:shiftwidth=4:filetype=python:
+
+  #############################################################################
+  #
+  # Copyright (c) 2005 Dell Computer Corporation
+  # Dual Licenced under GNU GPL and OSL
+  #
+  #############################################################################
+"""inventory_firmware.py: 
+
+usage:
+    -h | --help         print this message
+    -c | --config       Location of an additional config file to import
+    -o | --over         Override config file option
+"""
+
+from __future__ import generators
+
+# import arranged alphabetically
+import getopt
+import glob
+import os
+import sys
+import ConfigParser
+import traceback
+
+import repository
+import package
+import pycompat
+
+configLocations = [
+    "/etc/firmware/firmware.conf",
+    "/etc/firmware/firmware.d/*.conf",
+    "~/.firmware.conf",
+    ]
+
+def getConfig(ini, fileList):
+    for i in fileList:
+        for j in glob.glob(i):
+            if os.path.exists(j):
+                ini.read(j)
+
+class CmdlineError(Exception):pass
+
+def main():
+    ini = ConfigParser.ConfigParser()
+    altConfig = 0
+    overrides = []
+    interactive = 1
+    rpmMode = 0
+
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "hc:o:ryt", ["help", "config=", "overrides=", "rpm", "yes", "test"])
+        for option, argument in opts:
+            if option in ("-h", "--help"):
+                print __doc__
+                sys.exit(0)
+            if option in ("-c", "--config"):
+                getConfig(ini, [argument,])
+                altConfig = 1
+            if option in ("-o", "--override"):
+                overrides.append(argument)
+            if option in ("--rpm",):
+                rpmMode = 1
+            if option in ("-y", "--yes"):
+                interactive = 0
+            if option in ("-t", "--test",):
+                interactive = 2
+
+        # load standard configuration
+        if not altConfig:
+            getConfig(ini, configLocations)
+ 
+        for over in overrides:
+            section, key, value = over.split(",", 2)
+            if not ini.has_section(section):
+                ini.add_section(section)
+            ini.set(section, key, value)
+
+        if rpmMode:
+            v = 'manual'
+            if ini.has_option("main", "rpm_mode"):
+                v = ini.get("main", "rpm_mode")
+            if v != 'auto':
+                print "Config does not specify automatic install during RPM install." 
+                print "Please run apply_updates manually to install updates."
+                return 1
+    
+        print
+        print "Searching storage directory for available BIOS updates..."
+        r = repository.Repository( ini.get("main", "storage_topdir") )
+
+        depFailures = {}
+        def show_work(*args, **kargs):
+            #print "Got callback: %s  %s" % (args, kargs)
+            if kargs.get("what") == "found_package_ini":
+                p = kargs.get("path")
+                if len(p) > 50:
+                    p = p[-50:]
+                pycompat.spinPrint("Checking: %s" % p)
+
+            if kargs.get("what") == "fail_dependency_check":
+                pkg = kargs.get("package")
+                pkgName = "%s-%s" % (pkg.name, pkg.version)
+                if pkg.conf.has_option("package", "limit_system_support"):
+                    pkgName = pkgName + "-" + pkg.conf.get("package", "limit_system_support")
+                kargs.get("cb")[1][pkgName] = (kargs.get("package"), kargs.get("reason"))
+        
+        packagesToUpdate = repository.generateUpdateSet(r, generateFullSystemInventory(ini), cb=(show_work, depFailures) )
+        print "\033[2K\033[0G"  # clear line
+        needUpdate = 0
+        for pkg in packagesToUpdate.values():
+            print "Checking %s - %s" % (pkg["current"].name, pkg["current"].version)
+            if pkg["update"] is None:
+                print "\tNo update found"
+            else:
+                print "\tFound Update: %s - %s" % (pkg["update"].name, pkg["update"].version)
+                needUpdate = 1
+
+        if depFailures:
+            print
+            print "Following packages could apply, but have dependency failures:"
+        for pkg, reason in depFailures.values():
+            print "\t%s - %s" % (pkg.name, pkg.version)
+            print "\t\t REASON: %s" % reason
+            
+        if not needUpdate:
+            print 
+            print "This system does not appear to have any updates available."
+            print "No action necessary."
+            print
+            return 1
+        else:
+            print
+            print "Found out of date packages."
+            print 
+ 
+        # if we get to this point, that means update is necessary.
+        # any exit before this point means that there was an error, or no update
+        # was necessary and should return non-zero
+        if interactive == 2:
+            print 
+            print "Test mode complete."
+            print
+            return 0
+
+        if interactive == 1:
+            print 
+            print "Please run the program with the '--yes' switch to enable BIOS update."
+            print "   UPDATE NOT COMPLETED!"
+            print
+            return 0
+
+
+        print "Running updates..."
+        for pkg in repository.generateInstallationOrder(packagesToUpdate):
+            print "Installing %s - %s" % (pkg.name, pkg.version)
+            try:
+                ret = pkg.install()
+            except (package.InstallError,), e:
+                print "Installation failed for package: %s - %s" % (pkg.name, pkg.version)
+                print "aborting update..."
+                print
+                print "The error message from the low-level command was:"
+                print 
+                print e
+                break
+
+    except CmdlineError, e:
+        print
+        print e
+        print
+        print __doc__
+        sys.exit(2)
+
+    except (getopt.GetoptError):
+        # print help information and exit:
+        print __doc__
+        sys.exit(2)
+
+    return 0 #shell logic
+
+
+def getBootstrapConfig(ini, prefix):
+    # scan config for 
+    #   -- prefix + inventory_ext_plugin
+    #   -- prefix + inventory_py_plugin
+    pluginConfigNames=( "inventory_plugin", "inventory_plugin_dir" )
+    plugins={}
+    for sect in ini.sections():
+        for opt in pluginConfigNames:
+            if ini.has_option(sect, prefix + opt):
+                # read/modify/write
+                if not ini.get(sect, prefix + opt):
+                    continue
+                i = plugins.get(prefix + opt, [])
+                i.append( ini.get(sect, prefix + opt) )
+                plugins[prefix + opt] = i
+
+    # set up python path for plugins
+    for path in plugins.get("inventory_plugin_dir", []):
+        sys.path.append(path)
+
+    return plugins
+
+
+def generateFullSystemInventory(ini):
+    plugins = getBootstrapConfig(ini, "")
+
+    for pymod in plugins.get("inventory_plugin", []):
+        try:
+            module = __import__(pymod, globals(),  locals(), [])
+            for package in module.InventoryGenerator():
+                yield package
+
+        except (ImportError):
+            pass
+        except:   # don't let module messups propogate up
+            #traceback.print_exc()
+            pass
+
+
+
+if __name__ == "__main__":
+    sys.exit( main() )
+
