@@ -24,7 +24,6 @@
   include version.mk
   RELEASE_VERSION := $(RELEASE_MAJOR).$(RELEASE_MINOR).$(RELEASE_SUBLEVEL)$(RELEASE_EXTRALEVEL)
   RELEASE_STRING := $(RELEASE_NAME)-$(RELEASE_VERSION)
-  RPM_RELEASE := 0
 
   BUILD_DATE := $(shell date "+%Y-%m-%d %H:%M:%S")
 
@@ -123,6 +122,13 @@ setup.py: version.mk
 	@diff -q $@ $@.new >/dev/null 2>&1 || mv -f $@.new $@
 	@rm -f $@.new
 
+PY_VER_UPDATES=bin/up2date_repo_autoconf yum-plugin/dellsysidplugin.py
+$(PY_VER_UPDATES): version.mk
+	@echo Updating $@
+	@cp -f $@ $@.new
+	@perl -p -i -e 's/^version=.*/version="$(RELEASE_VERSION)"/' $@.new
+	@diff -q $@ $@.new >/dev/null 2>&1 || mv -f $@.new $@
+	@rm -f $@.new
 
 TARBALL=$(shell ls $(PWD)/$(RELEASE_STRING).tar.gz)
 
@@ -132,9 +138,8 @@ debsign=-uc -us
 endif
 
 DEBFILES= \
-  build/$(RELEASE_NAME)_$(RELEASE_VERSION)_$(DEB_RELEASE).i386.deb      \
-  build/$(RELEASE_NAME)_$(RELEASE_VERSION)_$(DEB_RELEASE).i386.changes      \
-  build/$(RELEASE_NAME)_$(RELEASE_VERSION)_$(DEB_RELEASE).i386.changes      \
+  build/$(RELEASE_NAME)_$(RELEASE_VERSION)-$(DEB_RELEASE)_$(DEBARCH).deb      \
+  build/$(RELEASE_NAME)_$(RELEASE_VERSION)-$(DEB_RELEASE)_i386.changes      \
   build/$(RELEASE_NAME)_$(RELEASE_VERSION).dsc
 
 # use debopts to do things like override maintainer email, etc.
@@ -146,10 +151,8 @@ $(DEBFILES): $(RELEASE_STRING).tar.gz
 	cp $(TARBALL) build/$(RELEASE_NAME)_$(RELEASE_VERSION).orig.tar.gz
 	cp -a pkg/debian build/$(RELEASE_STRING)/
 	chmod +x build/$(RELEASE_STRING)/debian/rules
-	#cd build/$(RELEASE_STRING)/ && dpkg-buildpackage -rfakeroot $(debsign) $(debopts)
 	cd build/$(RELEASE_STRING)/ && debuild -rfakeroot $(debsign) $(debopts)
 
-RPM_TYPE=noarch
 rpm: $(RELEASE_STRING)-$(RPM_RELEASE).$(RPM_TYPE).rpm
 $(RELEASE_STRING)-$(RPM_RELEASE).$(RPM_TYPE).rpm: $(RELEASE_STRING).tar.gz
 	mkdir -p build/{RPMS,SRPMS,SPECS,SOURCES,BUILD}
@@ -184,4 +187,3 @@ unit_test:
 	if [ -e ./test/test$${py_test}.py ]; then \
 		PYTHONPATH=$$PYTHONPATH:$$(pwd):$$(pwd)/pymod ./test/test$${py_test}.py		;\
 	fi
-
