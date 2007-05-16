@@ -6,7 +6,7 @@
 # START = Do not edit manually
 %define major 1
 %define minor 2
-%define sub 2
+%define sub 3
 %define extralevel %{nil}
 %define release_name firmware-tools
 %define release_version %{major}.%{minor}.%{sub}%{extralevel}
@@ -31,7 +31,7 @@ Requires:       python-abi = 2.2
 # needed for RHEL3 build, python-devel doesnt seem to Require: python in RHEL3
 BuildRequires:  python
 # override sitelib because this messes up on x86_64
-%define python_sitelib /usr/lib/python2.2/site-packages/
+%define python_sitelib %{_exec_prefix}/python2.2/site-packages/
 %endif
 
 Name:           firmware-tools 
@@ -43,7 +43,7 @@ Group:          Applications/System
 # License is actually GPL/OSL dual license (GPL Compatible), but rpmlint complains
 License:        GPL style
 URL:            http://linux.dell.com/libsmbios/download/ 
-Source0:        %{name}-%{version}.tar.gz
+Source0:        http://linux.dell.com/libsmbios/download/%{name}/%{name}-%{version}/%{name}-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 # This package is noarch for everything except RHEL3. Have to build arch
@@ -54,9 +54,7 @@ BuildArch:      noarch
 
 BuildRequires:  python-devel
 
-Obsoletes: bios_update_tools
-Provides:  bios_update_tools
-Provides: firmware_inventory(pci)
+Provides: firmware_inventory(pci) = 0:%{release_version}
 
 %description
 The firmware-tools project provides tools to inventory hardware and a plugin
@@ -90,14 +88,15 @@ rm -rf $RPM_BUILD_ROOT
 %doc COPYING-GPL COPYING-OSL README
 %{python_sitelib}/*
 %attr(0755,root,root) %{_bindir}/*
+%dir %{_sysconfdir}/firmware
+%dir %{_sysconfdir}/firmware/firmware.d
 %config(noreplace) %{_sysconfdir}/firmware/firmware.conf
-%{_sysconfdir}/firmware/
-%{_sysconfdir}/firmware/firmware.d/
 %{_datadir}/firmware/
 
 
 %changelog
-* Wed Mar 14 2007 Michael E Brown <michael_e_brown at dell.com> - 1.2.1-1
-- create and own %{_sysconfdir}/firmware/firmware.d/ for plugins.
+* Wed Mar 14 2007 Michael E Brown <michael_e_brown at dell.com> - 1.2.3-1
+- create and own {_sysconfdir}/firmware/firmware.d/ for plugins.
+- Fedora review changes
 * Mon Mar 12 2007 Michael E Brown <michael_e_brown at dell.com> - 1.2.0-1
 - Fedora-compliant packaging changes.
