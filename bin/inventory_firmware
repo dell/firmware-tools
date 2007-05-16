@@ -80,7 +80,7 @@ def main():
             ini.set(section, key, value)
 
         if mode == "bootstrap":
-            os.execvp("bootstrap", sys.argv)
+            os.execvp("bootstrap_firmware", sys.argv)
             #runBootstrapInventory(ini, commaSeparated)
         else:
             runInventory(ini)
