@@ -28,7 +28,6 @@ for i in *.tar.{gz,bz2} *.zip *.src.rpm; do
     cp $i $DEST
 done
 
-
 scp -4qr -i ~/.ssh/id_dsa_fwupdate *.src.rpm autobuilder@mock.linuxdev.us.dell.com:~/queue/
 
 for i in *.src.rpm
@@ -41,5 +40,3 @@ do
 	done
     ssh -4 -i ~/.ssh/id_dsa_fwupdate autobuilder@mock.linuxdev.us.dell.com rm \~/queue/$file
 done
-
-
