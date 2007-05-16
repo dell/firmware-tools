@@ -6,7 +6,7 @@
 # START = Do not edit manually
 %define major 1
 %define minor 2
-%define sub 0
+%define sub 1
 %define extralevel %{nil}
 %define release_name firmware-tools
 %define release_version %{major}.%{minor}.%{sub}%{extralevel}
@@ -76,6 +76,7 @@ a framework for BIOS and firmware updates.
 
 %install
 rm -rf $RPM_BUILD_ROOT
+mkdir -p $RPM_BUILD_ROOT/etc/firmware/firmware.d/
 %{__python} setup.py install -O1 --skip-build --root $RPM_BUILD_ROOT %{suse_prefix}
 
  
@@ -89,8 +90,12 @@ rm -rf $RPM_BUILD_ROOT
 %{python_sitelib}/*
 %attr(0755,root,root) %{_bindir}/*
 %config(noreplace) %{_sysconfdir}/firmware/firmware.conf
+%{_sysconfdir}/firmware/
+%{_sysconfdir}/firmware/firmware.d/
 
 
 %changelog
+* Wed Mar 14 2007 Michael E Brown <michael_e_brown at dell.com> - 1.2.0-1
+- create and own %{_sysconfdir}/firmware/firmware.d/ for plugins.
 * Mon Mar 12 2007 Michael E Brown <michael_e_brown at dell.com> - 1.2.0-1
 - Fedora-compliant packaging changes.

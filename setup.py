@@ -21,7 +21,7 @@ import os
 # START = Do not edit manually
 RELEASE_MAJOR="1"
 RELEASE_MINOR="2"
-RELEASE_SUBLEVEL="0"
+RELEASE_SUBLEVEL="1"
 RELEASE_EXTRALEVEL=""
 #
 # END = Do not edit manually
