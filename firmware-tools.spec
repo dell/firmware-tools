@@ -6,7 +6,7 @@
 # START = Do not edit manually
 %define major 1
 %define minor 2
-%define sub 4
+%define sub 5
 %define extralevel %{nil}
 %define release_name firmware-tools
 %define release_version %{major}.%{minor}.%{sub}%{extralevel}
@@ -26,8 +26,6 @@
 
 # Compat for RHEL3 build
 %if %(test "%{dist}" == ".el3" && echo 1 || echo 0)
-# add in required ABI (hardcode because /usr/bin/python not available at this point)
-Requires:       python-abi = 2.2
 # needed for RHEL3 build, python-devel doesnt seem to Require: python in RHEL3
 BuildRequires:  python
 # override sitelib because this messes up on x86_64
@@ -95,8 +93,15 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Tue Mar 20 2007 Michael E Brown <michael_e_brown at dell.com> - 1.2.5-1
+- Remove python-abi dep for RHEL3 (it was broken)
+
+* Fri Mar 16 2007 Michael E Brown <michael_e_brown at dell.com> - 1.2.4-1
+- fix typo in sitelib path -- only for RHEL3 build
+
 * Wed Mar 14 2007 Michael E Brown <michael_e_brown at dell.com> - 1.2.3-1
 - create and own {_sysconfdir}/firmware/firmware.d/ for plugins.
 - Fedora review changes
+
 * Mon Mar 12 2007 Michael E Brown <michael_e_brown at dell.com> - 1.2.0-1
 - Fedora-compliant packaging changes.
