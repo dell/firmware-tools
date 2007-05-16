@@ -22,7 +22,7 @@ import os
 RELEASE_MAJOR="1"
 RELEASE_MINOR="2"
 RELEASE_SUBLEVEL="5"
-RELEASE_EXTRALEVEL=".1_BETA"
+RELEASE_EXTRALEVEL=".2_BETA"
 #
 # END = Do not edit manually
 #
@@ -47,6 +47,9 @@ for i in gen_scripts:
 for i in doc_files:
     MANIFEST.write("include " + i + "\n" )
 
+MANIFEST.write("include pkg/debian/control\n" )
+MANIFEST.write("include pkg/debian/copyright\n" )
+MANIFEST.write("include pkg/debian/rules\n" )
 MANIFEST.write("include doc/firmware.conf\n" )
 MANIFEST.write("include version.mk\n" )
 MANIFEST.write("include pkg/firmware-tools.spec\n" )

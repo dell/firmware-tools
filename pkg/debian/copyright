@@ -1,0 +1,9 @@
+This package was debianized by Sadhana B <sadhana_b@dell.com> on
+Mon,  9 Apr 2007 19:15:12 +0530.
+
+It was downloaded from: http://linux.dell.com/libsmbios/download/firmware-tools/
+
+Upstream Author: Michael_E_Brown <michael_e_brown@dell.com>
+
+The Debian packaging is Copyright 2007 Sadhana B <sadhana_b@dell.com> and
+is licensed under the GPL, see `/usr/share/common-licenses/GPL'.

@@ -7,7 +7,7 @@
 %define major 1
 %define minor 2
 %define sub 5
-%define extralevel .1_BETA
+%define extralevel .2_BETA
 %define release_name firmware-tools
 %define release_version %{major}.%{minor}.%{sub}%{extralevel}
 #
