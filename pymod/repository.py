@@ -172,7 +172,7 @@ class Repository(object):
             elif p.compareVersion(candidate) > 0:
                 latest[pkgName] = candidate
 
-        cb[0]( who="iterLatestPackages", what="done_generating_list", package=latest[package], cb=cb)
+        cb[0]( who="iterLatestPackages", what="done_generating_list", cb=cb)
         keys = latest.keys()
         keys.sort()
         for package in keys:
