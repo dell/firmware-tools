@@ -6,7 +6,7 @@
 # START = Do not edit manually
 %define major 1
 %define minor 2
-%define sub 3
+%define sub 4
 %define extralevel %{nil}
 %define release_name firmware-tools
 %define release_version %{major}.%{minor}.%{sub}%{extralevel}
@@ -31,7 +31,7 @@ Requires:       python-abi = 2.2
 # needed for RHEL3 build, python-devel doesnt seem to Require: python in RHEL3
 BuildRequires:  python
 # override sitelib because this messes up on x86_64
-%define python_sitelib %{_exec_prefix}/python2.2/site-packages/
+%define python_sitelib %{_exec_prefix}/lib/python2.2/site-packages/
 %endif
 
 Name:           firmware-tools 
