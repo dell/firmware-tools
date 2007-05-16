@@ -1,9 +1,0 @@
-#!/usr/bin/make -f
-# -*- makefile -*-
-# vim:noet:ts=8:sw=8:filetype=make
-
-DEB_PYTHON_SYSTEM=pysupport
-include /usr/share/cdbs/1/rules/debhelper.mk
-include /usr/share/cdbs/1/rules/simple-patchsys.mk
-include /usr/share/cdbs/1/class/python-distutils.mk
-
