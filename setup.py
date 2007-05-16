@@ -12,7 +12,21 @@
 import distutils.core 
 import glob
 import os
-execfile("version.mk")
+
+###################################################################
+#
+# WARNING
+#
+# These are all automatically replaced by the release script.
+# START = Do not edit manually
+RELEASE_MAJOR="1"
+RELEASE_MINOR="2"
+RELEASE_SUBLEVEL="0"
+RELEASE_EXTRALEVEL=""
+#
+# END = Do not edit manually
+#
+###################################################################
 
 # override from makefile environment vars, if necessary
 for i in ("RELEASE_MAJOR", "RELEASE_MINOR", "RELEASE_SUBLEVEL", "RELEASE_EXTRALEVEL",):
@@ -35,6 +49,7 @@ for i in doc_files:
 
 MANIFEST.write("include doc/firmware.conf\n" )
 MANIFEST.write("include version.mk\n" )
+MANIFEST.write("include firmware-tools.spec\n" )
 MANIFEST.write( "#END AUTOGEN\n" )
 MANIFEST.close()
 
