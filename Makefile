@@ -104,7 +104,7 @@ $(SPEC): version.mk
 	@perl -p -i -e 's/^%define major .*/%define major $(RELEASE_MAJOR)/' $@.new
 	@perl -p -i -e 's/^%define minor .*/%define minor $(RELEASE_MINOR)/' $@.new
 	@perl -p -i -e 's/^%define sub .*/%define sub $(RELEASE_SUBLEVEL)/' $@.new
-	@perl -p -i -e 's/^%define rpm_release .*/%define sub $(RPM_RELEASE)/' $@.new
+	@perl -p -i -e 's/^%define rpm_release .*/%define rpm_release $(RPM_RELEASE)/' $@.new
 	@: # extralevel can be empty, so make rpm happy with conditional substitution
 	@[ -z "$(RELEASE_EXTRALEVEL)" ] || perl -p -i -e 's/^%define extralevel .*/%define extralevel $(RELEASE_EXTRALEVEL)/' $@.new
 	@[ -n "$(RELEASE_EXTRALEVEL)" ] || perl -p -i -e 's/^%define extralevel .*/%define extralevel %{nil}/' $@.new
@@ -122,7 +122,6 @@ setup.py: version.mk
 	@diff -q $@ $@.new >/dev/null 2>&1 || mv -f $@.new $@
 	@rm -f $@.new
 
-PY_VER_UPDATES=bin/up2date_repo_autoconf yum-plugin/dellsysidplugin.py
 $(PY_VER_UPDATES): version.mk
 	@echo Updating $@
 	@cp -f $@ $@.new
