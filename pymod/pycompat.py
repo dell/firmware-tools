@@ -70,7 +70,7 @@ def executeCommand(cmd, timeout=0):
             signal.signal(signal.SIGALRM,oldhandler)
             if prevTimeout:
                 passed = time.time() - starttime
-                signal.alarm(math.ceil(prevTimeout - passed))
+                signal.alarm(int(math.ceil(prevTimeout - passed)))
         except alarmExc:
             os.kill(-pid, signal.SIGTERM)
             time.sleep(1)
