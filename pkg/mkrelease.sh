@@ -8,8 +8,7 @@ set -x
 PLAGUE_BUILDS="fc5 fc6 fcdev rhel3 rhel4 rhel5 sles9 sles10"
 
 cur_dir=$(cd $(dirname $0); pwd)
-top_dir=$cur_dir/../../
-cd $cur_dir
+cd $cur_dir/../
 
 [ -n "$LIBSMBIOS_TOPDIR" ] ||
     LIBSMBIOS_TOPDIR=/var/ftp/pub/Applications/libsmbios/

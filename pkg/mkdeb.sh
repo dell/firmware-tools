@@ -7,8 +7,7 @@ set -x
 # dont run this from radon.
 
 cur_dir=$(cd $(dirname $0); pwd)
-top_dir=$cur_dir/../../
-cd $cur_dir
+cd $cur_dir/../
 
 [ -n "$LIBSMBIOS_TOPDIR" ] ||
     LIBSMBIOS_TOPDIR=/var/ftp/pub/Applications/libsmbios/
@@ -24,6 +23,7 @@ DEST=$LIBSMBIOS_TOPDIR/download/${RELEASE_NAME}/$RELEASE_STRING/
 make distclean
 make deb
 
+# need to port the following to pbuilder
 mkdir -p ${APT_REPO}/etch-i386/${RELEASE_NAME}/${RELEASE_VERSION}-${DEB_RELEASE}/
 cp build/* ${APT_REPO}/etch-i386/${RELEASE_NAME}/${RELEASE_VERSION}-${DEB_RELEASE}/
 
