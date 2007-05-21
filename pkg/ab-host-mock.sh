@@ -17,8 +17,6 @@ cd $cur_dir/..
 echo "FOO: $RELEASE_EXTRALEVEL"
 make -e tarball srpm
 
-exit 0
-
 scp -4qr -i ~/.ssh/id_dsa_fwupdate *.src.rpm autobuilder@mock.linuxdev.us.dell.com:~/queue/
 
 for i in *.src.rpm
