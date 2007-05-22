@@ -16,7 +16,7 @@ cd $cur_dir/..
 
 make -e tarball srpm
 
-for file in *.src.rpm
+for file in ./*.src.rpm
 do
 	for distro in $PLAGUE_BUILDS
 	do
