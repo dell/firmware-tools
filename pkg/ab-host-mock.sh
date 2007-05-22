@@ -14,18 +14,14 @@ PREFIX=testing_
 cur_dir=$(cd $(dirname $0); pwd)
 cd $cur_dir/..
 
-echo "FOO: $RELEASE_EXTRALEVEL"
 make -e tarball srpm
 
-scp -4qr -i ~/.ssh/id_dsa_fwupdate *.src.rpm autobuilder@mock.linuxdev.us.dell.com:~/queue/
-
-for i in *.src.rpm
+for file in *.src.rpm
 do
-	file=$(basename $i)
 	for distro in $PLAGUE_BUILDS
 	do
-		ssh -4 -i ~/.ssh/id_dsa_fwupdate autobuilder@mock.linuxdev.us.dell.com plague-client build \~/queue/$file ${PREFIX}${distro}
+		plague-client build $file ${PREFIX}${distro}
 		sleep 5
 	done
-    ssh -4 -i ~/.ssh/id_dsa_fwupdate autobuilder@mock.linuxdev.us.dell.com rm \~/queue/$file
+    rm $file
 done
