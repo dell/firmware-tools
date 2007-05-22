@@ -23,6 +23,7 @@ mkdir -p ${APT_REPO}/etch-i386/${RELEASE_NAME}/${RELEASE_VERSION}-${DEB_RELEASE}
 DEST=${APT_REPO}/etch-i386/${RELEASE_NAME}/${RELEASE_VERSION}-${DEB_RELEASE}/
 for file in build/*
 do
+    [ -f $file ] || continue
     [ -e $DEST/$(basename $file) ] || cp $file $DEST/
 done
 
