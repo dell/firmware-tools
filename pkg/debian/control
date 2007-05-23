@@ -3,7 +3,7 @@ Section: admin
 Priority: extra
 Maintainer: Sadhana B <sadhana_b@dell.com>
 Build-Depends: debhelper (>= 5), python-all-dev (>= 2.3.5-11), cdbs (>= 0.4.43), python-support (>= 0.5.3)
-XS-Python-Version: all
+XS-Python-Version: current
 Standards-Version: 3.7.2
 
 Package: firmware-tools

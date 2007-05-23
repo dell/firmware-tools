@@ -4,12 +4,11 @@
 set -e
 set -x
 
-# dont run this from radon.
 PLAGUE_BUILDS="fc5 fc6 fcdev rhel3 rhel4 rhel5 sles9 sles10"
+PREFIX=
 
 cur_dir=$(cd $(dirname $0); pwd)
-top_dir=$cur_dir/../../
-cd $cur_dir
+cd $cur_dir/../
 
 [ -n "$LIBSMBIOS_TOPDIR" ] ||
     LIBSMBIOS_TOPDIR=/var/ftp/pub/Applications/libsmbios/
@@ -28,15 +27,12 @@ for i in *.tar.{gz,bz2} *.zip *.src.rpm; do
     cp $i $DEST
 done
 
-scp -4qr -i ~/.ssh/id_dsa_fwupdate *.src.rpm autobuilder@mock.linuxdev.us.dell.com:~/queue/
-
-for i in *.src.rpm
+for file in ./*.src.rpm
 do
-	file=$(basename $i)
 	for distro in $PLAGUE_BUILDS
 	do
-		ssh -4 -i ~/.ssh/id_dsa_fwupdate autobuilder@mock.linuxdev.us.dell.com plague-client build \~/queue/$file ${PREFIX}${distro}
+		plague-client build $file ${PREFIX}${distro}
 		sleep 5
 	done
-    ssh -4 -i ~/.ssh/id_dsa_fwupdate autobuilder@mock.linuxdev.us.dell.com rm \~/queue/$file
+    rm $file
 done
