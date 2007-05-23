@@ -7,6 +7,8 @@ set -x
 cur_dir=$(cd $(dirname $0); pwd)
 cd $cur_dir/../
 
+umask 002
+
 [ -n "$APT_REPO" ] || 
     APT_REPO=/var/ftp/pub/yum/dell-repo/testing/debian/
 
