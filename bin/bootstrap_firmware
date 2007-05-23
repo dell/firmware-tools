@@ -24,28 +24,9 @@ import sys
 import ConfigParser
 
 # our modules
-import clifuncs
+import firmwaretools.clifuncs
 
 class CmdlineError(Exception):pass
-
-def runBootstrapInventory(ini, commaSeparated):
-    plugins = clifuncs.getBootstrapConfig(ini, "bootstrap_")
-
-    for pymod in plugins.get("bootstrap_inventory_plugin", []):
-        try:
-            module = __import__(pymod, globals(),  locals(), [])
-            for package in module.BootstrapGenerator():
-                if commaSeparated:
-                    sys.stdout.write( "%s," % package )
-                else:
-                    print "%s" % package
-
-        except (ImportError):
-            pass
-        except:   # don't let module messups propogate up
-            #import traceback
-            #traceback.print_exc()
-            pass
 
 def main():
     ini = ConfigParser.ConfigParser()
@@ -60,7 +41,7 @@ def main():
                 print __doc__
                 sys.exit(0)
             if option in ("-c", "--config"):
-                clifuncs.getConfig(ini, [argument,])
+                firmwaretools.clifuncs.getConfig(ini, [argument,])
                 altConfig = 1
             if option in ("-u", "--up2date_mode"):
                 commaSeparated=1
@@ -71,7 +52,7 @@ def main():
 
         # load standard configuration
         if not altConfig:
-            clifuncs.getConfig(ini, clifuncs.configLocations)
+            firmwaretools.clifuncs.getConfig(ini, firmwaretools.clifuncs.configLocations)
 
         for over in overrides:
             section, key, value = over.split(",", 2)
@@ -79,7 +60,12 @@ def main():
                 ini.add_section(section)
             ini.set(section, key, value)
 
-        runBootstrapInventory(ini, commaSeparated)
+        for pkg in firmwaretools.clifuncs.runBootstrapInventory(ini):
+            if commaSeparated:
+                sys.stdout.write( "%s," % pkg )
+            else:
+                print "%s" % pkg
+
 
     except CmdlineError, e:
         print

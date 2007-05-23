@@ -17,37 +17,39 @@ class TestCase(unittest.TestCase):
         pass
         
     def testExcCommandNoTimeout(self):
-        import pycompat
-        pycompat.executeCommand("sleep 0", timeout=0)
+        import firmwaretools.pycompat
+        firmwaretools.pycompat.executeCommand("sleep 0", timeout=0)
 
     def testExcCommandTimeout(self):
-        import pycompat
-        self.assertRaises(pycompat.commandTimeoutExpired, pycompat.executeCommand, "sleep 3", timeout=1)
+        import firmwaretools.pycompat
+        self.assertRaises(firmwaretools.pycompat.commandTimeoutExpired, firmwaretools.pycompat.executeCommand, "sleep 3", timeout=1)
 
     def testExcCommandAlarmNoTimeout(self):
         # test that executeCommand() doesn't interfere with existing alarm calls
         # given a command that itself doesnt timeout
-        import pycompat, signal, time
+        import signal, time
+        import firmwaretools.pycompat
         class alarmExc(Exception): pass
         def alarmhandler(signum,stackframe):
             raise alarmExc("timeout expired")
 
         oldhandler=signal.signal(signal.SIGALRM,alarmhandler)
         prevTimeout = signal.alarm(2)
-        pycompat.executeCommand("sleep 0", timeout=1)
+        firmwaretools.pycompat.executeCommand("sleep 0", timeout=1)
         self.assertRaises(alarmExc, time.sleep, 5)
 
     def testExcCommandAlarmTimeout(self):
         # test that executeCommand() doesn't interfere with existing alarm calls
         # given a command that itself times out
-        import pycompat, signal, time
+        import signal, time
+        import firmwaretools.pycompat
         class alarmExc(Exception): pass
         def alarmhandler(signum,stackframe):
             raise alarmExc("timeout expired")
 
         oldhandler=signal.signal(signal.SIGALRM,alarmhandler)
         prevTimeout = signal.alarm(2)
-        self.assertRaises(pycompat.commandTimeoutExpired, pycompat.executeCommand,"sleep 2", timeout=1)
+        self.assertRaises(firmwaretools.pycompat.commandTimeoutExpired, firmwaretools.pycompat.executeCommand,"sleep 2", timeout=1)
         self.assertRaises(alarmExc, time.sleep, 10)
 
 

@@ -20,8 +20,8 @@ import os
 # These are all automatically replaced by the release script.
 # START = Do not edit manually
 RELEASE_MAJOR="1"
-RELEASE_MINOR="2"
-RELEASE_SUBLEVEL="6"
+RELEASE_MINOR="3"
+RELEASE_SUBLEVEL="0"
 RELEASE_EXTRALEVEL=""
 #
 # END = Do not edit manually
@@ -71,7 +71,7 @@ distutils.core.setup (
         url="http://linux.dell.com/libsmbios/main/",
 
         package_dir={'': 'pymod'},
-        packages=[''],
+        packages=['firmwaretools'],
 
         ext_modules = [ ],
         data_files=dataFileList,

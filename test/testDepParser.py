@@ -11,10 +11,10 @@ import unittest
 
 class TestCase(unittest.TestCase):
     def setUp(self):
-        import package
-        pkgA = package.Package(name="pkgA", version="a01")
-        pkgB = package.Package(name="pkgC", version="a02")
-        pkgC = package.Package(name="pkgC", version="a03")
+        import firmwaretools.package
+        pkgA = firmwaretools.package.Package(name="pkgA", version="a01")
+        pkgB = firmwaretools.package.Package(name="pkgC", version="a02")
+        pkgC = firmwaretools.package.Package(name="pkgC", version="a03")
 
         self.inventory = {}
         self.inventory['pkgA'] = pkgA
@@ -25,13 +25,13 @@ class TestCase(unittest.TestCase):
         pass
         
     def testExist(self):
-        import dep_parser
+        import firmwaretools.dep_parser
         s = "pkgA"
-        d = dep_parser.DepParser(s, self.inventory, {})
+        d = firmwaretools.dep_parser.DepParser(s, self.inventory, {})
         self.assertEquals(1, d.depPass)
 
     def testExist2(self):
-        import dep_parser
+        import firmwaretools.dep_parser
         tests = [ ("exist", "pkgA"),
             ("gt",  "pkgA > a00"),
             ("ge1", "pkgA >= a00"),
@@ -44,11 +44,11 @@ class TestCase(unittest.TestCase):
             ("exist_gt_exist", "pkgA, pkgB > a01, pkgC"), ]
 
         for name, testStr in tests:
-            d = dep_parser.DepParser(testStr, self.inventory, {})
+            d = firmwaretools.dep_parser.DepParser(testStr, self.inventory, {})
             self.assertEquals(1, d.depPass)
 
     def testExist3(self):
-        import dep_parser
+        import firmwaretools.dep_parser
         tests = [ ("exist", "pkgD"),
             ("gt",  "pkgA > a01"),
             ("ge1", "pkgA >= a02"),
@@ -60,7 +60,7 @@ class TestCase(unittest.TestCase):
             ("exist_gt_exist", "pkgA, pkgB < a01, pkgC"), ]
 
         for name, testStr in tests:
-            d = dep_parser.DepParser(testStr, self.inventory, {})
+            d = firmwaretools.dep_parser.DepParser(testStr, self.inventory, {})
             self.assertEquals(0, d.depPass)
 
 

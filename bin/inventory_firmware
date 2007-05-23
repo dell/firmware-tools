@@ -24,26 +24,9 @@ import sys
 import ConfigParser
 
 # our modules
-import clifuncs
+import firmwaretools.clifuncs
 
 class CmdlineError(Exception):pass
-
-def runInventory(ini):
-    plugins = clifuncs.getBootstrapConfig(ini, "")
-
-    for pymod in plugins.get("inventory_plugin", []):
-        try:
-            module = __import__(pymod, globals(),  locals(), [])
-            for package in module.InventoryGenerator():
-                print "%s = %s" % (str(package), package.version)
-
-        except (ImportError):
-            pass
-        except:   # don't let module messups propogate up
-            #import traceback
-            #traceback.print_exc()
-            pass
-
 
 def main():
     mode = "inventory"
@@ -60,7 +43,7 @@ def main():
                 print __doc__
                 sys.exit(0)
             if option in ("-c", "--config"):
-                clifuncs.getConfig(ini, [argument,])
+                firmwaretools.clifuncs.getConfig(ini, [argument,])
                 altConfig = 1
             if option in ("-b", "--bootstrap"):
                 mode = "bootstrap"
@@ -71,7 +54,7 @@ def main():
 
         # load standard configuration
         if not altConfig:
-            clifuncs.getConfig(ini, clifuncs.configLocations)
+            firmwaretools.clifuncs.getConfig(ini, firmwaretools.clifuncs.configLocations)
 
         for over in overrides:
             section, key, value = over.split(",", 2)
@@ -83,7 +66,8 @@ def main():
             os.execvp("bootstrap_firmware", sys.argv)
             #runBootstrapInventory(ini, commaSeparated)
         else:
-            runInventory(ini)
+            for pkg in firmwaretools.clifuncs.runInventory(ini):
+                print "%s = %s" % (str(pkg), pkg.version)
 
     except CmdlineError, e:
         print

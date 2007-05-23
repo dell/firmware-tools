@@ -25,9 +25,10 @@ import sys
 import ConfigParser
 import traceback
 
-import repository
-import package
-import pycompat
+import firmwaretools.repository
+import firmwaretools.package
+import firmwaretools.pycompat
+import firmwaretools.clifuncs
 
 configLocations = [
     "/etc/firmware/firmware.conf",
@@ -89,7 +90,7 @@ def main():
     
         print
         print "Searching storage directory for available BIOS updates..."
-        r = repository.Repository( ini.get("main", "storage_topdir") )
+        r = firmwaretools.repository.Repository( ini.get("main", "storage_topdir") )
 
         depFailures = {}
         def show_work(*args, **kargs):
@@ -98,7 +99,7 @@ def main():
                 p = kargs.get("path")
                 if len(p) > 50:
                     p = p[-50:]
-                pycompat.spinPrint("Checking: %s" % p)
+                firmwaretools.pycompat.spinPrint("Checking: %s" % p)
 
             if kargs.get("what") == "fail_dependency_check":
                 pkg = kargs.get("package")
@@ -107,7 +108,7 @@ def main():
                     pkgName = pkgName + "-" + pkg.conf.get("package", "limit_system_support")
                 kargs.get("cb")[1][pkgName] = (kargs.get("package"), kargs.get("reason"))
         
-        packagesToUpdate = repository.generateUpdateSet(r, generateFullSystemInventory(ini), cb=(show_work, depFailures) )
+        packagesToUpdate = firmwaretools.repository.generateUpdateSet(r, firmwaretools.clifuncs.generateFullSystemInventory(ini), cb=(show_work, depFailures) )
         print "\033[2K\033[0G"  # clear line
         needUpdate = 0
         for pkg in packagesToUpdate.values():
@@ -154,11 +155,11 @@ def main():
 
 
         print "Running updates..."
-        for pkg in repository.generateInstallationOrder(packagesToUpdate):
+        for pkg in firmwaretools.repository.generateInstallationOrder(packagesToUpdate):
             print "Installing %s - %s" % (pkg.name, pkg.version)
             try:
                 ret = pkg.install()
-            except (package.InstallError,), e:
+            except (firmwaretools.package.InstallError,), e:
                 print "Installation failed for package: %s - %s" % (pkg.name, pkg.version)
                 print "aborting update..."
                 print
@@ -203,24 +204,6 @@ def getBootstrapConfig(ini, prefix):
         sys.path.append(path)
 
     return plugins
-
-
-def generateFullSystemInventory(ini):
-    plugins = getBootstrapConfig(ini, "")
-
-    for pymod in plugins.get("inventory_plugin", []):
-        try:
-            module = __import__(pymod, globals(),  locals(), [])
-            for package in module.InventoryGenerator():
-                yield package
-
-        except (ImportError):
-            pass
-        except:   # don't let module messups propogate up
-            #traceback.print_exc()
-            pass
-
-
 
 if __name__ == "__main__":
     sys.exit( main() )
