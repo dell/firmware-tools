@@ -50,3 +50,52 @@ def getBootstrapConfig(ini, prefix):
     return plugins
 
 
+def runInventory(ini):
+    plugins = getBootstrapConfig(ini, "")
+    for pymod in plugins.get("inventory_plugin", []):
+        try:
+            module = __import__(pymod, globals(),  locals(), [])
+            for package in module.InventoryGenerator():
+                yield package
+
+        except (ImportError):
+            pass
+        except:   # don't let module messups propogate up
+            #import traceback
+            #traceback.print_exc()
+            pass
+
+
+def runBootstrapInventory(ini):
+    plugins = getBootstrapConfig(ini, "bootstrap_")
+
+    for pymod in plugins.get("bootstrap_inventory_plugin", []):
+        try:
+            module = __import__(pymod, globals(),  locals(), [])
+            for pkg in module.BootstrapGenerator():
+                yield pkg
+
+        except (ImportError):
+            pass
+        except:   # don't let module messups propogate up
+            #import traceback
+            #traceback.print_exc()
+            pass
+
+
+def generateFullSystemInventory(ini):
+    plugins = getBootstrapConfig(ini, "")
+
+    for pymod in plugins.get("inventory_plugin", []):
+        try:
+            module = __import__(pymod, globals(),  locals(), [])
+            for pkg in module.InventoryGenerator():
+                yield pkg
+
+        except (ImportError):
+            pass
+        except:   # don't let module messups propogate up
+            #traceback.print_exc()
+            pass
+
+
