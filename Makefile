@@ -136,7 +136,7 @@ $(PY_VER_UPDATES): version.mk
 	@diff -q $@ $@.new >/dev/null 2>&1 || mv -f $@.new $@
 	@rm -f $@.new
 
-TARBALL=$(shell ls $(PWD)/$(RELEASE_STRING).tar.gz)
+TARBALL=$(RELEASE_STRING).tar.gz
 
 # to specify key if package is to be signed: make deb debsign=-k<keyname>
 ifndef debsign
