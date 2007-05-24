@@ -14,7 +14,7 @@ umask 002
 set -e
 
 make distclean
-make -e deb
+make -e changelog deb
 
 # need to port the following to pbuilder
 mkdir -p ${APT_REPO}/etch-i386/${RELEASE_NAME}/${RELEASE_VERSION}-${DEB_RELEASE}/
