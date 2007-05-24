@@ -27,12 +27,4 @@ for i in *.tar.{gz,bz2} *.zip *.src.rpm; do
     cp $i $DEST
 done
 
-for file in ./*.src.rpm
-do
-	for distro in $PLAGUE_BUILDS
-	do
-		plague-client build $file ${PREFIX}${distro}
-		sleep 5
-	done
-    rm $file
-done
+/var/ftp/pub/yum/dell-repo/scripts/upload_rpm.sh ./*.src.rpm
