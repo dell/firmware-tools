@@ -71,6 +71,9 @@
   .PHONY: all clean clean_list distclean distclean_list \
   		rpm unit_test tarball
 
+CHANGELOG=pkg/debian/changelog
+CHANGELOG_TEXT=new version
+
 SPEC=pkg/$(RELEASE_NAME).spec
 # check that firmware-tools.spec has correct version info. force build if not.
 G_RELEASE_MAJOR=$(shell grep "^%define major" $(SPEC) | awk '{print $$3}')
@@ -97,6 +100,8 @@ ifneq ($(G_RELEASE_EXTRALEVEL),$(RELEASE_EXTRALEVEL))
  endif
 endif
 
+$(CHANGELOG): version.mk
+	cd pkg/ && DEBEMAIL="Sadhana B <sadhana_b@dell.com>" fakeroot debchange -v $(RELEASE_VERSION) $(CHANGELOG_TEXT)
 
 $(SPEC): version.mk
 	@echo Updating $@
@@ -148,9 +153,15 @@ $(DEBFILES): $(RELEASE_STRING).tar.gz
 	mkdir -p build
 	tar zxvf $(TARBALL) -C build
 	cp $(TARBALL) build/$(RELEASE_NAME)_$(RELEASE_VERSION).orig.tar.gz
+	make $(CHANGELOG)
 	cp -a pkg/debian build/$(RELEASE_STRING)/
 	chmod +x build/$(RELEASE_STRING)/debian/rules
 	cd build/$(RELEASE_STRING)/ && debuild -rfakeroot $(debsign) $(debopts)
+	make removeautogen
+
+MANIFEST=build/$(RELEASE_STRING)/MANIFEST.in
+removeautogen: $(MANIFEST)
+	rm -f $(MANIFEST)
 
 rpm: $(RELEASE_STRING)-$(RPM_RELEASE).$(RPM_TYPE).rpm
 $(RELEASE_STRING)-$(RPM_RELEASE).$(RPM_TYPE).rpm: $(RELEASE_STRING).tar.gz
