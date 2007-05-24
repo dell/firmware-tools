@@ -110,8 +110,12 @@ $(SPEC): version.mk
 	@diff -q $@ $@.new >/dev/null 2>&1 || mv -f $@.new $@
 	@rm -f $@.new
 
+# This updates the debian version information, similar to how specfile for RPM
+# is updated. It has to be manually invoked becuase it wont work for rpm builds.
 CHANGELOG=pkg/debian/changelog
-CHANGELOG_TEXT="autobuild testing version. This is not for release."
+CHANGELOG_TEXT="Placeholder changelog entry. Please update this for release."
+changelog: $(CHANGELOG)
+.PHONY: $(CHANGELOG)
 $(CHANGELOG): version.mk
 	cd pkg/ && DEBEMAIL="Sadhana B <sadhana_b@dell.com>" fakeroot debchange -v $(RELEASE_VERSION)-$(DEB_RELEASE) $(CHANGELOG_TEXT)
 
@@ -172,7 +176,7 @@ $(RELEASE_STRING)-$(RPM_RELEASE).src.rpm: $(RELEASE_STRING).tar.gz
 	-rm -rf build/ dist/ MANIFEST*
 
 tarball: $(RELEASE_STRING).tar.gz
-$(RELEASE_STRING).tar.gz: $(SPEC) setup.py $(PY_VER_UPDATES) $(CHANGELOG)
+$(RELEASE_STRING).tar.gz: $(SPEC) setup.py $(PY_VER_UPDATES)
 	-rm -rf MANIFEST*
 	python ./setup.py sdist --dist-dir=$$(pwd)
 	-rm -rf MANIFEST*
