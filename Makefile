@@ -71,9 +71,6 @@
   .PHONY: all clean clean_list distclean distclean_list \
   		rpm unit_test tarball
 
-CHANGELOG=pkg/debian/changelog
-CHANGELOG_TEXT=new version
-
 SPEC=pkg/$(RELEASE_NAME).spec
 # check that firmware-tools.spec has correct version info. force build if not.
 G_RELEASE_MAJOR=$(shell grep "^%define major" $(SPEC) | awk '{print $$3}')
@@ -100,9 +97,6 @@ ifneq ($(G_RELEASE_EXTRALEVEL),$(RELEASE_EXTRALEVEL))
  endif
 endif
 
-$(CHANGELOG): version.mk
-	cd pkg/ && DEBEMAIL="Sadhana B <sadhana_b@dell.com>" fakeroot debchange -v $(RELEASE_VERSION) $(CHANGELOG_TEXT)
-
 $(SPEC): version.mk
 	@echo Updating $@
 	@cp -f $@ $@.new
@@ -116,6 +110,10 @@ $(SPEC): version.mk
 	@diff -q $@ $@.new >/dev/null 2>&1 || mv -f $@.new $@
 	@rm -f $@.new
 
+CHANGELOG=pkg/debian/changelog
+CHANGELOG_TEXT="autobuild testing version. This is not for release."
+$(CHANGELOG): version.mk
+	cd pkg/ && DEBEMAIL="Sadhana B <sadhana_b@dell.com>" fakeroot debchange -v $(RELEASE_VERSION)-$(DEB_RELEASE) $(CHANGELOG_TEXT)
 
 setup.py: version.mk
 	@echo Updating $@
@@ -147,21 +145,16 @@ DEBFILES= \
   build/$(RELEASE_NAME)_$(RELEASE_VERSION).dsc
 
 # use debopts to do things like override maintainer email, etc.
+deb_builddir=build
 deb: $(DEBFILES)
 $(DEBFILES): $(RELEASE_STRING).tar.gz
-	rm -rf build
-	mkdir -p build
-	tar zxvf $(TARBALL) -C build
-	cp $(TARBALL) build/$(RELEASE_NAME)_$(RELEASE_VERSION).orig.tar.gz
-	make $(CHANGELOG)
-	cp -a pkg/debian build/$(RELEASE_STRING)/
-	chmod +x build/$(RELEASE_STRING)/debian/rules
-	cd build/$(RELEASE_STRING)/ && debuild -rfakeroot $(debsign) $(debopts)
-	make removeautogen
-
-MANIFEST=build/$(RELEASE_STRING)/MANIFEST.in
-removeautogen: $(MANIFEST)
-	rm -f $(MANIFEST)
+	rm -rf $(deb_builddir)
+	mkdir -p $(deb_builddir)
+	tar zxvf $(TARBALL) -C $(deb_builddir)
+	cp $(TARBALL) $(deb_builddir)/$(RELEASE_NAME)_$(RELEASE_VERSION).orig.tar.gz
+	cp -a pkg/debian $(deb_builddir)/$(RELEASE_STRING)/
+	chmod +x $(deb_builddir)/$(RELEASE_STRING)/debian/rules
+	cd $(deb_builddir)/$(RELEASE_STRING)/ && debuild -rfakeroot $(debsign) $(debopts)
 
 rpm: $(RELEASE_STRING)-$(RPM_RELEASE).$(RPM_TYPE).rpm
 $(RELEASE_STRING)-$(RPM_RELEASE).$(RPM_TYPE).rpm: $(RELEASE_STRING).tar.gz
@@ -179,7 +172,7 @@ $(RELEASE_STRING)-$(RPM_RELEASE).src.rpm: $(RELEASE_STRING).tar.gz
 	-rm -rf build/ dist/ MANIFEST*
 
 tarball: $(RELEASE_STRING).tar.gz
-$(RELEASE_STRING).tar.gz: $(SPEC) setup.py $(PY_VER_UPDATES)
+$(RELEASE_STRING).tar.gz: $(SPEC) setup.py $(PY_VER_UPDATES) $(CHANGELOG)
 	-rm -rf MANIFEST*
 	python ./setup.py sdist --dist-dir=$$(pwd)
 	-rm -rf MANIFEST*

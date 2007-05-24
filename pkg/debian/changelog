@@ -1,6 +1,8 @@
 firmware-tools (1.3.0) gutsy; urgency=low
 
-  * new version
+  * new upstream version
+  * debian packaging changes per review from 
+    Martin Pitt <martin.pitt@ubuntu.com>
 
  -- Sadhana B <sadhana_b@dell.com>  Thu, 24 May 2007 08:21:19 -0500
 

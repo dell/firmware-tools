@@ -9,7 +9,7 @@ cd $cur_dir/../
 umask 002
 
 [ -n "$APT_REPO" ] || 
-    APT_REPO=/var/ftp/pub/yum/dell-repo/software/debian/
+    APT_REPO=/var/ftp/pub/yum/dell-repo/software/debian/incoming
 
 . version.mk
 RELEASE_VERSION=${RELEASE_MAJOR}.${RELEASE_MINOR}.${RELEASE_SUBLEVEL}${RELEASE_EXTRALEVEL}
@@ -24,7 +24,7 @@ make deb
 mkdir -p ${APT_REPO}/etch-i386/${RELEASE_NAME}/${RELEASE_VERSION}-${DEB_RELEASE}/
 
 DEST=${APT_REPO}/etch-i386/${RELEASE_NAME}/${RELEASE_VERSION}-${DEB_RELEASE}/
-for file in build/*
+for file in build/*.deb build/*.dsc build/*.diff.gz build/*.tar.gz
 do
     [ -e $DEST/$(basename $file) ] || cp $file $DEST/
 done
