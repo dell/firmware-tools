@@ -4,9 +4,6 @@
 set -e
 set -x
 
-PLAGUE_BUILDS="fc5 fc6 fcdev rhel3 rhel4 rhel5 sles9 sles10"
-PREFIX=
-
 cur_dir=$(cd $(dirname $0); pwd)
 cd $cur_dir/../
 
@@ -27,4 +24,4 @@ for i in *.tar.{gz,bz2} *.zip *.src.rpm; do
     cp $i $DEST
 done
 
-/var/ftp/pub/yum/dell-repo/scripts/upload_rpm.sh ./*.src.rpm
+PREFIX= /var/ftp/pub/yum/dell-repo/scripts/upload_rpm.sh ./*.src.rpm
