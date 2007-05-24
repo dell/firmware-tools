@@ -1,11 +1,12 @@
 #!/bin/sh
 # vim:et:ai:ts=4:sw=4:filetype=sh:
 
-set -e
 set -x
 
 cur_dir=$(cd $(dirname $0); pwd)
 cd $cur_dir/../
+
+umask 002
 
 [ -n "$LIBSMBIOS_TOPDIR" ] ||
     LIBSMBIOS_TOPDIR=/var/ftp/pub/Applications/libsmbios/
@@ -14,6 +15,8 @@ cd $cur_dir/../
 RELEASE_VERSION=${RELEASE_MAJOR}.${RELEASE_MINOR}.${RELEASE_SUBLEVEL}${RELEASE_EXTRALEVEL}
 RELEASE_STRING=${RELEASE_NAME}-${RELEASE_VERSION}
 DEST=$LIBSMBIOS_TOPDIR/download/${RELEASE_NAME}/$RELEASE_STRING/
+
+set -e
 
 make tarball srpm
 

@@ -5,11 +5,14 @@
 # called by autobuild-hook.sh as a host-specific builder. It builds RPMS
 # and places them into plague.
 
-set -e
 set -x
 
 cur_dir=$(cd $(dirname $0); pwd)
 cd $cur_dir/..
+
+umask 002
+
+set -e
 
 make -e tarball srpm
 
