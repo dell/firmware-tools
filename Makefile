@@ -136,8 +136,6 @@ $(PY_VER_UPDATES): version.mk
 	@diff -q $@ $@.new >/dev/null 2>&1 || mv -f $@.new $@
 	@rm -f $@.new
 
-TARBALL=$(RELEASE_STRING).tar.gz
-
 # to specify key if package is to be signed: make deb debsign=-k<keyname>
 ifndef debsign
 debsign=-uc -us
@@ -175,8 +173,9 @@ $(RELEASE_STRING)-$(RPM_RELEASE).src.rpm: $(RELEASE_STRING).tar.gz
 	mv build/SRPMS/*.rpm $(BUILDDIR)
 	-rm -rf build/ dist/ MANIFEST*
 
-tarball: $(RELEASE_STRING).tar.gz
-$(RELEASE_STRING).tar.gz: $(SPEC) setup.py $(PY_VER_UPDATES)
+TARBALL=$(RELEASE_STRING).tar.gz
+tarball: $(TARBALL)
+$(TARBALL): $(SPEC) setup.py $(PY_VER_UPDATES)
 	-rm -rf MANIFEST*
 	python ./setup.py sdist --dist-dir=$$(pwd)
 	-rm -rf MANIFEST*
