@@ -1,4 +1,4 @@
-# vim:expandtab:autoindent:tabstop=4:shiftwidth=4:filetype=python:
+# vim:tw=0:expandtab:autoindent:tabstop=4:shiftwidth=4:filetype=python:
 
   #############################################################################
   #
@@ -10,13 +10,13 @@
 package module
 """
 
-import rpmUtils.miscutils
+import rpm
 
 class InternalError(Exception): pass
 class InstallError(Exception): pass
 
 def defaultCompareStrategy(ver1, ver2):
-    return rpmUtils.miscutils.compareEVR((0, ver1, 0), (0, ver2, 0))
+    return rpm.labelCompare( ("0", str(ver1), "0"), ("0", str(ver2), "0"))
 
 def defaultInstallStrategy(self):
     raise InternalError("Attempt to install a package with no install function. Name: %s, Version: %s" % (self.name, self.version))
