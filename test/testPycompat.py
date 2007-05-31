@@ -17,39 +17,39 @@ class TestCase(unittest.TestCase):
         pass
         
     def testExcCommandNoTimeout(self):
-        import firmwaretools.pycompat
-        firmwaretools.pycompat.executeCommand("sleep 0", timeout=0)
+        import pycompat
+        pycompat.executeCommand("sleep 0", timeout=0)
 
     def testExcCommandTimeout(self):
-        import firmwaretools.pycompat
-        self.assertRaises(firmwaretools.pycompat.commandTimeoutExpired, firmwaretools.pycompat.executeCommand, "sleep 3", timeout=1)
+        import pycompat
+        self.assertRaises(pycompat.commandTimeoutExpired, pycompat.executeCommand, "sleep 3", timeout=1)
 
     def testExcCommandAlarmNoTimeout(self):
         # test that executeCommand() doesn't interfere with existing alarm calls
         # given a command that itself doesnt timeout
         import signal, time
-        import firmwaretools.pycompat
+        import pycompat
         class alarmExc(Exception): pass
         def alarmhandler(signum,stackframe):
             raise alarmExc("timeout expired")
 
         oldhandler=signal.signal(signal.SIGALRM,alarmhandler)
-        prevTimeout = signal.alarm(2)
-        firmwaretools.pycompat.executeCommand("sleep 0", timeout=1)
+        prevTimeout = signal.alarm(1)
+        pycompat.executeCommand("sleep 0", timeout=1)
         self.assertRaises(alarmExc, time.sleep, 5)
 
     def testExcCommandAlarmTimeout(self):
         # test that executeCommand() doesn't interfere with existing alarm calls
         # given a command that itself times out
         import signal, time
-        import firmwaretools.pycompat
+        import pycompat
         class alarmExc(Exception): pass
         def alarmhandler(signum,stackframe):
             raise alarmExc("timeout expired")
 
         oldhandler=signal.signal(signal.SIGALRM,alarmhandler)
         prevTimeout = signal.alarm(2)
-        self.assertRaises(firmwaretools.pycompat.commandTimeoutExpired, firmwaretools.pycompat.executeCommand,"sleep 2", timeout=1)
+        self.assertRaises(pycompat.commandTimeoutExpired, pycompat.executeCommand,"sleep 2", timeout=1)
         self.assertRaises(alarmExc, time.sleep, 10)
 
 

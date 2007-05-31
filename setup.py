@@ -70,7 +70,7 @@ distutils.core.setup (
         author_email="libsmbios-devel@lists.us.dell.com",
         url="http://linux.dell.com/libsmbios/main/",
 
-        package_dir={'': 'pymod'},
+        package_dir={'firmwaretools': 'pymod'},
         packages=['firmwaretools'],
 
         ext_modules = [ ],
