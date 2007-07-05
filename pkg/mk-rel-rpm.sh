@@ -18,6 +18,8 @@ DEST=$LIBSMBIOS_TOPDIR/download/${RELEASE_NAME}/$RELEASE_STRING/
 
 set -e
 
+git tag -u libsmbios -m "tag for official release: $RELEASE_STRING" v${RELEASE_VERSION}
+
 make tarball srpm
 
 mkdir -p $DEST
@@ -27,4 +29,4 @@ for i in *.tar.{gz,bz2} *.zip *.src.rpm; do
     cp $i $DEST
 done
 
-PREFIX= /var/ftp/pub/yum/dell-repo/scripts/upload_rpm.sh ./*.src.rpm
+#PREFIX= /var/ftp/pub/yum/dell-repo/scripts/upload_rpm.sh ./*.src.rpm
