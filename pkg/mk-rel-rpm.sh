@@ -1,5 +1,5 @@
 #!/bin/sh
-# vim:et:ai:ts=4:sw=4:filetype=sh:
+# vim:et:ai:ts=4:sw=4:filetype=sh:tw=0
 
 set -x
 
@@ -29,4 +29,4 @@ for i in *.tar.{gz,bz2} *.zip *.src.rpm; do
     cp $i $DEST
 done
 
-#PREFIX= /var/ftp/pub/yum/dell-repo/scripts/upload_rpm.sh ./*.src.rpm
+/var/ftp/pub/yum/dell-repo/software/_tools/upload_rpm.sh ./${RELEASE_STRING}-${RPM_RELEASE}.src.rpm
