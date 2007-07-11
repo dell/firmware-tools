@@ -56,6 +56,7 @@ BuildArch:      noarch
 %endif
 
 BuildRequires:  python-devel
+Requires: rpm-python
 
 Provides: firmware_inventory(pci) = 0:%{release_version}
 
