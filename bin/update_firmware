@@ -84,9 +84,9 @@ def main():
             if ini.has_option("main", "rpm_mode"):
                 v = ini.get("main", "rpm_mode")
             if v != 'auto':
-                print "Config does not specify automatic install during RPM install." 
+                print "Config does not specify automatic install during package install." 
                 print "Please run update_firmware manually to install updates."
-                return 1
+                return 0
     
         print
         print "Searching storage directory for available BIOS updates..."
