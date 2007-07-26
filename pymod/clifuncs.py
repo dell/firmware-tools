@@ -7,6 +7,8 @@
   #
   #############################################################################
 
+from __future__ import generators
+
 import getopt
 import glob
 import os
