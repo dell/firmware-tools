@@ -159,6 +159,10 @@ def main():
             print "Installing %s - %s" % (pkg.name, pkg.version)
             try:
                 ret = pkg.install()
+            except (firmwaretools.package.NoInstaller,), e:
+                print "package %s - %s does not have an installer available." % (pkg.name, pkg.version)
+                print "skipping this package for now."
+                continue
             except (firmwaretools.package.InstallError,), e:
                 print "Installation failed for package: %s - %s" % (pkg.name, pkg.version)
                 print "aborting update..."

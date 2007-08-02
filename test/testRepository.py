@@ -138,7 +138,7 @@ class TestCase(unittest.TestCase):
         systemInventory = [p,]
         r = repository.Repository(datafiles)
         packagesToUpdate = repository.generateUpdateSet(r, systemInventory)
-        self.assertRaises(package.InternalError, packagesToUpdate["testpack"]["update"].install)
+        self.assertRaises(package.NoInstaller, packagesToUpdate["testpack"]["update"].install)
 
     def testGenerateUpdateSetInstall(self):
         import repository

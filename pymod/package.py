@@ -14,12 +14,13 @@ import rpm
 
 class InternalError(Exception): pass
 class InstallError(Exception): pass
+class NoInstaller(Exception): pass
 
 def defaultCompareStrategy(ver1, ver2):
     return rpm.labelCompare( ("0", str(ver1), "0"), ("0", str(ver2), "0"))
 
 def defaultInstallStrategy(self):
-    raise InternalError("Attempt to install a package with no install function. Name: %s, Version: %s" % (self.name, self.version))
+    raise NoInstaller("Attempt to install a package with no install function. Name: %s, Version: %s" % (self.name, self.version))
 
 class Package(object):
     def __init__(self, *args, **kargs):
