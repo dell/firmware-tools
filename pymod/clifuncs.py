@@ -57,6 +57,9 @@ def runInventory(ini):
     for pymod in plugins.get("inventory_plugin", []):
         try:
             module = __import__(pymod, globals(),  locals(), [])
+            for i in pymod.split(".")[1:]:
+                module = getattr(module, i)
+
             for package in module.InventoryGenerator():
                 yield package
 
@@ -74,6 +77,9 @@ def runBootstrapInventory(ini):
     for pymod in plugins.get("bootstrap_inventory_plugin", []):
         try:
             module = __import__(pymod, globals(),  locals(), [])
+            for i in pymod.split(".")[1:]:
+                module = getattr(module, i)
+
             for pkg in module.BootstrapGenerator():
                 yield pkg
 
@@ -91,6 +97,9 @@ def generateFullSystemInventory(ini):
     for pymod in plugins.get("inventory_plugin", []):
         try:
             module = __import__(pymod, globals(),  locals(), [])
+            for i in pymod.split(".")[1:]:
+                module = getattr(module, i)
+
             for pkg in module.InventoryGenerator():
                 yield pkg
 

@@ -18,13 +18,14 @@ class TestCase(unittest.TestCase):
 
     def testBootstrapInventory(self):
         # set up unit test mode
-        module = __import__("bootstrap_pci", globals(),  locals(), [])
+        module = __import__("firmwaretools.bootstrap_pci", globals(),  locals(), [])
+        module = getattr(module, "bootstrap_pci")
         module.unit_test_mode=1
 
         # manually setup fake config file
         ini = ConfigParser.ConfigParser()
         ini.add_section("bootstrap_pci")
-        ini.set("bootstrap_pci", "bootstrap_inventory_plugin", "bootstrap_pci")
+        ini.set("bootstrap_pci", "bootstrap_inventory_plugin", "firmwaretools.bootstrap_pci")
 
         # run bootstrap and compare.
         import clifuncs
