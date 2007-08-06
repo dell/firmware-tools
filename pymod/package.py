@@ -37,9 +37,8 @@ class InstalledPackage(Package):
     pass
 
 # required: pci bus, device, function, pci ven/dev
-def PciDevice(InstalledPackage):
-    def __init__(self, *args, **kargs):
-        super(PciPackage, self).__init__(*args, **kargs)
+class PciDevice(InstalledPackage):
+    pass
 
 class RepositoryPackage(Package):
     mainIni = None
