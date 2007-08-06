@@ -34,12 +34,24 @@ def makePackage(configFile):
         )
 
     try:
-        # and gift wrap it with type specified in config file (if specified)
-        # the wrapper should probably override the install and compare functions
-        module = __import__(conf.get("package","module"), globals(),  locals(), [])
+        pymod = conf.get("package","module")
+        module = __import__(pymod, globals(),  locals(), [])
+        for i in pymod.split(".")[1:]:
+            module = getattr(module, i)
+
         packageTypeClass = conf.get("package", "type")
         type = getattr(module, packageTypeClass)
-        type(p)
+        if issubclass(type, package.Package):
+            # direct instantiate class (new style)
+            p = type(
+                name=conf.get("package", "name"),
+                version=conf.get("package", "version"),
+                conf=conf,
+                path=os.path.dirname(configFile),
+            )
+        else:
+            # just wrap it (old style)
+            type(p)
     except (ConfigParser.NoOptionError, ConfigParser.NoSectionError, ImportError, AttributeError):
         pass
 

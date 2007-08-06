@@ -19,9 +19,6 @@ class NoInstaller(Exception): pass
 def defaultCompareStrategy(ver1, ver2):
     return rpm.labelCompare( ("0", str(ver1), "0"), ("0", str(ver2), "0"))
 
-def defaultInstallStrategy(self):
-    raise NoInstaller("Attempt to install a package with no install function. Name: %s, Version: %s" % (self.name, self.version))
-
 class Package(object):
     def __init__(self, *args, **kargs):
         self.name = None
@@ -39,13 +36,21 @@ class Package(object):
 class InstalledPackage(Package):
     pass
 
-class RepositoryPackage(Package):
+# required: pci bus, device, function, pci ven/dev
+def PciDevice(InstalledPackage):
     def __init__(self, *args, **kargs):
-        self.installFunction = defaultInstallStrategy
+        super(PciPackage, self).__init__(*args, **kargs)
+
+class RepositoryPackage(Package):
+    mainIni = None
+    def __init__(self, *args, **kargs):
+        self.installFunction = None
         self.conf = None
         self.path = None
         super(RepositoryPackage, self).__init__(*args, **kargs)
         
     def install(self):
-        return self.installFunction(self)
+        if self.installFunction is not None:
+            return self.installFunction(self)
 
+        raise NoInstaller("Attempt to install a package with no install function. Name: %s, Version: %s" % (self.name, self.version))
