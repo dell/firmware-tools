@@ -29,6 +29,7 @@ import firmwaretools.repository
 import firmwaretools.package
 import firmwaretools.pycompat
 import firmwaretools.clifuncs
+import firmwaretools.trace_decorator as trace_decorator
 
 configLocations = [
     "/etc/firmware/firmware.conf",
@@ -50,9 +51,10 @@ def main():
     overrides = []
     interactive = 1
     rpmMode = 0
+    verbose=0
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hc:o:ryt", ["help", "config=", "overrides=", "rpm", "yes", "test"])
+        opts, args = getopt.getopt(sys.argv[1:], "hc:o:rytv", ["help", "config=", "overrides=", "rpm", "yes", "test", "verbose"])
         for option, argument in opts:
             if option in ("-h", "--help"):
                 print __doc__
@@ -68,6 +70,9 @@ def main():
                 interactive = 0
             if option in ("-t", "--test",):
                 interactive = 2
+            if option in ("-v", "--verbose",):
+                verbose = verbose + 1
+                trace_decorator.debug["__main__"] = verbose
 
         # load standard configuration
         if not altConfig:
