@@ -91,6 +91,7 @@ def main():
         print
         print "Searching storage directory for available BIOS updates..."
         r = firmwaretools.repository.Repository( ini.get("main", "storage_topdir") )
+        firmwaretools.package.RepositoryPackage.mainIni = ini
 
         depFailures = {}
         def show_work(*args, **kargs):
@@ -186,28 +187,6 @@ def main():
 
     return 0 #shell logic
 
-
-def getBootstrapConfig(ini, prefix):
-    # scan config for 
-    #   -- prefix + inventory_ext_plugin
-    #   -- prefix + inventory_py_plugin
-    pluginConfigNames=( "inventory_plugin", "inventory_plugin_dir" )
-    plugins={}
-    for sect in ini.sections():
-        for opt in pluginConfigNames:
-            if ini.has_option(sect, prefix + opt):
-                # read/modify/write
-                if not ini.get(sect, prefix + opt):
-                    continue
-                i = plugins.get(prefix + opt, [])
-                i.append( ini.get(sect, prefix + opt) )
-                plugins[prefix + opt] = i
-
-    # set up python path for plugins
-    for path in plugins.get("inventory_plugin_dir", []):
-        sys.path.append(path)
-
-    return plugins
 
 if __name__ == "__main__":
     sys.exit( main() )
