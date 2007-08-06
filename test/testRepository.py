@@ -45,6 +45,8 @@ class TestCase(unittest.TestCase):
                 self.assertEqual( pkg.version, "a04" )
             elif pkg.name == "testpack_different":
                 self.assertEqual( pkg.version, "a07" )
+            elif pkg.name == "testpack_newpkgstrat":
+                self.assertEqual( pkg.version, "a08" )
             elif pkg.name == "system_specific":
                 self.failUnless( pkg.version in li )
                 li.remove(pkg.version)
@@ -102,6 +104,22 @@ class TestCase(unittest.TestCase):
         packagesToUpdate = repository.generateUpdateSet(r, systemInventory)
 
         self.failUnless( packagesToUpdate["testpack"]["update"] is None )
+
+    def testGenerateUpdateSet4_andInstall(self):
+        import repository
+        import package
+        p = package.InstalledPackage()
+        p.name = "testpack_newpkgstrat"
+        p.version = "a04"
+        systemInventory = [p,]
+        r = repository.Repository(datafiles)
+        packagesToUpdate = repository.generateUpdateSet(r, systemInventory)
+
+        self.assertEqual(
+        packagesToUpdate["testpack_newpkgstrat"]["update"].name, "testpack_newpkgstrat" )
+        self.assertEqual( packagesToUpdate["testpack_newpkgstrat"]["update"].version, "a08")
+        res = packagesToUpdate["testpack_newpkgstrat"]["update"].install()
+        self.assertEqual( res, "SUCCESS" )
 
     def testGenerateUpdateSetMultiple(self):
         import repository

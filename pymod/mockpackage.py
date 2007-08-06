@@ -16,6 +16,7 @@ from __future__ import generators
 # import arranged alphabetically
 import package
 
+# old style
 class MockPackageWrapper(object):
     def __init__(self, package):
         package.installFunction = self.installFunction
@@ -23,6 +24,16 @@ class MockPackageWrapper(object):
 
     def installFunction(self, package):
         #print "MOCK INSTALL OF: %s = %s" % (package, package.version)
+        return "SUCCESS"
+
+
+#new style
+class MockPackage2(package.RepositoryPackage):
+    def __init__(self, *args, **kargs):
+        super(MockPackage2, self).__init__(*args, **kargs)
+
+    def install(self):
+        #print "MOCK INSTALL OF: %s = %s" % (self.name, self.version)
         return "SUCCESS"
 
 
