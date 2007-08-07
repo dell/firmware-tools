@@ -18,9 +18,11 @@ import ConfigParser
 import package
 import pycompat
 import dep_parser
+from trace_decorator import trace, dprint, setModule, debug
 
 class CircularDependencyError(Exception): pass
 
+#@trace    # comment out due to python2.2 compatibilitty
 def makePackage(configFile):
     conf = ConfigParser.ConfigParser()
     conf.read(configFile)
@@ -35,6 +37,7 @@ def makePackage(configFile):
 
     try:
         pymod = conf.get("package","module")
+        dprint("pymod: %s\n" % pymod)
         module = __import__(pymod, globals(),  locals(), [])
         for i in pymod.split(".")[1:]:
             module = getattr(module, i)
@@ -42,6 +45,7 @@ def makePackage(configFile):
         packageTypeClass = conf.get("package", "type")
         type = getattr(module, packageTypeClass)
         if issubclass(type, package.Package):
+            dprint("direct instantiate\n")
             # direct instantiate class (new style)
             p = type(
                 name=conf.get("package", "name"),
@@ -51,11 +55,17 @@ def makePackage(configFile):
             )
         else:
             # just wrap it (old style)
+            dprint("wrap\n")
             type(p)
     except (ConfigParser.NoOptionError, ConfigParser.NoSectionError, ImportError, AttributeError):
+        import traceback
+        traceback.print_exc()
         pass
 
     return p
+
+# backwards compatible with python 2.2
+makePackage = trace(makePackage)
 
 # a null function that just eats args. Default callback
 def nullFunc(*args, **kargs): pass
