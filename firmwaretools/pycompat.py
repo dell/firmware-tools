@@ -1,4 +1,4 @@
-# vim:expandtab:autoindent:tabstop=4:shiftwidth=4:filetype=python:
+# vim:expandtab:autoindent:tabstop=4:shiftwidth=4:filetype=python:tw=0
 
   #############################################################################
   #
@@ -72,9 +72,12 @@ def executeCommand(cmd, timeout=0):
                 passed = time.time() - starttime
                 signal.alarm(int(math.ceil(prevTimeout - passed)))
         except alarmExc:
-            os.kill(-pid, signal.SIGTERM)
-            time.sleep(1)
-            os.kill(-pid, signal.SIGKILL)
+            try:
+                os.kill(-pid, signal.SIGTERM)
+                time.sleep(1)
+                os.kill(-pid, signal.SIGKILL)
+            except OSError: # errno=3  == no such process
+                pass
             (rpid, ret) = os.waitpid(pid, 0)
             signal.signal(signal.SIGALRM,oldhandler)
             if prevTimeout:
@@ -83,12 +86,23 @@ def executeCommand(cmd, timeout=0):
             raise commandTimeoutExpired( "Specified timeout of %s seconds expired before command finished. Command was: %s"
                     % (timeout, cmd)
                     )
+        except KeyboardInterrupt:
+            signal.signal(signal.SIGALRM,oldhandler)
+            try:
+                os.kill(-pid, signal.SIGTERM)
+                time.sleep(1)
+                os.kill(-pid, signal.SIGKILL)
+            except OSError: # errno=3  == no such process
+                pass
+            (rpid, ret) = os.waitpid(pid, 0)
+            raise
 
         # mask and return just return value
         return (ret & 0xFF00) >> 8
     else:
         #child
         os.setpgrp()  # become process group leader so that we can kill all our children
+        signal.signal(signal.SIGINT, signal.SIG_IGN) #ignore <CTRL>-C so parent gets it
         ret = os.system(cmd)
         os._exit( (ret & 0xFF00) >> 8 )
 
