@@ -20,8 +20,8 @@ import os
 # These are all automatically replaced by the release script.
 # START = Do not edit manually
 RELEASE_MAJOR="1"
-RELEASE_MINOR="3"
-RELEASE_SUBLEVEL="5"
+RELEASE_MINOR="4"
+RELEASE_SUBLEVEL="0"
 RELEASE_EXTRALEVEL=""
 #
 # END = Do not edit manually
