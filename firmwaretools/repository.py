@@ -176,6 +176,8 @@ class Repository(object):
                             cb[0]( who="iterPackages", what="made_package", package=p, cb=cb)
                             yield p
                         except:
+                            import traceback
+                            print traceback.print_exc()
                             pass
             except OSError:   # directory doesnt exist, so no repo packages. :-)
                 pass
