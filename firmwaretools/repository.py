@@ -60,6 +60,7 @@ def makePackage(configFile):
     except (ConfigParser.NoOptionError, ConfigParser.NoSectionError, ImportError, AttributeError):
         import traceback
         traceback.print_exc()
+        print "Exception caught and ignored."
         pass
 
     return p
