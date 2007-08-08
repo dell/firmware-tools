@@ -4,6 +4,7 @@
 import inspect
 import sys
 import traceback
+import types
 from decorator import decorator
 
 # levels:
@@ -58,6 +59,14 @@ def trace(f, *args, **kw):
         dprint( "LEAVE %s --> %s\n\n" % (f.func_name, result), msgLevel=msgLevel, outLevel=outLevel)
 
     return result
+
+# helper function so we can use back-compat format but not be ugly
+def decorateAllFunctions(module):
+    methods = [ method for method in dir(module)
+            if isinstance(getattr(module, method), types.FunctionType)
+            ]
+    for i in methods:
+        setattr(module, i, trace(getattr(module,i)))
 
 # backwards compat
 trace = decorator(trace)
