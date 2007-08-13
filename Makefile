@@ -141,6 +141,13 @@ ifndef debsign
 debsign=-uc -us
 endif
 
+TARBALL=dist/$(RELEASE_STRING).tar.gz
+tarball: $(TARBALL)
+$(TARBALL): $(SPEC) setup.py $(PY_VER_UPDATES)
+	-rm -rf MANIFEST*
+	python ./setup.py sdist --dist-dir=$$(pwd)/dist
+	-rm -rf MANIFEST*
+
 DEBFILES= \
   build/$(RELEASE_NAME)_$(RELEASE_VERSION)-$(DEB_RELEASE)_$(DEBARCH).deb      \
   build/$(RELEASE_NAME)_$(RELEASE_VERSION)-$(DEB_RELEASE)_i386.changes      \
@@ -149,7 +156,7 @@ DEBFILES= \
 # use debopts to do things like override maintainer email, etc.
 deb_builddir=build
 deb: $(DEBFILES)
-$(DEBFILES): $(RELEASE_STRING).tar.gz
+$(DEBFILES): $(TARBALL)
 	rm -rf $(deb_builddir)
 	mkdir -p $(deb_builddir)
 	tar zxvf $(TARBALL) -C $(deb_builddir)
@@ -159,25 +166,20 @@ $(DEBFILES): $(RELEASE_STRING).tar.gz
 	cd $(deb_builddir)/$(RELEASE_STRING)/ && debuild -rfakeroot $(debsign) $(debopts)
 
 rpm: $(RELEASE_STRING)-$(RPM_RELEASE).$(RPM_TYPE).rpm
-$(RELEASE_STRING)-$(RPM_RELEASE).$(RPM_TYPE).rpm: $(RELEASE_STRING).tar.gz
-	mkdir -p build/{RPMS,SRPMS,SPECS,SOURCES,BUILD}
-	rpmbuild --define "_topdir $(PWD)/build/" -ta $(TARBALL)
-	mv build/RPMS/*/*.rpm $(BUILDDIR)
-	mv build/SRPMS/*.rpm $(BUILDDIR)
-	-rm -rf build/ dist/ MANIFEST*
-
-srpm: $(RELEASE_STRING)-$(RPM_RELEASE).src.rpm
-$(RELEASE_STRING)-$(RPM_RELEASE).src.rpm: $(RELEASE_STRING).tar.gz
-	mkdir -p build/{RPMS,SRPMS,SPECS,SOURCES,BUILD}
-	rpmbuild --define "_topdir $(PWD)/build/" -ts $(TARBALL)
-	mv build/SRPMS/*.rpm $(BUILDDIR)
-	-rm -rf build/ dist/ MANIFEST*
-
-TARBALL=$(RELEASE_STRING).tar.gz
-tarball: $(TARBALL)
-$(TARBALL): $(SPEC) setup.py $(PY_VER_UPDATES)
+$(RELEASE_STRING)-$(RPM_RELEASE).$(RPM_TYPE).rpm: $(TARBALL)
+	mkdir -p dist/{RPMS,SRPMS,SPECS,SOURCES,BUILD}
+	rpmbuild --define "_topdir $(PWD)/dist/" -ta $(TARBALL)
+	mv dist/RPMS/*/*.rpm $(BUILDDIR)/dist
+	mv dist/SRPMS/*.rpm  $(BUILDDIR)/dist
 	-rm -rf MANIFEST*
-	python ./setup.py sdist --dist-dir=$$(pwd)
+	-rm -rf dist/{RPMS,SRPMS,SPECS,SOURCES,BUILD}
+
+srpm: dist/$(RELEASE_STRING)-$(RPM_RELEASE).src.rpm
+dist/$(RELEASE_STRING)-$(RPM_RELEASE).src.rpm: $(TARBALL)
+	mkdir -p dist/{RPMS,SRPMS,SPECS,SOURCES,BUILD}
+	rpmbuild --define "_topdir $(PWD)/dist/" -ts $(TARBALL)
+	mv dist/SRPMS/*.rpm $(BUILDDIR)/dist
+	-rm -rf dist/{RPMS,SRPMS,SPECS,SOURCES,BUILD}
 	-rm -rf MANIFEST*
 
 unit_test:
