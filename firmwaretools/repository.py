@@ -20,7 +20,7 @@ import pycompat
 import dep_parser
 import sys
 import traceback
-from trace_decorator import dprint, decorateAllFunctions
+from trace_decorator import trace, dprint, decorateAllFunctions
 
 class CircularDependencyError(Exception): pass
 
@@ -184,6 +184,8 @@ class Repository(object):
             except OSError:   # directory doesnt exist, so no repo packages. :-)
                 pass
 
+    iterPackages = trace(iterPackages)
+
     def iterLatestPackages(self, cb=(nullFunc, None)):
         latest = {}
         for candidate in self.iterPackages(cb=cb):
@@ -203,5 +205,7 @@ class Repository(object):
         for package in keys:
             cb[0]( who="iterLatestPackages", what="made_package", package=latest[package], cb=cb)
             yield latest[package]
+
+    iterLatestPackages = trace(iterLatestPackages)
 
 decorateAllFunctions(sys.modules[__name__])
