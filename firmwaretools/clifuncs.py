@@ -54,6 +54,7 @@ def getBootstrapConfig(ini, prefix):
 
 
 def runInventory(ini):
+    # returns a list of devices on the system
     return runSomething(ini, "", "inventory_plugin", "InventoryGenerator")
 
 def runBootstrapInventory(ini):
@@ -69,8 +70,8 @@ def runSomething(ini, prefix, pluginName, function):
             for i in pymod.split(".")[1:]:
                 module = getattr(module, i)
 
-            for device in getattr(module,function)():
-                yield device
+            for thing in getattr(module,function)():
+                yield thing
 
         except (ImportError):
             pass
