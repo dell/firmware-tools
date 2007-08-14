@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# vim:expandtab:autoindent:tabstop=4:shiftwidth=4:filetype=python:
+# vim:expandtab:autoindent:tabstop=4:shiftwidth=4:filetype=python:tw=0
 
   #############################################################################
   #
@@ -123,7 +123,7 @@ def main():
                 print "\tAvailable: %s - %s" % (pkg["update"].name, pkg["update"].version)
 
             if pkg["update"] is None:
-                print "\tDid not find a newer package to install."
+                print "\tDid not find a newer package to install that meets all installation checks."
             else:
                 print "\tFound Update: %s - %s" % (pkg["update"].name, pkg["update"].version)
                 needUpdate = 1
