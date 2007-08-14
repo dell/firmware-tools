@@ -17,18 +17,18 @@ class TestCase(unittest.TestCase):
         pass
         
     def testExcCommandNoTimeout(self):
-        import pycompat
+        import firmwaretools.pycompat as pycompat
         pycompat.executeCommand("sleep 0", timeout=0)
 
     def testExcCommandTimeout(self):
-        import pycompat
+        import firmwaretools.pycompat as pycompat
         self.assertRaises(pycompat.commandTimeoutExpired, pycompat.executeCommand, "sleep 3", timeout=1)
 
     def testExcCommandAlarmNoTimeout(self):
         # test that executeCommand() doesn't interfere with existing alarm calls
         # given a command that itself doesnt timeout
         import signal, time
-        import pycompat
+        import firmwaretools.pycompat as pycompat
         class alarmExc(Exception): pass
         def alarmhandler(signum,stackframe):
             raise alarmExc("timeout expired")
@@ -42,7 +42,7 @@ class TestCase(unittest.TestCase):
         # test that executeCommand() doesn't interfere with existing alarm calls
         # given a command that itself times out
         import signal, time
-        import pycompat
+        import firmwaretools.pycompat as pycompat
         class alarmExc(Exception): pass
         def alarmhandler(signum,stackframe):
             raise alarmExc("timeout expired")

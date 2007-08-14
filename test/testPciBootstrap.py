@@ -28,7 +28,7 @@ class TestCase(unittest.TestCase):
         ini.set("bootstrap_pci", "bootstrap_inventory_plugin", "firmwaretools.bootstrap_pci")
 
         # run bootstrap and compare.
-        import clifuncs
+        import firmwaretools.clifuncs as clifuncs
         index = 0
         for pkg in clifuncs.runBootstrapInventory(ini):
             self.assertEqual( module.mockExpectedOutput.split("\n")[index], str(pkg) )

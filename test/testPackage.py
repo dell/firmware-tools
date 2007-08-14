@@ -17,7 +17,7 @@ class TestCase(unittest.TestCase):
         pass
         
     def testCompareVersions(self):
-        import package
+        import firmwaretools.package as package
         self.assertEqual(-1, package.defaultCompareStrategy( "1.0", "2.0"))
         self.assertEqual( 0, package.defaultCompareStrategy( "1.0", "1.0"))
         self.assertEqual( 1, package.defaultCompareStrategy( "2.0", "1.0"))

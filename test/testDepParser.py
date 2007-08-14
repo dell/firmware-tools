@@ -11,7 +11,7 @@ import unittest
 
 class TestCase(unittest.TestCase):
     def setUp(self):
-        import package
+        import firmwaretools.package as package
         pkgA = package.Package(name="pkgA", version="a01")
         pkgB = package.Package(name="pkgC", version="a02")
         pkgC = package.Package(name="pkgC", version="a03")
@@ -25,13 +25,13 @@ class TestCase(unittest.TestCase):
         pass
         
     def testExist(self):
-        import dep_parser
+        import firmwaretools.dep_parser as dep_parser
         s = "pkgA"
         d = dep_parser.DepParser(s, self.inventory, {})
         self.assertEquals(1, d.depPass)
 
     def testExist2(self):
-        import dep_parser
+        import firmwaretools.dep_parser as dep_parser
         tests = [ ("exist", "pkgA"),
             ("gt",  "pkgA > a00"),
             ("ge1", "pkgA >= a00"),
@@ -48,7 +48,7 @@ class TestCase(unittest.TestCase):
             self.assertEquals(1, d.depPass)
 
     def testExist3(self):
-        import dep_parser
+        import firmwaretools.dep_parser as dep_parser
         tests = [ ("exist", "pkgD"),
             ("gt",  "pkgA > a01"),
             ("ge1", "pkgA >= a02"),

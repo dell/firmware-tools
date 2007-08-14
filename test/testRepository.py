@@ -25,13 +25,13 @@ class TestCase(unittest.TestCase):
         pass
         
     def testRepositoryInventory(self):
-        import repository
+        import firmwaretools.repository as repository
         r = repository.Repository(datafiles)
         for pkg in r.iterPackages():
             pass
  
     def testIterLatest(self):
-        import repository
+        import firmwaretools.repository as repository
         r = repository.Repository(datafiles)
         list = []
 
@@ -68,8 +68,8 @@ class TestCase(unittest.TestCase):
         self.assertEqual( len(li), 0 )
 
     def testGenerateUpdateSet1(self):
-        import repository
-        import package
+        import firmwaretools.repository as repository
+        import firmwaretools.package as package
         p = package.InstalledPackage()
         p.name = "testpack"
         p.version = "a04"
@@ -81,8 +81,8 @@ class TestCase(unittest.TestCase):
         self.assertEqual( packagesToUpdate["testpack"]["update"].version, "a06" )
 
     def testGenerateUpdateSet2(self):
-        import repository
-        import package
+        import firmwaretools.repository as repository
+        import firmwaretools.package as package
         p = package.InstalledPackage()
         p.name = "testpack_different"
         p.version = "a04"
@@ -94,8 +94,8 @@ class TestCase(unittest.TestCase):
         self.assertEqual( packagesToUpdate["testpack_different"]["update"].version, "a07" )
 
     def testGenerateUpdateSet3(self):
-        import repository
-        import package
+        import firmwaretools.repository as repository
+        import firmwaretools.package as package
         p = package.InstalledPackage()
         p.name = "testpack"
         p.version = "a08"
@@ -106,8 +106,8 @@ class TestCase(unittest.TestCase):
         self.failUnless( packagesToUpdate["testpack"]["update"] is None )
 
     def testGenerateUpdateSet4_andInstall(self):
-        import repository
-        import package
+        import firmwaretools.repository as repository
+        import firmwaretools.package as package
         p = package.InstalledPackage()
         p.name = "testpack_newpkgstrat"
         p.version = "a04"
@@ -122,8 +122,8 @@ class TestCase(unittest.TestCase):
         self.assertEqual( res, "SUCCESS" )
 
     def testGenerateUpdateSetMultiple(self):
-        import repository
-        import package
+        import firmwaretools.repository as repository
+        import firmwaretools.package as package
 
         p = package.InstalledPackage()
         p.name = "testpack"
@@ -148,8 +148,8 @@ class TestCase(unittest.TestCase):
         self.failUnless( packagesToUpdate["testpack_another"]["update"] is None )
 
     def testGenerateUpdateSetInstallDefault(self):
-        import repository
-        import package
+        import firmwaretools.repository as repository
+        import firmwaretools.package as package
         p = package.InstalledPackage()
         p.name = "testpack"
         p.version = "a04"
@@ -159,8 +159,8 @@ class TestCase(unittest.TestCase):
         self.assertRaises(package.NoInstaller, packagesToUpdate["testpack"]["update"].install)
 
     def testGenerateUpdateSetInstall(self):
-        import repository
-        import package
+        import firmwaretools.repository as repository
+        import firmwaretools.package as package
         p = package.InstalledPackage()
         p.name = "testpack_different"
         p.version = "a04"
@@ -174,8 +174,8 @@ class TestCase(unittest.TestCase):
     def testGenerateUpdateSet_SystemSpecific1(self):
         # test the case where system specific update available that doesn't 
         # apply to current system
-        import repository
-        import package
+        import firmwaretools.repository as repository
+        import firmwaretools.package as package
         p = package.InstalledPackage()
         p.name = "system_specific"
         p.version = "a01"
@@ -188,8 +188,8 @@ class TestCase(unittest.TestCase):
     def testGenerateUpdateSet_SystemSpecific2(self):
         # test the case where system specific update available that does
         # apply to current system
-        import repository
-        import package
+        import firmwaretools.repository as repository
+        import firmwaretools.package as package
 
         p = package.InstalledPackage()
         p.name = "system_specific"
@@ -209,8 +209,8 @@ class TestCase(unittest.TestCase):
     def testGenerateUpdateSet_SystemSpecific3(self):
         # test the case where system specific update available that does
         # apply to current system
-        import repository
-        import package
+        import firmwaretools.repository as repository
+        import firmwaretools.package as package
 
         p = package.InstalledPackage()
         p.name = "system_specific"
@@ -231,8 +231,8 @@ class TestCase(unittest.TestCase):
     def testGenerateUpdateSet_testRequires1(self):
         # test the case where system specific update available that doesn't 
         # apply to current system
-        import repository
-        import package
+        import firmwaretools.repository as repository
+        import firmwaretools.package as package
 
         p = package.InstalledPackage()
         p.name = "test_requires"
@@ -247,8 +247,8 @@ class TestCase(unittest.TestCase):
     def testGenerateUpdateSet_testRequires2(self):
         # test the case where system specific update available that does
         # apply to current system
-        import repository
-        import package
+        import firmwaretools.repository as repository
+        import firmwaretools.package as package
 
         p = package.InstalledPackage()
         p.name = "test_requires"
@@ -270,8 +270,8 @@ class TestCase(unittest.TestCase):
         self.assertEqual( packagesToUpdate["test_requires"]["update"].version, "a09" )
 
     def testInstallationOrder1(self):
-        import repository
-        import package
+        import firmwaretools.repository as repository
+        import firmwaretools.package as package
 
         p = package.InstalledPackage()
         p.name = "testorder1"
@@ -298,8 +298,8 @@ class TestCase(unittest.TestCase):
             self.assertEqual( n, pkg.name )
 
     def testInstallationOrder2(self):
-        import repository
-        import package
+        import firmwaretools.repository as repository
+        import firmwaretools.package as package
 
         p = package.InstalledPackage()
         p.name = "testorder1"
