@@ -14,8 +14,10 @@ some docs here eventually.
 from __future__ import generators
 
 # import arranged alphabetically
-import re
 import os
+import re
+import sys
+from trace_decorator import dprint, decorateAllFunctions
 
 import package
 
@@ -69,6 +71,7 @@ def lspciGeneratorFactory():
         return mockLspciGenerator()
 
 
+decorateAllFunctions(sys.modules[__name__])
 
 #==============================================================
 # mock classes for unit tests
@@ -126,14 +129,4 @@ pci_firmware(ven_0x14e4_dev_0x1645_subven_0x1645_subdev_0x0121)
 pci_firmware(ven_0x8086_dev_0x0309)
 pci_firmware(ven_0x9005_dev_0x00cf_subven_0x00cf_subdev_0x0121)
 pci_firmware(ven_0x9005_dev_0x00cf_subven_0x00cf_subdev_0x0121)"""
-
-
-
-
-
-
-
-
-
-
 

@@ -27,6 +27,8 @@ import shutil
 import signal
 import time
 
+from trace_decorator import dprint, decorateAllFunctions
+
 def spinner(cycle=['/', '-', '\\', '|']):
     step = cycle[0]
     del cycle[0]
@@ -140,3 +142,4 @@ def walkPath(topdir, direction=0):
         yield (topdir, dirs, files)
 
 
+decorateAllFunctions(sys.modules[__name__])

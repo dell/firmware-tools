@@ -12,7 +12,10 @@ repository module
 
 from __future__ import generators
 
+import sys
+
 import package
+from trace_decorator import dprint, decorateAllFunctions
 
 class DepParser(object):
     tokens = ( 'ID', 'LT', 'LE', 'EQ', 'GE', 'GT', 'COMMA' )
@@ -84,3 +87,4 @@ class DepParser(object):
             self.reason = "Failed for rule: requires %s" % t[1]
             self.depPass = 0
 
+decorateAllFunctions(sys.modules[__name__])

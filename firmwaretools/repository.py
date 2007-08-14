@@ -18,11 +18,12 @@ import ConfigParser
 import package
 import pycompat
 import dep_parser
-from trace_decorator import trace, dprint, setModule, debug
+import sys
+import traceback
+from trace_decorator import dprint, decorateAllFunctions
 
 class CircularDependencyError(Exception): pass
 
-#@trace    # comment out due to python2.2 compatibilitty
 def makePackage(configFile):
     conf = ConfigParser.ConfigParser()
     conf.read(configFile)
@@ -58,15 +59,10 @@ def makePackage(configFile):
             dprint("wrap\n")
             type(p)
     except (ConfigParser.NoOptionError, ConfigParser.NoSectionError, ImportError, AttributeError):
-        import traceback
-        traceback.print_exc()
-        print "Exception caught and ignored."
+        dprint(traceback.format_exc())
         pass
 
     return p
-
-# backwards compatible with python 2.2
-makePackage = trace(makePackage)
 
 # a null function that just eats args. Default callback
 def nullFunc(*args, **kargs): pass
@@ -177,8 +173,7 @@ class Repository(object):
                             cb[0]( who="iterPackages", what="made_package", package=p, cb=cb)
                             yield p
                         except:
-                            import traceback
-                            print traceback.print_exc()
+                            dprint(traceback.format_exc())
                             pass
             except OSError:   # directory doesnt exist, so no repo packages. :-)
                 pass
@@ -203,3 +198,4 @@ class Repository(object):
             cb[0]( who="iterLatestPackages", what="made_package", package=latest[package], cb=cb)
             yield latest[package]
 
+decorateAllFunctions(sys.modules[__name__])

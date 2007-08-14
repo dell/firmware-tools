@@ -36,8 +36,12 @@ class Package(object):
 class InstalledPackage(Package):
     pass
 
+#
+class Device(InstalledPackage):
+    pass
+
 # required: pci bus, device, function, pci ven/dev
-class PciDevice(InstalledPackage):
+class PciDevice(Device):
     pass
 
 class RepositoryPackage(Package):
