@@ -114,7 +114,7 @@ def main():
                     pkgName = pkgName + "-" + pkg.conf.get("package", "limit_system_support")
                 kargs.get("cb")[1][pkgName] = (kargs.get("package"), kargs.get("reason"))
         
-        packagesToUpdate = firmwaretools.repository.generateUpdateSet(r, firmwaretools.clifuncs.generateFullSystemInventory(ini), cb=(show_work, depFailures) )
+        packagesToUpdate = firmwaretools.repository.generateUpdateSet(r, firmwaretools.clifuncs.runInventory(ini), cb=(show_work, depFailures) )
         print "\033[2K\033[0G"  # clear line
         needUpdate = 0
         for pkg in packagesToUpdate.values():
