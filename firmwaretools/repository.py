@@ -1,4 +1,4 @@
-# vim:expandtab:autoindent:tabstop=4:shiftwidth=4:filetype=python:
+# vim:expandtab:autoindent:tabstop=4:shiftwidth=4:filetype=python:tw=0
 
   #############################################################################
   #
@@ -73,7 +73,7 @@ def generateInstallationOrder(packagesToUpdate, cb=(nullFunc, None)):
     # as we install them
     unionInventory = {}  # { 'pkgName': pkg, ... }
     for pkgName, details in packagesToUpdate.items():
-        unionInventory[pkgName] = details["current"]
+        unionInventory[pkgName] = details["device"]
         
     updatePackageList = [] # [ pkg, pkg, pkg ]
     for pkgName, details in packagesToUpdate.items():
@@ -100,26 +100,32 @@ def generateInstallationOrder(packagesToUpdate, cb=(nullFunc, None)):
 # suppose we do this the slow way for now, then get somebody smarter to help later
 def generateUpdateSet(repo, systemInventory, cb=(nullFunc, None)):
     packagesToUpdate = {}
-    for pkg in systemInventory:
-        packagesToUpdate[pkg.name] = { "current": pkg, "update": None }
+    for device in systemInventory:
+        packagesToUpdate[device.name] = { "device": device, "update": None, "available_updates": []}
 
     # generate union inventory
     unionInventory = {}
     for pkgName, details in packagesToUpdate.items():
-        unionInventory[pkgName] = details["current"]
-        if details["update"]:
-            unionInventory[pkgName] = details["update"]
+        unionInventory[pkgName] = details["device"]
+
+    for candidate in repo.iterPackages(cb=cb):
+        if packagesToUpdate.has_key(candidate.name):
+            available_updates = packagesToUpdate[candidate.name]['available_updates']
+            available_updates.append(candidate)
+            packagesToUpdate[candidate.name]['available_updates'] = available_updates
 
     workToDo = 1
     while workToDo:
         workToDo = 0
-        for candidate in repo.iterLatestPackages(cb=cb):
-            if checkRules(packagesToUpdate, candidate, unionInventory, cb=cb):
-                packagesToUpdate[candidate.name]["update"] = candidate
-                # update union inventory
-                unionInventory[candidate.name] = candidate
-                # need another run-through in case this fixes deps for another package
-                workToDo = 1
+
+        for pkgName, details in packagesToUpdate.items():
+            for candidate in details['available_updates']:
+                if checkRules(packagesToUpdate, candidate, unionInventory, cb=cb):
+                    packagesToUpdate[candidate.name]["update"] = candidate
+                    # update union inventory
+                    unionInventory[candidate.name] = candidate
+                    # need another run-through in case this fixes deps for another package
+                    workToDo = 1
 
     return packagesToUpdate
 

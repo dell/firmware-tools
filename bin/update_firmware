@@ -118,7 +118,7 @@ def main():
         print "\033[2K\033[0G"  # clear line
         needUpdate = 0
         for pkg in packagesToUpdate.values():
-            print "Checking %s - %s" % (pkg["current"].name, pkg["current"].version)
+            print "Checking %s - %s" % (pkg["device"].name, pkg["device"].version)
             if pkg["update"] is None:
                 print "\tNo update found"
             else:
