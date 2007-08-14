@@ -95,7 +95,7 @@ def generateInstallationOrder(packagesToUpdate, cb=(nullFunc, None)):
                 workToDo = 1
 
     if len(updatePackageList):
-        raise CircularDependencyError("packages have circular dependency")
+        raise CircularDependencyError("packages have circular dependency, or are otherwise uninstallable.")
 
 # suppose we do this the slow way for now, then get somebody smarter to help later
 def generateUpdateSet(repo, systemInventory, cb=(nullFunc, None)):
@@ -103,21 +103,23 @@ def generateUpdateSet(repo, systemInventory, cb=(nullFunc, None)):
     for device in systemInventory:
         packagesToUpdate[device.name] = { "device": device, "update": None, "available_updates": []}
 
-    # generate union inventory
+    # generate union inventory. Union inventory is used by the rules processing engine.
     unionInventory = {}
     for pkgName, details in packagesToUpdate.items():
         unionInventory[pkgName] = details["device"]
 
+    # for every device on system, attach a list of available updates for that device.
     for candidate in repo.iterPackages(cb=cb):
         if packagesToUpdate.has_key(candidate.name):
             available_updates = packagesToUpdate[candidate.name]['available_updates']
             available_updates.append(candidate)
             packagesToUpdate[candidate.name]['available_updates'] = available_updates
 
+    # for every device, look at the available updates to see if one can be applied.
+    # if we do any work, start over so that dependencies work themselves out over multiple iterations.
     workToDo = 1
     while workToDo:
         workToDo = 0
-
         for pkgName, details in packagesToUpdate.items():
             for candidate in details['available_updates']:
                 if checkRules(packagesToUpdate, candidate, unionInventory, cb=cb):
