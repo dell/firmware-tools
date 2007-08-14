@@ -25,6 +25,7 @@ import ConfigParser
 
 # our modules
 import firmwaretools.clifuncs
+import firmwaretools.trace_decorator as trace_decorator
 
 class CmdlineError(Exception):pass
 
@@ -33,6 +34,7 @@ def main():
     altConfig = 0
     overrides = []
     commaSeparated=0
+    verbose=0
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], "hc:o:ub", ["help", "config=", "overrides=", "up2date_mode", "bootstrap"])
@@ -49,6 +51,9 @@ def main():
                 overrides.append(argument)
             if option in ("-b", "--bootstrap"):
                 pass # ignore for backwards compat
+            if option in ("-v", "--verbose",):
+                verbose = verbose + 1
+                trace_decorator.debug["__main__"] = verbose
 
         # load standard configuration
         if not altConfig:
