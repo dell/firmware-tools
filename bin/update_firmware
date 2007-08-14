@@ -7,7 +7,7 @@
   # Dual Licenced under GNU GPL and OSL
   #
   #############################################################################
-"""update_firmware: 
+"""update_firmware:
 
 usage:
     -h | --help         print this message
@@ -77,7 +77,7 @@ def main():
         # load standard configuration
         if not altConfig:
             getConfig(ini, configLocations)
- 
+
         for over in overrides:
             section, key, value = over.split(",", 2)
             if not ini.has_section(section):
@@ -89,10 +89,10 @@ def main():
             if ini.has_option("main", "rpm_mode"):
                 v = ini.get("main", "rpm_mode")
             if v != 'auto':
-                print "Config does not specify automatic install during package install." 
+                print "Config does not specify automatic install during package install."
                 print "Please run update_firmware manually to install updates."
                 return 0
-    
+
         print
         print "Searching storage directory for available BIOS updates..."
         r = firmwaretools.repository.Repository( ini.get("main", "storage_topdir") )
@@ -113,14 +113,17 @@ def main():
                 if pkg.conf.has_option("package", "limit_system_support"):
                     pkgName = pkgName + "-" + pkg.conf.get("package", "limit_system_support")
                 kargs.get("cb")[1][pkgName] = (kargs.get("package"), kargs.get("reason"))
-        
+
         packagesToUpdate = firmwaretools.repository.generateUpdateSet(r, firmwaretools.clifuncs.runInventory(ini), cb=(show_work, depFailures) )
         print "\033[2K\033[0G"  # clear line
         needUpdate = 0
         for pkg in packagesToUpdate.values():
             print "Checking %s - %s" % (pkg["device"].name, pkg["device"].version)
+            for availPkg in pkg["available_updates"]:
+                print "\tAvailable: %s - %s" % (pkg["update"].name, pkg["update"].version)
+
             if pkg["update"] is None:
-                print "\tNo update found"
+                print "\tDid not find a newer package to install."
             else:
                 print "\tFound Update: %s - %s" % (pkg["update"].name, pkg["update"].version)
                 needUpdate = 1
@@ -131,9 +134,9 @@ def main():
         for pkg, reason in depFailures.values():
             print "\t%s - %s" % (pkg.name, pkg.version)
             print "\t\t REASON: %s" % reason
-            
+
         if not needUpdate:
-            print 
+            print
             print "This system does not appear to have any updates available."
             print "No action necessary."
             print
@@ -141,19 +144,19 @@ def main():
         else:
             print
             print "Found out of date packages."
-            print 
- 
+            print
+
         # if we get to this point, that means update is necessary.
         # any exit before this point means that there was an error, or no update
         # was necessary and should return non-zero
         if interactive == 2:
-            print 
+            print
             print "Test mode complete."
             print
             return 0
 
         if interactive == 1:
-            print 
+            print
             print "Please run the program with the '--yes' switch to enable BIOS update."
             print "   UPDATE NOT COMPLETED!"
             print
@@ -174,7 +177,7 @@ def main():
                 print "aborting update..."
                 print
                 print "The error message from the low-level command was:"
-                print 
+                print
                 print e
                 break
 
