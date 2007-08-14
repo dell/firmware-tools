@@ -1,4 +1,4 @@
-# vim:expandtab:autoindent:tabstop=4:shiftwidth=4:filetype=python:
+# vim:expandtab:autoindent:tabstop=4:shiftwidth=4:filetype=python:tw=0
 
   #############################################################################
   #
@@ -15,6 +15,7 @@ import os
 import sys
 import ConfigParser
 import traceback
+from trace_decorator import dprint,  decorateAllFunctions
 
 configLocations = [
     "/etc/firmware/firmware.conf",
@@ -53,60 +54,29 @@ def getBootstrapConfig(ini, prefix):
 
 
 def runInventory(ini):
-    plugins = getBootstrapConfig(ini, "")
-    for pymod in plugins.get("inventory_plugin", []):
-        try:
-            module = __import__(pymod, globals(),  locals(), [])
-            for i in pymod.split(".")[1:]:
-                module = getattr(module, i)
-
-            for package in module.InventoryGenerator():
-                yield package
-
-        except (ImportError):
-            pass
-        except:   # don't let module messups propogate up
-            #import traceback
-            #traceback.print_exc()
-            pass
-
+    return runSomething(ini, "", "inventory_plugin", "InventoryGenerator")
 
 def runBootstrapInventory(ini):
-    plugins = getBootstrapConfig(ini, "bootstrap_")
+    return runSomething(ini, "bootstrap_", "bootstrap_inventory_plugin", "BootstrapGenerator")
 
-    for pymod in plugins.get("bootstrap_inventory_plugin", []):
+# gets a list of modules and runs a generator function from each module
+def runSomething(ini, prefix, pluginName, function):
+    plugins = getBootstrapConfig(ini, prefix)
+
+    for pymod in plugins.get(pluginName, []):
         try:
             module = __import__(pymod, globals(),  locals(), [])
             for i in pymod.split(".")[1:]:
                 module = getattr(module, i)
 
-            for pkg in module.BootstrapGenerator():
-                yield pkg
+            for device in getattr(module,function)():
+                yield device
 
         except (ImportError):
             pass
         except:   # don't let module messups propogate up
-            #import traceback
-            #traceback.print_exc()
+            dprint(traceback.format_exc())
             pass
 
 
-def generateFullSystemInventory(ini):
-    plugins = getBootstrapConfig(ini, "")
-
-    for pymod in plugins.get("inventory_plugin", []):
-        try:
-            module = __import__(pymod, globals(),  locals(), [])
-            for i in pymod.split(".")[1:]:
-                module = getattr(module, i)
-
-            for pkg in module.InventoryGenerator():
-                yield pkg
-
-        except (ImportError):
-            pass
-        except:   # don't let module messups propogate up
-            #traceback.print_exc()
-            pass
-
-
+decorateAllFunctions(sys.modules[__name__])
