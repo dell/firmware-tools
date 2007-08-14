@@ -29,4 +29,6 @@ for i in *.tar.{gz,bz2} *.zip *.src.rpm; do
     cp $i $DEST
 done
 
-/var/ftp/pub/yum/dell-repo/software/_tools/upload_rpm.sh ./${RELEASE_STRING}-${RPM_RELEASE}*.src.rpm
+/var/ftp/pub/yum/dell-repo/software/_tools/upload_rpm.sh dist/${RELEASE_STRING}-${RPM_RELEASE}*.src.rpm
+
+git push --tags origin master:master
