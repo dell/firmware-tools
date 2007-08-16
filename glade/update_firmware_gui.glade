@@ -161,10 +161,23 @@
 	      <property name="show_arrow">True</property>
 
 	      <child>
-		<widget class="GtkToolButton" id="ApplyUpdates">
+		<widget class="GtkToolButton" id="Undo">
+		  <property name="visible">True</property>
+		  <property name="stock_id">gtk-undo</property>
+		  <property name="visible_horizontal">True</property>
+		  <property name="visible_vertical">True</property>
+		  <property name="is_important">False</property>
+		</widget>
+		<packing>
+		  <property name="expand">False</property>
+		  <property name="homogeneous">True</property>
+		</packing>
+	      </child>
+
+	      <child>
+		<widget class="GtkToolButton" id="toolbutton1">
 		  <property name="visible">True</property>
 		  <property name="label" translatable="yes">Update
-Firmware
 Now</property>
 		  <property name="use_underline">True</property>
 		  <property name="stock_id">gtk-jump-to</property>
@@ -197,7 +210,7 @@ Now</property>
 		  <property name="label" translatable="yes">Allow
 Downgrade</property>
 		  <property name="use_underline">True</property>
-		  <property name="stock_id">gtk-undo</property>
+		  <property name="stock_id">gtk-dialog-warning</property>
 		  <property name="visible_horizontal">True</property>
 		  <property name="visible_vertical">True</property>
 		  <property name="is_important">False</property>
@@ -267,7 +280,7 @@ Reflash</property>
       </child>
 
       <child>
-	<widget class="GtkStatusbar" id="statusbar1">
+	<widget class="GtkStatusbar" id="main_window_statusbar">
 	  <property name="visible">True</property>
 	  <property name="has_resize_grip">True</property>
 	</widget>

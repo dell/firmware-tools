@@ -114,13 +114,13 @@ def main():
                     pkgName = pkgName + "-" + pkg.conf.get("package", "limit_system_support")
                 kargs.get("cb")[1][pkgName] = (kargs.get("package"), kargs.get("reason"))
 
-        packagesToUpdate = firmwaretools.repository.generateUpdateSet(r, firmwaretools.clifuncs.runInventory(ini), cb=(show_work, depFailures) )
+        updateSet = firmwaretools.repository.generateUpdateSet(r, firmwaretools.clifuncs.runInventory(ini), cb=(show_work, depFailures) )
         print "\033[2K\033[0G"  # clear line
         needUpdate = 0
-        for pkg in packagesToUpdate.values():
-            print "Checking %s - %s" % (pkg["device"].name, pkg["device"].version)
-            for availPkg in pkg["available_updates"]:
-                print "\tAvailable: %s - %s" % (pkg["update"].name, pkg["update"].version)
+        for device in updateSet.iterDevices():
+            print "Checking %s - %s" % (device.name, device.version)
+            for availPkg in updateSet.iterAvailableUpdates(device):
+                print "\tAvailable: %s - %s" % (pkg.name, pkg.version)
 
             if pkg["update"] is None:
                 print "\tDid not find a newer package to install that meets all installation checks."

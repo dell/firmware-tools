@@ -67,101 +67,131 @@ def makePackage(configFile):
 # a null function that just eats args. Default callback
 def nullFunc(*args, **kargs): pass
 
-def generateInstallationOrder(packagesToUpdate, cb=(nullFunc, None)):
-    # generate initial union inventory
-    # we will start with no update packages and add them in one at a time
-    # as we install them
-    unionInventory = {}  # { 'pkgName': pkg, ... }
-    for pkgName, details in packagesToUpdate.items():
-        unionInventory[pkgName] = details["device"]
-        
-    updatePackageList = [] # [ pkg, pkg, pkg ]
-    for pkgName, details in packagesToUpdate.items():
-        if details["update"]:
-            updatePackageList.append(details["update"])
-
-    workToDo = 1
-    while workToDo:
-        workToDo = 0
-        for candidate in updatePackageList:
-            if checkRules(packagesToUpdate, candidate, unionInventory, cb=cb):
-                yield candidate
-
-                # move pkg from to-install list to inventory list
-                updatePackageList.remove(candidate)
-                unionInventory[candidate.name] = candidate
-
-                # need another run-through in case this fixes deps for another package
-                workToDo = 1
-
-    if len(updatePackageList):
-        raise CircularDependencyError("packages have circular dependency, or are otherwise uninstallable.")
-
-# suppose we do this the slow way for now, then get somebody smarter to help later
-def generateUpdateSet(repo, systemInventory, cb=(nullFunc, None)):
-    packagesToUpdate = {}
+def generateUpdateSet2(repo, systemInventory, cb=(nullFunc, None)):
+    set = UpdateSet()
     for device in systemInventory:
-        packagesToUpdate[device.name] = { "device": device, "update": None, "available_updates": []}
-
-    # generate union inventory. Union inventory is used by the rules processing engine.
-    unionInventory = {}
-    for pkgName, details in packagesToUpdate.items():
-        unionInventory[pkgName] = details["device"]
+        set.addDevice(device)
 
     # for every device on system, attach a list of available updates for that device.
     for candidate in repo.iterPackages(cb=cb):
-        if packagesToUpdate.has_key(candidate.name):
-            available_updates = packagesToUpdate[candidate.name]['available_updates']
-            available_updates.append(candidate)
-            packagesToUpdate[candidate.name]['available_updates'] = available_updates
+        set.addAvailablePackage(candidate)
 
-    # for every device, look at the available updates to see if one can be applied.
-    # if we do any work, start over so that dependencies work themselves out over multiple iterations.
-    workToDo = 1
-    while workToDo:
-        workToDo = 0
-        for pkgName, details in packagesToUpdate.items():
-            for candidate in details['available_updates']:
-                if checkRules(packagesToUpdate, candidate, unionInventory, cb=cb):
-                    packagesToUpdate[candidate.name]["update"] = candidate
-                    # update union inventory
+    set.calculateUpgradeList(cb)
+
+    return set
+
+
+class UpdateSet(object): 
+    def __init__(self, *args, **kargs):
+        self.deviceList = {}
+
+    def addDevice(self, device):
+        self.deviceList[device.name] = { "device": device, "update": None, "available_updates": []}
+
+    def addAvailablePackage(self, package):
+        if self.deviceList.has_key(package.name):
+            available_updates = self.deviceList[package.name]['available_updates']
+            available_updates.append(package)
+            self.deviceList[package.name]['available_updates'] = available_updates
+
+    def hasDevice(self, device):
+        return self.deviceList.has_key(device.name)
+
+    def getUpdatePackageForDeviceName(self, deviceName):
+        ret = None
+        if self.deviceList.has_key(deviceName):
+            ret = self.deviceList[deviceName]['update']
+        return ret
+
+    def iterDevices(self):
+        for device, details in self.deviceList.items():
+            yield details["device"]
+
+    def iterAvailableUpdates(self, device):
+        for pkg in self.deviceList[device.name]["available_updates"]:
+            yield pkg
+
+    def checkRules(self, candidate, unionInventory, cb=(nullFunc, None)):
+        # check if candidate update even applies to this system
+        if not self.deviceList.get(candidate.name):
+            cb[0]( who="checkRules", what="package_not_present_on_system", package=candidate, cb=cb)
+            return 0
+            
+        # is candidate newer than what is either installed or scheduled for install
+        if unionInventory[candidate.name].compareVersion(candidate) >= 0:
+            cb[0]( who="checkRules", what="package_not_newer", package=candidate, systemPackage=unionInventory[candidate.name], cb=cb)
+            return 0
+    
+        #check to see if this package has specific system requirements
+        # for now, check if we are on a specific system by checking for
+        # a BIOS package w/ matching id. In future, may have specific 
+        # system package.
+        if candidate.conf.has_option("package", "limit_system_support"):
+            systemVenDev = candidate.conf.get("package", "limit_system_support")
+            if not unionInventory.get( "system_bios(%s)" % systemVenDev ):
+                cb[0]( who="checkRules", what="fail_limit_system_check", package=candidate, cb=cb )
+                return 0
+    
+        #check generic dependencies
+        if candidate.conf.has_option("package", "requires"):
+            requires = candidate.conf.get("package", "requires")
+            if len(requires):
+                d = dep_parser.DepParser(requires, unionInventory, self.deviceList)
+                if not d.depPass:
+                    cb[0]( who="checkRules", what="fail_dependency_check", package=candidate, reason=d.reason, cb=cb )
+                    return 0
+        return 1
+
+
+    def calculateUpgradeList(self, cb=(nullFunc, None)):
+        unionInventory = {}
+        for deviceName, details in self.deviceList.items():
+            unionInventory[deviceName] = details["device"]
+
+        # for every device, look at the available updates to see if one can be applied.
+        # if we do any work, start over so that dependencies work themselves out over multiple iterations.
+        workToDo = 1
+        while workToDo:
+            workToDo = 0
+            for pkgName, details in self.deviceList.items():
+                for candidate in details['available_updates']:
+                    if self.checkRules(candidate, unionInventory, cb=cb):
+                        self.deviceList[candidate.name]["update"] = candidate
+                        # update union inventory
+                        unionInventory[candidate.name] = candidate
+                        # need another run-through in case this fixes deps for another package
+                        workToDo = 1
+
+    def generateInstallationOrder(self, cb=(nullFunc, None)):
+        unionInventory = {}
+        for deviceName, details in self.deviceList.items():
+            unionInventory[deviceName] = details["device"]
+
+        # generate initial union inventory
+        # we will start with no update packages and add them in one at a time
+        # as we install them
+        updateDeviceList = [] # [ pkg, pkg, pkg ]
+        for pkgName, details in self.deviceList.items():
+            if details["update"]:
+                updateDeviceList.append(details["update"])
+    
+        workToDo = 1
+        while workToDo:
+            workToDo = 0
+            for candidate in updateDeviceList:
+                if self.checkRules(candidate, unionInventory, cb=cb):
+                    yield candidate
+    
+                    # move pkg from to-install list to inventory list
+                    updateDeviceList.remove(candidate)
                     unionInventory[candidate.name] = candidate
+    
                     # need another run-through in case this fixes deps for another package
                     workToDo = 1
+    
+        if len(updateDeviceList):
+            raise CircularDependencyError("packages have circular dependency, or are otherwise uninstallable.")
 
-    return packagesToUpdate
-
-
-def checkRules(packagesToUpdate, candidate, unionInventory, cb=(nullFunc, None)):
-    # check if candidate update even applies to this system
-    if not packagesToUpdate.get(candidate.name):
-        cb[0]( who="checkRules", what="package_not_present_on_system", package=candidate, cb=cb)
-        return 0
-        
-    # is candidate newer than what is either installed or scheduled for install
-    if unionInventory[candidate.name].compareVersion(candidate) >= 0:
-        cb[0]( who="checkRules", what="package_not_newer", package=candidate, systemPackage=unionInventory[candidate.name], cb=cb)
-        return 0
-
-    #check to see if this package has specific system requirements
-    # for now, check if we are on a specific system by checking for
-    # a BIOS package w/ matching id. In future, may have specific 
-    # system package.
-    if candidate.conf.has_option("package", "limit_system_support"):
-        systemVenDev = candidate.conf.get("package", "limit_system_support")
-        if not unionInventory.get( "system_bios(%s)" % systemVenDev ):
-            cb[0]( who="checkRules", what="fail_limit_system_check", package=candidate, cb=cb )
-            return 0
-
-    #check generic dependencies
-    if candidate.conf.has_option("package", "requires"):
-        requires = candidate.conf.get("package", "requires")
-        if len(requires):
-            d = dep_parser.DepParser(requires, unionInventory, packagesToUpdate)
-            if not d.depPass:
-                cb[0]( who="checkRules", what="fail_dependency_check", package=candidate, reason=d.reason, cb=cb )
-                return 0
-    return 1
 
 
 class Repository(object):
