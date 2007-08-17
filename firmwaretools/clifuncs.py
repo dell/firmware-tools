@@ -74,10 +74,9 @@ def runSomething(ini, prefix, pluginName, function):
                 yield thing
 
         except (ImportError):
-            pass
+            dprint(traceback.format_exc())
         except:   # don't let module messups propogate up
             dprint(traceback.format_exc())
-            pass
 
 
 decorateAllFunctions(sys.modules[__name__])

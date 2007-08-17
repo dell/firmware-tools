@@ -40,15 +40,15 @@ class MockPackage2(package.RepositoryPackage):
 # standard entry point -- Bootstrap
 def BootstrapGenerator(): 
     for i in [ "mock_package(ven_0x1028_dev_0x1234)", "testpack_different" ]:
-        yield package.InstalledPackage( name=i )
+        yield package.Device( name=i )
 
 # standard entry point -- Inventory
 #  -- this is a generator function, but system can only have one system bios,
 #     so, only one yield, no loop
 def InventoryGenerator(): 
-    p = package.InstalledPackage( name="mock_package(ven_0x1028_dev_0x1234)", version="a05")
+    p = package.Device( name="mock_package(ven_0x1028_dev_0x1234)", version="a05")
     yield p
-    p = package.InstalledPackage( name="testpack_different", version="a04")
+    p = package.Device( name="testpack_different", version="a04")
     yield p
 
 #==============================================================

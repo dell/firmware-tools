@@ -24,7 +24,7 @@ import package
 # new standard entry point. 
 def BootstrapGenerator(): 
     for i in lspciGeneratorFactory():
-        yield package.InstalledPackage(name=process_pci_dev(i))
+        yield package.PciDevice(name=process_pci_dev(i))
 
 
 # a regular expression to parse 'lspci -n -m' output

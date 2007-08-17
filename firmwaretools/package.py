@@ -35,11 +35,8 @@ class Package(object):
     def compareVersion(self, otherPackage):
         return self.compareStrategy(self.version, otherPackage.version)
 
-class InstalledPackage(Package):
-    pass
-
-#
-class Device(InstalledPackage):
+# Base class for all devices on a system
+class Device(Package):
     pass
 
 # required: pci bus, device, function, pci ven/dev
