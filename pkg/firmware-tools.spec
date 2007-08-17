@@ -44,7 +44,7 @@ Summary:        Scripts and tools to manage firmware and BIOS updates
 
 Group:          Applications/System
 # License is actually GPL/OSL dual license (GPL Compatible), but rpmlint complains
-License:        GPL style
+License:        GPLv2+ or OSL
 URL:            http://linux.dell.com/libsmbios/download/ 
 Source0:        http://linux.dell.com/libsmbios/download/%{name}/%{name}-%{version}/%{name}-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
@@ -99,6 +99,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Fri Aug 17 2007 Michael E Brown <michael_e_brown at dell.com> - 1.4.2-1
+- rebase to upstream release
+
 * Tue May 1 2007 Michael E Brown <michael_e_brown at dell.com> - 1.2.6-1
 - disable empty debuginfo package
 
