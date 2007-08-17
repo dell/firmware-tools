@@ -31,18 +31,6 @@ import firmwaretools.pycompat
 import firmwaretools.clifuncs
 import firmwaretools.trace_decorator as trace_decorator
 
-configLocations = [
-    "/etc/firmware/firmware.conf",
-    "/etc/firmware/firmware.d/*.conf",
-    "~/.firmware.conf",
-    ]
-
-def getConfig(ini, fileList):
-    for i in fileList:
-        for j in glob.glob(i):
-            if os.path.exists(j):
-                ini.read(j)
-
 class CmdlineError(Exception):pass
 
 def main():
@@ -60,7 +48,7 @@ def main():
                 print __doc__
                 sys.exit(0)
             if option in ("-c", "--config"):
-                getConfig(ini, [argument,])
+                firmwaretools.clifuncs.getConfig(ini, [argument,])
                 altConfig = 1
             if option in ("-o", "--override"):
                 overrides.append(argument)
@@ -76,7 +64,7 @@ def main():
 
         # load standard configuration
         if not altConfig:
-            getConfig(ini, configLocations)
+            firmwaretools.clifuncs.getConfig(ini, configLocations)
 
         for over in overrides:
             section, key, value = over.split(",", 2)
