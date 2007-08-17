@@ -1,5 +1,5 @@
 #!/usr/bin/python2
-# vim:expandtab:autoindent:tabstop=4:shiftwidth=4:filetype=python:
+# vim:expandtab:autoindent:tabstop=4:shiftwidth=4:filetype=python:tw=0
 """
     this is the documentation...
 """
@@ -24,6 +24,7 @@ import firmwaretools.trace_decorator as trace_decorator
 import firmwaretools.guihelpers as guihelpers
 import firmwaretools.repository as repository
 import firmwaretools.clifuncs
+import firmwaretools.package
 
 PROGRAM_NAME="Firmware Inventory GUI"
 PROGRAM_VERSION="1.0"
@@ -37,39 +38,43 @@ class InventoryFirmware:
         self.wTree.get_widget("about_dialog").destroy()
 
         # create model for src treeview
-        self.inventoryTreeview = self.wTree.get_widget("inventory_treeview")
+        self.inventoryTreeView = self.wTree.get_widget("inventory_treeview")
         self.inventoryTreeModel= gtk.TreeStore(
                 object,                # device or package
-                gobject.TYPE_BOOLEAN,  # for device == enable update for device (checkbox), 
+                gobject.TYPE_BOOLEAN,  # for device == enable update for device (checkbox),
                                        # for package == update to this package
                 gobject.TYPE_STRING,   # display name
                 gobject.TYPE_STRING    # version
                 )
-        self.inventoryTreeview.set_model(self.inventoryTreeModel)
+        self.inventoryTreeView.set_model(self.inventoryTreeModel)
         self.COLUMN_DEVICE = 0
         self.COLUMN_DEVICE_ENABLE_UPDATE = 1
         self.COLUMN_DEVICE_DISPLAY_NAME = 2
-        self.COLUMN_DEVICE_CUR_FW_VER = 3
+        self.COLUMN_DEVICE_FW_VER = 3
 
         # add column headers to the src treeview
-        self.inventoryTreeview.set_headers_visible(True)
+        self.inventoryTreeView.set_headers_visible(True)
         renderer=gtk.CellRendererToggle()
-        column=gtk.TreeViewColumn("Enable Update",renderer, text=self.COLUMN_DEVICE_ENABLE_UPDATE)
-        column.set_resizable(True)
-        self.inventoryTreeview.append_column(column)
+        renderer.set_property('activatable', True)
+        renderer.connect('toggled', self.toggle_enabled_cb, self.inventoryTreeModel)
+        column=gtk.TreeViewColumn("Enable",renderer)
+        column.add_attribute(renderer, "active", self.COLUMN_DEVICE_ENABLE_UPDATE)
+        column.set_cell_data_func(renderer, self.cell_data_func, data=self)
+        self.inventoryTreeView.append_column(column)
 
         renderer=gtk.CellRendererText()
         column=gtk.TreeViewColumn("Display Name",renderer, text=self.COLUMN_DEVICE_DISPLAY_NAME)
         column.set_resizable(True)
-        self.inventoryTreeview.append_column(column)
+        self.inventoryTreeView.append_column(column)
+        self.inventoryTreeView.set_expander_column(column)
 
         renderer=gtk.CellRendererText()
-        column=gtk.TreeViewColumn("Firmware Version",renderer, text=self.COLUMN_DEVICE_DISPLAY_NAME)
+        column=gtk.TreeViewColumn("Firmware Version",renderer, text=self.COLUMN_DEVICE_FW_VER)
         column.set_resizable(True)
-        self.inventoryTreeview.append_column(column)
+        self.inventoryTreeView.append_column(column)
 
         # let us select multiple releases
-        self.inventoryTreeview.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
+        self.inventoryTreeView.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
 
         # get handle to status bar
         self.statusBar = self.wTree.get_widget("main_window_status_bar")
@@ -87,16 +92,22 @@ class InventoryFirmware:
         ctx = self.statusBar.get_context_id("inventory")
         self.statusBar.push(ctx, "Performing system inventory...")
 
-        # collect inventory
+        # special function to make sure GUI updates smoothly while we
+        # generate the update set
         def myYield(*args, **kargs):
             # eats all its args...
             guihelpers.gtkYield()
 
+        # make sure current GUI is fully displayed
+        guihelpers.gtkYield()
+
+        # collect inventory
         r = firmwaretools.repository.Repository( ini.get("main", "storage_topdir") )
         firmwaretools.package.RepositoryPackage.mainIni = ini
         self.updateSet = repository.generateUpdateSet(r, firmwaretools.clifuncs.runInventory(ini), cb=(myYield, None))
 
         self._populate()
+        self.inventoryTreeView.expand_all()
 
         # set status == ready
         self.statusBar.pop(ctx)
@@ -105,10 +116,28 @@ class InventoryFirmware:
         self.inventoryTreeModel.clear()
         for device in self.updateSet.iterDevices():
             guihelpers.gtkYield()
-            iter = self.inventoryTreeModel.append(None, [device, True, str(displayname), device.version])
+            iter = self.inventoryTreeModel.append(None, [device, True, str(device), device.version])
             for availPkg in self.updateSet.iterAvailableUpdates(device):
                 guihelpers.gtkYield()
                 self.inventoryTreeModel.append(iter, [availPkg, False, str(availPkg), availPkg.version])
+
+    #
+    # treeview toggle related
+    #
+    def cell_data_func(self, column, renderer, model, iter):
+        pyobj = model.get_value(iter,self.COLUMN_DEVICE)
+        print "pyobj class: %s" % pyobj.__class__
+        if isinstance(pyobj, firmwaretools.package.Device):
+            renderer.set_property("radio", "false")
+        else:
+            renderer.set_property("radio", "true")
+
+    def toggle_enabled_cb(self, renderer, path, user_data, *args, **kargs):
+        model = user_data
+        model[path][self.COLUMN_DEVICE_ENABLE_UPDATE] = not model[path][self.COLUMN_DEVICE_ENABLE_UPDATE]
+    #
+    # end toggle functions
+    #
 
     def on_help_about(self, *args):
         wTree = gtk.glade.XML(TOPDIR + self.GLADE_FILE, "about_dialog")
@@ -221,14 +250,14 @@ def _info(type, value, tb):
     dialog.details = frame
     dialog.set_position(gtk.WIN_POS_CENTER)
     dialog.set_gravity(gtk.gdk.GRAVITY_CENTER)
-    
+
     while 1:
         resp = dialog.run()
         if resp == 1:
             dialog.details.show()
             dialog.action_area.get_children()[1].set_sensitive(0)
             continue
-        else: 
+        else:
             dialog.destroy()
             break
 
