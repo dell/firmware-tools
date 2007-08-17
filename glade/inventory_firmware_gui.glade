@@ -323,4 +323,16 @@ Reflash</property>
   </child>
 </widget>
 
+<widget class="GtkAboutDialog" id="about_dialog">
+  <property name="visible">True</property>
+  <property name="destroy_with_parent">True</property>
+  <property name="name" translatable="yes">Inventory_firmware_gui</property>
+  <property name="copyright" translatable="yes">Copyright 2007 Dell, Inc</property>
+  <property name="license" translatable="yes">GPL version 2 or later</property>
+  <property name="wrap_license">False</property>
+  <property name="website">http://linux.dell.com/wiki/index.php/Oss/Firmware_Tools</property>
+  <property name="authors">Michael Brown &lt;Michael_E_Brown@dell.com&gt;</property>
+  <property name="translator_credits" translatable="yes" comments="TRANSLATORS: Replace this string with your names, one name per line.">translator-credits</property>
+</widget>
+
 </glade-interface>
