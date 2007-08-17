@@ -28,6 +28,8 @@ class Package(object):
             setattr(self, key, value)
 
     def __str__(self):
+        if hasattr(self, "displayname"):
+            return self.displayname
         return self.name
 
     def compareVersion(self, otherPackage):
