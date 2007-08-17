@@ -70,7 +70,7 @@ class TestCase(unittest.TestCase):
     def testGenerateUpdateSet1(self):
         import firmwaretools.repository as repository
         import firmwaretools.package as package
-        p = package.InstalledPackage()
+        p = package.Device()
         p.name = "testpack"
         p.version = "a04"
         systemInventory = [p,]
@@ -83,7 +83,7 @@ class TestCase(unittest.TestCase):
     def testGenerateUpdateSet2(self):
         import firmwaretools.repository as repository
         import firmwaretools.package as package
-        p = package.InstalledPackage()
+        p = package.Device()
         p.name = "testpack_different"
         p.version = "a04"
         systemInventory = [p,]
@@ -96,7 +96,7 @@ class TestCase(unittest.TestCase):
     def testGenerateUpdateSet3(self):
         import firmwaretools.repository as repository
         import firmwaretools.package as package
-        p = package.InstalledPackage()
+        p = package.Device()
         p.name = "testpack"
         p.version = "a08"
         systemInventory = [p,]
@@ -108,7 +108,7 @@ class TestCase(unittest.TestCase):
     def testGenerateUpdateSet4_andInstall(self):
         import firmwaretools.repository as repository
         import firmwaretools.package as package
-        p = package.InstalledPackage()
+        p = package.Device()
         p.name = "testpack_newpkgstrat"
         p.version = "a04"
         systemInventory = [p,]
@@ -124,15 +124,15 @@ class TestCase(unittest.TestCase):
         import firmwaretools.repository as repository
         import firmwaretools.package as package
 
-        p = package.InstalledPackage()
+        p = package.Device()
         p.name = "testpack"
         p.version = "a04"
 
-        q = package.InstalledPackage()
+        q = package.Device()
         q.name = "testpack_different"
         q.version = "a04"
 
-        r = package.InstalledPackage()
+        r = package.Device()
         r.name = "testpack_another"
         r.version = "a05"
 
@@ -149,7 +149,7 @@ class TestCase(unittest.TestCase):
     def testGenerateUpdateSetInstallDefault(self):
         import firmwaretools.repository as repository
         import firmwaretools.package as package
-        p = package.InstalledPackage()
+        p = package.Device()
         p.name = "testpack"
         p.version = "a04"
         systemInventory = [p,]
@@ -160,7 +160,7 @@ class TestCase(unittest.TestCase):
     def testGenerateUpdateSetInstall(self):
         import firmwaretools.repository as repository
         import firmwaretools.package as package
-        p = package.InstalledPackage()
+        p = package.Device()
         p.name = "testpack_different"
         p.version = "a04"
         systemInventory = [p,]
@@ -175,7 +175,7 @@ class TestCase(unittest.TestCase):
         # apply to current system
         import firmwaretools.repository as repository
         import firmwaretools.package as package
-        p = package.InstalledPackage()
+        p = package.Device()
         p.name = "system_specific"
         p.version = "a01"
         systemInventory = [p,]
@@ -190,11 +190,11 @@ class TestCase(unittest.TestCase):
         import firmwaretools.repository as repository
         import firmwaretools.package as package
 
-        p = package.InstalledPackage()
+        p = package.Device()
         p.name = "system_specific"
         p.version = "a01"
 
-        q = package.InstalledPackage()
+        q = package.Device()
         q.name = "system_bios(ven_0x5555_dev_0x1234)"
         q.version = "a00"
 
@@ -211,11 +211,11 @@ class TestCase(unittest.TestCase):
         import firmwaretools.repository as repository
         import firmwaretools.package as package
 
-        p = package.InstalledPackage()
+        p = package.Device()
         p.name = "system_specific"
         p.version = "a01"
 
-        q = package.InstalledPackage()
+        q = package.Device()
         q.name = "system_bios(ven_0x5555_dev_0x4321)"
         q.version = "a00"
 
@@ -233,7 +233,7 @@ class TestCase(unittest.TestCase):
         import firmwaretools.repository as repository
         import firmwaretools.package as package
 
-        p = package.InstalledPackage()
+        p = package.Device()
         p.name = "test_requires"
         p.version = "a01"
 
@@ -249,15 +249,15 @@ class TestCase(unittest.TestCase):
         import firmwaretools.repository as repository
         import firmwaretools.package as package
 
-        p = package.InstalledPackage()
+        p = package.Device()
         p.name = "test_requires"
         p.version = "a01"
 
-        q = package.InstalledPackage()
+        q = package.Device()
         q.name = "otherpackage"
         q.version = "a00"
 
-        r = package.InstalledPackage()
+        r = package.Device()
         r.name = "foo"
         r.version = "43"
 
@@ -272,15 +272,15 @@ class TestCase(unittest.TestCase):
         import firmwaretools.repository as repository
         import firmwaretools.package as package
 
-        p = package.InstalledPackage()
+        p = package.Device()
         p.name = "testorder1"
         p.version = "a01"
 
-        q = package.InstalledPackage()
+        q = package.Device()
         q.name = "testorder2"
         q.version = "a01"
 
-        r = package.InstalledPackage()
+        r = package.Device()
         r.name = "testorder3"
         r.version = "a01"
 
@@ -300,15 +300,15 @@ class TestCase(unittest.TestCase):
         import firmwaretools.repository as repository
         import firmwaretools.package as package
 
-        p = package.InstalledPackage()
+        p = package.Device()
         p.name = "testorder1"
         p.version = "a01"
 
-        q = package.InstalledPackage()
+        q = package.Device()
         q.name = "testorder2"
         q.version = "a08"
 
-        r = package.InstalledPackage()
+        r = package.Device()
         r.name = "testorder3"
         r.version = "a01"
 
