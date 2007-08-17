@@ -97,10 +97,10 @@ class UpdateSet(object):
     def hasDevice(self, device):
         return self.deviceList.has_key(device.name)
 
-    def getUpdatePackageForDeviceName(self, deviceName):
+    def getUpdatePackageForDevice(self, device):
         ret = None
-        if self.deviceList.has_key(deviceName):
-            ret = self.deviceList[deviceName]['update']
+        if self.deviceList.has_key(device.name):
+            ret = self.deviceList[device.name]['update']
         return ret
 
     def iterDevices(self):

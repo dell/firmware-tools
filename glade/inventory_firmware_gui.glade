@@ -4,6 +4,8 @@
 <glade-interface>
 
 <widget class="GtkWindow" id="MainWindow">
+  <property name="width_request">460</property>
+  <property name="height_request">380</property>
   <property name="visible">True</property>
   <property name="title" translatable="yes">Update Firmware</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
@@ -18,6 +20,7 @@
   <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
   <property name="focus_on_map">True</property>
   <property name="urgency_hint">False</property>
+  <signal name="destroy" handler="on_quit_app" last_modification_time="Fri, 17 Aug 2007 04:21:45 GMT"/>
 
   <child>
     <widget class="GtkVBox" id="vbox1">
@@ -51,7 +54,7 @@
 		      <property name="visible">True</property>
 		      <property name="label">gtk-quit</property>
 		      <property name="use_stock">True</property>
-		      <signal name="activate" handler="on_quit1_activate" last_modification_time="Wed, 15 Aug 2007 04:37:26 GMT"/>
+		      <signal name="activate" handler="on_file_quit" last_modification_time="Fri, 17 Aug 2007 04:19:22 GMT"/>
 		    </widget>
 		  </child>
 		</widget>
@@ -103,6 +106,32 @@
 		      <signal name="activate" handler="on_delete1_activate" last_modification_time="Wed, 15 Aug 2007 04:37:26 GMT"/>
 		    </widget>
 		  </child>
+
+		  <child>
+		    <widget class="GtkSeparatorMenuItem" id="separator1">
+		      <property name="visible">True</property>
+		    </widget>
+		  </child>
+
+		  <child>
+		    <widget class="GtkCheckMenuItem" id="allow_downgrade">
+		      <property name="visible">True</property>
+		      <property name="label" translatable="yes">Allow _Downgrade</property>
+		      <property name="use_underline">True</property>
+		      <property name="active">False</property>
+		      <signal name="activate" handler="on_allow_downgrade_activate" last_modification_time="Fri, 17 Aug 2007 04:32:55 GMT"/>
+		    </widget>
+		  </child>
+
+		  <child>
+		    <widget class="GtkCheckMenuItem" id="allow_reflash">
+		      <property name="visible">True</property>
+		      <property name="label" translatable="yes">Allow _Reflash</property>
+		      <property name="use_underline">True</property>
+		      <property name="active">False</property>
+		      <signal name="activate" handler="on_allow_reflash_activate" last_modification_time="Fri, 17 Aug 2007 04:32:55 GMT"/>
+		    </widget>
+		  </child>
 		</widget>
 	      </child>
 	    </widget>
@@ -126,11 +155,11 @@
 		<widget class="GtkMenu" id="menuitem4_menu">
 
 		  <child>
-		    <widget class="GtkMenuItem" id="about1">
+		    <widget class="GtkMenuItem" id="about">
 		      <property name="visible">True</property>
 		      <property name="label" translatable="yes">_About</property>
 		      <property name="use_underline">True</property>
-		      <signal name="activate" handler="on_about1_activate" last_modification_time="Wed, 15 Aug 2007 04:37:26 GMT"/>
+		      <signal name="activate" handler="on_help_about" last_modification_time="Fri, 17 Aug 2007 04:30:10 GMT"/>
 		    </widget>
 		  </child>
 		</widget>
@@ -141,7 +170,7 @@
 	<packing>
 	  <property name="padding">0</property>
 	  <property name="expand">False</property>
-	  <property name="fill">False</property>
+	  <property name="fill">True</property>
 	</packing>
       </child>
 
@@ -259,7 +288,7 @@ Reflash</property>
 	  <property name="window_placement">GTK_CORNER_TOP_LEFT</property>
 
 	  <child>
-	    <widget class="GtkTreeView" id="treeview1">
+	    <widget class="GtkTreeView" id="inventory_treeview">
 	      <property name="visible">True</property>
 	      <property name="can_focus">True</property>
 	      <property name="headers_visible">True</property>
@@ -280,7 +309,7 @@ Reflash</property>
       </child>
 
       <child>
-	<widget class="GtkStatusbar" id="main_window_statusbar">
+	<widget class="GtkStatusbar" id="main_window_status_bar">
 	  <property name="visible">True</property>
 	  <property name="has_resize_grip">True</property>
 	</widget>

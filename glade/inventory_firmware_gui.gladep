@@ -2,8 +2,8 @@
 <!DOCTYPE glade-project SYSTEM "http://glade.gnome.org/glade-project-2.0.dtd">
 
 <glade-project>
-  <name>Update_firmware_gui</name>
-  <program_name>update_firmware_gui</program_name>
+  <name>Inventory_firmware_gui</name>
+  <program_name>Inventory_firmware_gui</program_name>
   <gnome_support>FALSE</gnome_support>
   <output_main_file>FALSE</output_main_file>
   <output_support_files>FALSE</output_support_files>

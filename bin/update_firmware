@@ -164,7 +164,7 @@ def main():
 
 
         print "Running updates..."
-        for pkg in firmwaretools.repository.generateInstallationOrder(packagesToUpdate):
+        for pkg in updateSet.generateInstallationOrder():
             print "Installing %s - %s" % (pkg.name, pkg.version)
             try:
                 ret = pkg.install()

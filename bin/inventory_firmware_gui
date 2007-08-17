@@ -1,5 +1,8 @@
 #!/usr/bin/python2
 # vim:expandtab:autoindent:tabstop=4:shiftwidth=4:filetype=python:
+"""
+    this is the documentation...
+"""
 
 # import arranged alphabetically
 import commands
@@ -16,38 +19,45 @@ import gtk, gtk.glade, pango
 import gobject
 import gnome.ui
 
-PROGRAM_NAME="Update Firmware GUI"
+import firmwaretools.trace_decorator as trace_decorator
+
+PROGRAM_NAME="Firmware Inventory GUI"
 PROGRAM_VERSION="1.0"
 
-class UpdateFirmware:
-    GLADE_FILE = '/glade/update_firmware_gui.glade'
-    def __init__(self, source, destination):
+class InventoryFirmware:
+    GLADE_FILE = '/glade/inventory_firmware_gui.glade'
+    def __init__(self):
         self.wTree = gtk.glade.XML(TOPDIR + self.GLADE_FILE)
         self.wTree.signal_autoconnect(self)
         self.main_window = self.wTree.get_widget("MainWindow")
 
-        # show splash screen until we finish fully loading
-        self.wTree.get_widget("splash").show()
-
         # create model for src treeview
-        self.srcTreeView = self.wTree.get_widget("source_treeview")
-        self.srcTreeModel= gtk.TreeStore(gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING)
-        self.srcTreeView.set_model(self.srcTreeModel)
-        self.COLUMN_SRC_RELNAME = 0
-        self.COLUMN_DST_RELNAME = 1
-        self.COLUMN_SRC_STATUS = 2
-        self.COLUMN_DST_STATUS = 3
+        self.inventoryTreeview = self.wTree.get_widget("inventory_treeview")
+        self.inventoryTreeModel= gtk.TreeStore(gobject.TYPE_BOOLEAN, gobject.TYPE_STRING, gobject.TYPE_STRING)
+        self.inventoryTreeview.set_model(self.inventoryTreeModel)
+        self.COLUMN_DEVICE_ENABLE_UPDATE = 0
+        self.COLUMN_DEVICE_DISPLAY_NAME = 1
+        self.COLUMN_DEVICE_CUR_FW_VER = 2
 
         # add column headers to the src treeview
-        self.srcTreeView.set_headers_visible(gtk.TRUE)
+        self.inventoryTreeview.set_headers_visible(True)
+        renderer=gtk.CellRendererToggle()
+        column=gtk.TreeViewColumn("Enable Update",renderer, text=self.COLUMN_DEVICE_ENABLE_UPDATE)
+        column.set_resizable(True)
+        self.inventoryTreeview.append_column(column)
+
         renderer=gtk.CellRendererText()
-        column=gtk.TreeViewColumn("release",renderer, text=self.COLUMN_SRC_RELNAME)
-        column.set_resizable(gtk.TRUE)
-        self.srcTreeView.append_column(column)
+        column=gtk.TreeViewColumn("Display Name",renderer, text=self.COLUMN_DEVICE_DISPLAY_NAME)
+        column.set_resizable(True)
+        self.inventoryTreeview.append_column(column)
+
+        renderer=gtk.CellRendererText()
+        column=gtk.TreeViewColumn("Current Firmware Version",renderer, text=self.COLUMN_DEVICE_DISPLAY_NAME)
+        column.set_resizable(True)
+        self.inventoryTreeview.append_column(column)
 
         # let us select multiple releases
-        self.srcTreeView.get_selection().set_mode(gtk.SELECTION_NONE)
-        self.dstTreeView.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
+        self.inventoryTreeview.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
 
         # get handle to status bar
         self.statusBar = self.wTree.get_widget("main_window_status_bar")
@@ -55,151 +65,10 @@ class UpdateFirmware:
         # make sure to do this after all gui elements have been set up.
         # set up mappers and unit of work. populate treeviews
         self.tooltips = gtk.Tooltips()
-        self.uow = util.unitofwork.NewUnitOfWork()
-        self._setSrcMapper( source )
-        self._setDstMapper( destination )
-        self._populate()
-
-        # get rid of splash screen once we have everything ready
-        self.wTree.get_widget("splash").destroy()
 
         # show main window
         self.main_window.show()
 
-    def _setDstMapper(self, destinationDir):
-        self.dstMapper = util.mapper.MapperFactory("ReleaseMapperIni", destinationDir)
-        self.uow.setDefaultMapper( self.dstMapper )
-        self.tooltips.set_tip(self.wTree.get_widget("destination_eventbox"), destinationDir)
-
-    def _writeText(self, text):
-        self.textBuffer.insert(self.textBuffer.get_end_iter(), text)
-        self.wTree.get_widget("text_output").scroll_to_mark(self.textBuffer.get_insert(), 0)
-
-    def _writeTextUsingOutputObj( self, outputObj, header, doYield=1, rowNum=None, treeRow=None ):
-        self._writeText("="*40 + "\n")
-        self._writeText(header)
-        getText = ( (outputObj.getInfo, ""), 
-                    (outputObj.getWarnings, "WARNING: "), 
-                    (outputObj.getErrors, "ERROR: "))
-        for i in getText:
-            for line in i[0]():
-                self._writeText("  " + i[1] + line)
-
-        if doYield:
-            util.guihelpers.gtkYield()
-
-        if rowNum or treeRow:
-            self._refresh_one(rowNum=rowNum, treeRow=treeRow)
-            
-
-    def _populate(self):
-        self.srcTreeModel.clear()
-        self.dstMapper.dropCleanCache()
-        self.srcMapper.dropCleanCache()
-        cookie = self._bannerBegin( statusContext="populate", statusText="Scanning releases. Please wait...")
-        try:
-            for srcRel in self.srcMapper.iterate():
-                # make sure we don't appear to lock up gui
-                util.guihelpers.gtkYield()
-    
-                try:
-                    dstRelName = self.dstMapper.get( srcRel.getReleaseName(), ignoreDeletionMark=1 ).getReleaseName()
-                except release.releasemapper.NonexistentObject:
-                    dstRelName = ""
-    
-                iter = self.srcTreeModel.append(None, [srcRel.getReleaseName(), dstRelName, "", ""])
-                self._refresh_one( self.srcTreeModel.get_path( iter ) )
-    
-            for dstRel in self.dstMapper.iterate(ignoreDeletionMark=1):
-                # make sure we don't appear to lock up gui
-                util.guihelpers.gtkYield()
-    
-                try:
-                    self.srcMapper.get(dstRel.getReleaseName())
-                    continue 
-                except release.releasemapper.NonexistentObject:
-                    pass
-                
-                iter = self.srcTreeModel.append(None, ["", dstRel.getReleaseName(), "", ""])
-                self._refresh_one( self.srcTreeModel.get_path( iter ) )
-    
-            self.srcMapper.dropCleanCache()
-            self.dstMapper.dropCleanCache()
-        finally:
-            self._bannerEnd( cookie )
-
-    def _refresh_all(self):
-        cookie = self._bannerBegin( statusContext="refresh", statusText="Refreshing...")
-        try:
-            for row in xrange(len(self.srcTreeModel)):
-                # make sure we don't appear to lock up gui
-                util.guihelpers.gtkYield()
-                self._refresh_one(row)
-                util.guihelpers.gtkYield()
-        finally:
-            self._bannerEnd( cookie )
-
-    def _refresh_one(self, rowNum=None, treeRow=None):
-        if treeRow is None:
-            treeRow = self.srcTreeModel[rowNum]
-
-        srcRelName = treeRow[self.COLUMN_SRC_RELNAME]
-        dstRelName = treeRow[self.COLUMN_DST_RELNAME]
-
-        assert( srcRelName or dstRelName )
-
-        # one of these is guaranteed to be non-null
-        nameToUse = srcRelName
-        if not nameToUse:
-            nameToUse = dstRelName
-
-        # refresh dst rel name
-        try:
-            dstRelName = self.dstMapper.get( nameToUse, ignoreDeletionMark=1 ).getReleaseName()
-        except release.releasemapper.NonexistentObject:
-            dstRelName = ""
-
-        # refresh src rel name
-        try:
-            srcRelName = self.srcMapper.get( nameToUse ).getReleaseName()
-        except release.releasemapper.NonexistentObject:
-            srcRelName = ""
-
-        treeRow[self.COLUMN_SRC_RELNAME] = srcRelName 
-        treeRow[self.COLUMN_DST_RELNAME] = dstRelName 
-        treeRow[self.COLUMN_SRC_STATUS] = ""
-        treeRow[self.COLUMN_DST_STATUS] = release.helperfunctions.getDestStatusString( srcRelName, dstRelName, self.dstMapper )
-
-    def _bannerBegin(self, bannerText=None, statusText=None, statusContext=None, setWait=1):
-        cookie = None
-        if statusContext and statusText:
-            context = self.statusBar.get_context_id(statusContext)
-            msgId = self.statusBar.push( context, statusText )
-            cookie = (context, msgId)
-
-        if bannerText:
-            self._writeText( "\n\n\n")
-            self._writeText( ("====" * 20)  + "\n")
-            self._writeText(bannerText + "\n")
-            self._writeText( ("====" * 20)  + "\n")
-
-        if setWait:
-            watch = gtk.gdk.Cursor(gtk.gdk.WATCH) 
-            if self.main_window.window:
-                self.main_window.window.set_cursor(watch)
-
-        util.guihelpers.gtkYield()
-        return cookie
-
-    def _bannerEnd(self, cookie, bannerText=None):
-        if cookie:
-            self.statusBar.remove( *cookie )
-        if bannerText:
-            self._writeText( ("====" * 20)  + "\n")
-            self._writeText(bannerText + "\n")
-            self._writeText( ("====" * 20)  + "\n")
-        if self.main_window.window:
-            self.main_window.window.set_cursor(None)
 
     def menu_help_about(self, *args):
         wTree = gtk.glade.XML(TOPDIR + self.GLADE_FILE, "about")
@@ -212,243 +81,34 @@ class UpdateFirmware:
         self.on_quit_app( allowCancel = 1 )
 
     def on_quit_app(self, *args, **kargs):
-        resp = 0
-        if util.unitofwork.UnitOfWork().workInQueue():
-            dialog = gtk.MessageDialog(parent=None,
-                    flags=0,
-                    type=gtk.MESSAGE_WARNING,
-                    buttons=gtk.BUTTONS_NONE,
-                    message_format=_("<big><b>There is uncommitted work present. Do you want to quit, losing this work?</b></big>"))
-            dialog.set_title(_("Unsaved work present"))
-            dialog.vbox.get_children()[0].get_children()[1].set_property("use-markup", True)
-            dialog.add_button(gtk.STOCK_QUIT, 0)
-            dialog.add_button(gtk.STOCK_SAVE, 1)
-            if kargs.get("allowCancel", 0):
-                dialog.add_button(gtk.STOCK_CANCEL, 2)
-    
-            resp = dialog.run()
-            dialog.destroy()
+        gtk.main_quit()
 
-        if resp == 1:
-            self.uow.commit()
 
-        if resp != 2:
-            gtk.main_quit()
 
-    def on_clear_clicked(self, *args):
-        self.textBuffer.delete( self.textBuffer.get_start_iter(), self.textBuffer.get_end_iter() )
-
-    def on_refresh_clicked(self, *args):
-        self._populate()
-
-    def on_commit_clicked(self, *args):
-        cookie = self._bannerBegin( statusContext="commit", statusText="Committing. Please wait...")
-        try:
-            self.uow.commit()
-            self.srcMapper.dropCleanCache()
-            self.dstMapper.dropCleanCache()
-            self._refresh_all()
-        finally:
-            self._bannerEnd( cookie )
-
-    def on_rollback_clicked(self, *args):
-        cookie = self._bannerBegin( statusContext="rollback", statusText="Rolling back changes. Please wait...")
-        try:
-            self.uow.rollback()
-            self.srcMapper.dropCleanCache()
-            self.dstMapper.dropCleanCache()
-            self._refresh_all()
-        finally:
-            self._bannerEnd( cookie )
-
-    def on_destination_treeview_button_press_event(self, *args):
-        treeview = args[0]
-        event = args[1]
-        # which button was clicked?
-        if event.button == 1:
-            # only on double-click.
-            if event.type == gtk.gdk._2BUTTON_PRESS:
-                rows = util.guihelpers.getSelectionPaths(treeview)
-                if len(rows) == 1:
-                    if self.srcTreeModel[rows[0]][self.COLUMN_DST_RELNAME]:
-                        self.show_release_properties_dialog(self.srcTreeModel[rows[0]][self.COLUMN_DST_RELNAME], rows[0])
-
-    def on_properties_activate(self, *args):
-        for rel in util.guihelpers.getSelectionPaths(self.dstTreeView):
-            if self.srcTreeModel[rel][self.COLUMN_DST_RELNAME]:
-                self.show_release_properties_dialog(self.srcTreeModel[rel][self.COLUMN_DST_RELNAME], rel)
-
-    def show_release_properties_dialog(self, releaseName, row):
-        if not self.propertiesDialogCache.get(releaseName):
-            self.propertiesDialogCache[releaseName] = 1
-
-            wTree = gtk.glade.XML(TOPDIR + self.GLADE_FILE, "release_properties")
-    
-            releaseObj = self.dstMapper.get(releaseName, ignoreDeletionMark=1)
-            import release.releaseadapter
-            adapter =  release.releaseadapter.DialogAdapter( releaseObj, wTree, self.propertiesDialogCache, (self._refresh_one, row) )
-            self.propertiesDialogCache[releaseName] = adapter
-
-        else:
-            while self.propertiesDialogCache[releaseName] == 1:
-                util.guihelpers.gtkYield()
-
-            self.propertiesDialogCache[releaseName].reactivate()
-
-    def on_rollback_selected_clicked(self, *args):
-        for row in util.guihelpers.getSelectionPaths(self.dstTreeView):
-            if self.srcTreeModel[row][self.COLUMN_DST_RELNAME]:
-                releaseName = self.srcTreeModel[row][self.COLUMN_DST_RELNAME]
-                print "rolling back selected: %s" % releaseName
-                releaseObj = self.dstMapper.get(releaseName, ignoreDeletionMark=1)
-                self.uow.rollbackOne( releaseObj, self.dstMapper )
-                self._refresh_one( treeRow=self.srcTreeModel[row] )
-
-    def on_add_files_clicked(self, button):
-        cookie = self._bannerBegin(
-                statusContext = "add_files_op", 
-                statusText = "Adding files. Please wait...", 
-                bannerText = "Adding files.")
-
-        try:
-            out = util.output.Output()
-            for row in util.guihelpers.getSelectionPaths(self.dstTreeView):
-                dstRelName = self.srcTreeModel[row][self.COLUMN_DST_RELNAME]
-                if not dstRelName: continue
-    
-                try:
-                    dstRelObj = self.dstMapper.get( dstRelName )
-                except release.releasemapper.NonexistentObject:
-                    continue
-    
-                release.helperfunctions.addFiles( dstRelObj, out )
-    
-                self._writeTextUsingOutputObj(out, "Updating file list for: %s\n" % dstRelObj.getReleaseName(), rowNum=row)
-   
-        finally:
-            self._bannerEnd( cookie, "Done adding files." )
-
-    def on_scan_for_work_clicked(self, *args):
-        cookie = self._bannerBegin(
-                statusContext = "scan_work", 
-                statusText = "Scanning releases. Please wait...", 
-                bannerText = "Scanning for uncompleted tasks.")
-
-        try:
-            out = util.output.Output()
-            for row in self.srcTreeModel:
-                dstRelName = row[self.COLUMN_DST_RELNAME]
-                if not dstRelName: continue
-                try:
-                    dstRelObj = self.dstMapper.get( dstRelName )
-                except release.releasemapper.NonexistentObject:
-                    continue
-                
-                if release.helperfunctions.scanReleaseForWork( dstRelObj, out ):
-                    self._writeTextUsingOutputObj(out, "%s\n" % dstRelObj.getReleaseName())
-        finally:
-            self._bannerEnd( cookie, "Scan for uncompleted tasks is complete." )
-
-    def on_mark_deleted_clicked(self, button):
-        cookie = self._bannerBegin(
-                statusContext = "delete", 
-                statusText = "Marking selected releases as deleted. Please wait...", 
-                bannerText = "Marking releases as deleted.")
-
-        try:
-            for row in util.guihelpers.getSelectionPaths(self.dstTreeView):
-                dstRelName = self.srcTreeModel[row][self.COLUMN_DST_RELNAME]
-    
-                if not dstRelName: continue
-    
-                try:
-                    dstRel = self.dstMapper.get( dstRelName )
-                    dstRel.markDeleted()
-                    self._writeText("Marked release as deleted:  %s\n" % dstRel.getReleaseName())
-                except release.releasemapper.NonexistentObject:
-                    pass
-    
-                self._refresh_one(row)
-    
-        finally:
-            self._bannerEnd( cookie, "Done." )
-
-    def on_merge_clicked(self, button):
-        out = util.output.Output()
-        cookie = self._bannerBegin(
-                statusContext = "merge", 
-                statusText = "Merging selected releases. Please wait...", 
-                bannerText = "Merging releases.")
-
-        try:
-            for row in util.guihelpers.getSelectionPaths(self.dstTreeView):
-                srcRelName = self.srcTreeModel[row][self.COLUMN_SRC_RELNAME]
-                dstRelName = self.srcTreeModel[row][self.COLUMN_DST_RELNAME]
-    
-                assert( srcRelName or dstRelName )
-                release.helperfunctions.reconcile( self.srcMapper, self.dstMapper, srcRelName, dstRelName, out )
-    
-                self._writeTextUsingOutputObj(out, "Reconcile %s\n" % dstRelName, rowNum=row)
-    
-        finally:
-            self._bannerEnd( cookie, "Done merging." )
-
-    def on_fix_sbs_clicked(self, *args):
-        out = util.output.Output()
-        cookie = self._bannerBegin(
-                statusContext = "sbs", 
-                statusText = "Fixing SBS platform support list. Please wait...", 
-                bannerText = "Fixing SBS platform support list.")
-
-        try:
-            for row in self.srcTreeModel:
-                dstRelName = row[self.COLUMN_DST_RELNAME]
-                if not dstRelName: continue
-                try:
-                    dstRel = self.dstMapper.get( dstRelName )
-                except release.releasemapper.NonexistentObject:
-                    continue
-    
-                w2000fixed = release.helperfunctions.mergePlatforms(dstRel, 'w2000', 'w2000sbs', out)
-                w2003fixed = release.helperfunctions.mergePlatforms(dstRel, 'w2003', 'w2003sbs', out)
-                if w2000fixed or w2003fixed:
-                    self._writeTextUsingOutputObj(out, "fix sbs %s\n" % dstRel.getReleaseName(), treeRow=row)
-
-        finally:
-            self._bannerEnd( cookie, "Done fixing SBS." )
 
 def main():
     pretty = 0
 
     global TOPDIR
     TOPDIR = ""
-    source = None
-    destination = None
     verbose = 0
     warnings = 0
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hvwt:s:d:", ["help", "verbose", "warnings", "source=", "dest=", "topdir="])
+        opts, args = getopt.getopt(sys.argv[1:], "hvwt:", ["help", "verbose", "warnings", "topdir="])
         for option, argument in opts:
             if option in ("-h", "--help"):
                 print __doc__
                 sys.exit(1)
-            if option in ("-s", "--source"):
-                source = argument
-            if option in ("-d", "--dest"):
-                destination = argument
             if option in ("-v", "--verbose"):
                 verbose = verbose + 1
+                trace_decorator.debug["__main__"] = verbose
             if option in ("-w", "--warnings"):
                 warnings = warnings + 1
             if option in ("-t", "--topdir"):
                 TOPDIR = argument
 
-
-        if source is None: raise getopt.GetoptError("arg1", "arg2")
-        if destination is None: raise getopt.GetoptError("arg1", "arg2")
-
         gnome.init(PROGRAM_NAME, PROGRAM_VERSION)
-        test = MergeGui(source, destination)
+        test = InventoryFirmware()
         gtk.main()
 
     except (getopt.GetoptError):
