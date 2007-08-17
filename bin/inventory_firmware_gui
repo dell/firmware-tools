@@ -5,6 +5,7 @@
 """
 
 # import arranged alphabetically
+import ConfigParser
 import commands
 import cStringIO
 import getopt
@@ -20,24 +21,35 @@ import gobject
 import gnome.ui
 
 import firmwaretools.trace_decorator as trace_decorator
+import firmwaretools.guihelpers as guihelpers
+import firmwaretools.repository as repository
+import firmwaretools.clifuncs
 
 PROGRAM_NAME="Firmware Inventory GUI"
 PROGRAM_VERSION="1.0"
 
 class InventoryFirmware:
     GLADE_FILE = '/glade/inventory_firmware_gui.glade'
-    def __init__(self):
+    def __init__(self, ini):
         self.wTree = gtk.glade.XML(TOPDIR + self.GLADE_FILE)
         self.wTree.signal_autoconnect(self)
         self.main_window = self.wTree.get_widget("MainWindow")
+        self.wTree.get_widget("about_dialog").destroy()
 
         # create model for src treeview
         self.inventoryTreeview = self.wTree.get_widget("inventory_treeview")
-        self.inventoryTreeModel= gtk.TreeStore(gobject.TYPE_BOOLEAN, gobject.TYPE_STRING, gobject.TYPE_STRING)
+        self.inventoryTreeModel= gtk.TreeStore(
+                object,                # device or package
+                gobject.TYPE_BOOLEAN,  # for device == enable update for device (checkbox), 
+                                       # for package == update to this package
+                gobject.TYPE_STRING,   # display name
+                gobject.TYPE_STRING    # version
+                )
         self.inventoryTreeview.set_model(self.inventoryTreeModel)
-        self.COLUMN_DEVICE_ENABLE_UPDATE = 0
-        self.COLUMN_DEVICE_DISPLAY_NAME = 1
-        self.COLUMN_DEVICE_CUR_FW_VER = 2
+        self.COLUMN_DEVICE = 0
+        self.COLUMN_DEVICE_ENABLE_UPDATE = 1
+        self.COLUMN_DEVICE_DISPLAY_NAME = 2
+        self.COLUMN_DEVICE_CUR_FW_VER = 3
 
         # add column headers to the src treeview
         self.inventoryTreeview.set_headers_visible(True)
@@ -52,7 +64,7 @@ class InventoryFirmware:
         self.inventoryTreeview.append_column(column)
 
         renderer=gtk.CellRendererText()
-        column=gtk.TreeViewColumn("Current Firmware Version",renderer, text=self.COLUMN_DEVICE_DISPLAY_NAME)
+        column=gtk.TreeViewColumn("Firmware Version",renderer, text=self.COLUMN_DEVICE_DISPLAY_NAME)
         column.set_resizable(True)
         self.inventoryTreeview.append_column(column)
 
@@ -61,6 +73,8 @@ class InventoryFirmware:
 
         # get handle to status bar
         self.statusBar = self.wTree.get_widget("main_window_status_bar")
+        ctx = self.statusBar.get_context_id("main")
+        self.statusBar.push(ctx, "Ready")
 
         # make sure to do this after all gui elements have been set up.
         # set up mappers and unit of work. populate treeviews
@@ -69,21 +83,47 @@ class InventoryFirmware:
         # show main window
         self.main_window.show()
 
+        # set status == collecting inventory
+        ctx = self.statusBar.get_context_id("inventory")
+        self.statusBar.push(ctx, "Performing system inventory...")
 
-    def menu_help_about(self, *args):
-        wTree = gtk.glade.XML(TOPDIR + self.GLADE_FILE, "about")
-        wTree.get_widget("about").set_property('name',PROGRAM_NAME)
-        wTree.get_widget("about").set_property('version',PROGRAM_VERSION)
+        # collect inventory
+        def myYield(*args, **kargs):
+            # eats all its args...
+            guihelpers.gtkYield()
+
+        r = firmwaretools.repository.Repository( ini.get("main", "storage_topdir") )
+        firmwaretools.package.RepositoryPackage.mainIni = ini
+        self.updateSet = repository.generateUpdateSet(r, firmwaretools.clifuncs.runInventory(ini), cb=(myYield, None))
+
+        self._populate()
+
+        # set status == ready
+        self.statusBar.pop(ctx)
+
+    def _populate(self):
+        self.inventoryTreeModel.clear()
+        for device in self.updateSet.iterDevices():
+            guihelpers.gtkYield()
+            iter = self.inventoryTreeModel.append(None, [device, True, str(displayname), device.version])
+            for availPkg in self.updateSet.iterAvailableUpdates(device):
+                guihelpers.gtkYield()
+                self.inventoryTreeModel.append(iter, [availPkg, False, str(availPkg), availPkg.version])
+
+    def on_help_about(self, *args):
+        wTree = gtk.glade.XML(TOPDIR + self.GLADE_FILE, "about_dialog")
+        wTree.get_widget("about_dialog").set_property('name',PROGRAM_NAME)
+        wTree.get_widget("about_dialog").set_property('version',PROGRAM_VERSION)
         # 'run' will make this dialog modal
-        wTree.get_widget("about").run()
+        wTree.get_widget("about_dialog").run()
+        wTree.get_widget("about_dialog").destroy()
 
     def on_file_quit(self, *args):
         self.on_quit_app( allowCancel = 1 )
 
     def on_quit_app(self, *args, **kargs):
+        # check kargs['allowCancel']
         gtk.main_quit()
-
-
 
 
 def main():
@@ -91,14 +131,22 @@ def main():
 
     global TOPDIR
     TOPDIR = ""
+    ini = ConfigParser.ConfigParser()
     verbose = 0
     warnings = 0
+    altConfig = 0
+    overrides = []
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hvwt:", ["help", "verbose", "warnings", "topdir="])
+        opts, args = getopt.getopt(sys.argv[1:], "hvwt:c:o:", ["help", "verbose", "warnings", "topdir=", "config=", "overrides=",])
         for option, argument in opts:
             if option in ("-h", "--help"):
                 print __doc__
                 sys.exit(1)
+            if option in ("-c", "--config"):
+                firmwaretools.clifuncs.getConfig(ini, [argument,])
+                altConfig = 1
+            if option in ("-o", "--override"):
+                overrides.append(argument)
             if option in ("-v", "--verbose"):
                 verbose = verbose + 1
                 trace_decorator.debug["__main__"] = verbose
@@ -107,8 +155,19 @@ def main():
             if option in ("-t", "--topdir"):
                 TOPDIR = argument
 
+        # load standard configuration
+        if not altConfig:
+            firmwaretools.clifuncs.getConfig(ini, firmwaretools.clifuncs.configLocations)
+
+        for over in overrides:
+            section, key, value = over.split(",", 2)
+            if not ini.has_section(section):
+                ini.add_section(section)
+            ini.set(section, key, value)
+
+
         gnome.init(PROGRAM_NAME, PROGRAM_VERSION)
-        test = InventoryFirmware()
+        test = InventoryFirmware(ini)
         gtk.main()
 
     except (getopt.GetoptError):
