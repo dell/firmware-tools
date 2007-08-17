@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # vim:ai:ts=4:sw=4:et:filetype=python:
 
 #future imports always first
