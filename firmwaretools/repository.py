@@ -67,7 +67,7 @@ def makePackage(configFile):
 # a null function that just eats args. Default callback
 def nullFunc(*args, **kargs): pass
 
-def generateUpdateSet2(repo, systemInventory, cb=(nullFunc, None)):
+def generateUpdateSet(repo, systemInventory, cb=(nullFunc, None)):
     set = UpdateSet()
     for device in systemInventory:
         set.addDevice(device)
