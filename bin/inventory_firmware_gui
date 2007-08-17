@@ -54,17 +54,20 @@ class InventoryFirmware:
 
         # add column headers to the src treeview
         self.inventoryTreeView.set_headers_visible(True)
+
         renderer=gtk.CellRendererToggle()
-        renderer.set_property('activatable', True)
-        renderer.connect('toggled', self.toggle_enabled_cb, self.inventoryTreeModel)
-        column=gtk.TreeViewColumn("Enable",renderer)
+        #renderer.set_property('activatable', True)
+        #renderer.connect('toggled', self.toggle_enabled_cb, self.inventoryTreeModel)
+
+        column=gtk.TreeViewColumn("Flash",renderer)
         column.add_attribute(renderer, "active", self.COLUMN_DEVICE_ENABLE_UPDATE)
-        column.set_cell_data_func(renderer, self.cell_data_func, data=self)
+        column.set_cell_data_func(renderer, self.cell_data_func_toggle)
         self.inventoryTreeView.append_column(column)
 
         renderer=gtk.CellRendererText()
         column=gtk.TreeViewColumn("Display Name",renderer, text=self.COLUMN_DEVICE_DISPLAY_NAME)
         column.set_resizable(True)
+        column.set_cell_data_func(renderer, self.cell_data_func_display_name)
         self.inventoryTreeView.append_column(column)
         self.inventoryTreeView.set_expander_column(column)
 
@@ -119,25 +122,27 @@ class InventoryFirmware:
             iter = self.inventoryTreeModel.append(None, [device, True, str(device), device.version])
             for availPkg in self.updateSet.iterAvailableUpdates(device):
                 guihelpers.gtkYield()
-                self.inventoryTreeModel.append(iter, [availPkg, False, str(availPkg), availPkg.version])
+                toggle=False
+                if self.updateSet.getUpdatePackageForDevice(device) == availPkg:
+                    toggle=True
+                self.inventoryTreeModel.append(iter, [availPkg, toggle, str(availPkg), availPkg.version])
 
-    #
-    # treeview toggle related
-    #
-    def cell_data_func(self, column, renderer, model, iter):
+    def cell_data_func_display_name(self, column, cell, model, iter):
         pyobj = model.get_value(iter,self.COLUMN_DEVICE)
-        print "pyobj class: %s" % pyobj.__class__
+        if not isinstance(pyobj, firmwaretools.package.Device):
+            text = cell.get_property("text")
+            cell.set_property("text", "available: %s" % text)
+
+    def cell_data_func_toggle(self, column, cell, model, iter):
+        pyobj = model.get_value(iter,self.COLUMN_DEVICE)
         if isinstance(pyobj, firmwaretools.package.Device):
-            renderer.set_property("radio", "false")
+            cell.set_property("radio", False)
         else:
-            renderer.set_property("radio", "true")
+            cell.set_property("radio", True)
 
     def toggle_enabled_cb(self, renderer, path, user_data, *args, **kargs):
         model = user_data
         model[path][self.COLUMN_DEVICE_ENABLE_UPDATE] = not model[path][self.COLUMN_DEVICE_ENABLE_UPDATE]
-    #
-    # end toggle functions
-    #
 
     def on_help_about(self, *args):
         wTree = gtk.glade.XML(TOPDIR + self.GLADE_FILE, "about_dialog")
