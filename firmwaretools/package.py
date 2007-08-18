@@ -47,7 +47,6 @@ class RepositoryPackage(Package):
     mainIni = None
     def __init__(self, *args, **kargs):
         self.installFunction = None
-        self.conf = None
         self.path = None
         super(RepositoryPackage, self).__init__(*args, **kargs)
         
@@ -56,3 +55,8 @@ class RepositoryPackage(Package):
             return self.installFunction(self)
 
         raise NoInstaller("Attempt to install a package with no install function. Name: %s, Version: %s" % (self.name, self.version))
+
+
+class MockRepositoryPackage(RepositoryPackage):
+    def install(self):
+        print "MockRepositoryPackage -> Install pkg(%s)  version(%s)" % (str(self), self.version)
