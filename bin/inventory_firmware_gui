@@ -26,8 +26,8 @@ import firmwaretools.repository as repository
 import firmwaretools.clifuncs
 import firmwaretools.package
 
-PROGRAM_NAME="Firmware Inventory GUI"
-PROGRAM_VERSION="1.0"
+PROGRAM_NAME="Firmware Inventory and Update GUI"
+version="1.4.3"
 
 class InventoryFirmware:
     GLADE_FILE = '/glade/inventory_firmware_gui.glade'
@@ -200,7 +200,7 @@ class InventoryFirmware:
     def on_help_about(self, *args):
         wTree = gtk.glade.XML(TOPDIR + self.GLADE_FILE, "about_dialog")
         wTree.get_widget("about_dialog").set_property('name',PROGRAM_NAME)
-        wTree.get_widget("about_dialog").set_property('version',PROGRAM_VERSION)
+        wTree.get_widget("about_dialog").set_property('version',version)
         # 'run' will make this dialog modal
         wTree.get_widget("about_dialog").run()
         wTree.get_widget("about_dialog").destroy()
@@ -253,7 +253,7 @@ def main():
             ini.set(section, key, value)
 
 
-        gnome.init(PROGRAM_NAME, PROGRAM_VERSION)
+        gnome.init(PROGRAM_NAME, version)
         test = InventoryFirmware(ini)
         gtk.main()
 
