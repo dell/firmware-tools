@@ -37,7 +37,7 @@ def main():
     verbose=0
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hc:o:ub", ["help", "config=", "overrides=", "up2date_mode", "bootstrap"])
+        opts, args = getopt.getopt(sys.argv[1:], "hc:o:ubv", ["help", "config=", "overrides=", "up2date_mode", "bootstrap", "verbose"])
         for option, argument in opts:
             if option in ("-h", "--help"):
                 print __doc__
@@ -67,9 +67,9 @@ def main():
 
         for pkg in firmwaretools.clifuncs.runBootstrapInventory(ini):
             if commaSeparated:
-                sys.stdout.write( "%s," % pkg )
+                sys.stdout.write( "%s," % pkg.name )
             else:
-                print "%s" % pkg
+                print "%s" % pkg.name
 
 
     except CmdlineError, e:
