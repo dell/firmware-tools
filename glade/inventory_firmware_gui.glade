@@ -114,22 +114,22 @@
 		  </child>
 
 		  <child>
-		    <widget class="GtkCheckMenuItem" id="allow_downgrade">
+		    <widget class="GtkCheckMenuItem" id="menu_allow_downgrade">
 		      <property name="visible">True</property>
 		      <property name="label" translatable="yes">Allow _Downgrade</property>
 		      <property name="use_underline">True</property>
 		      <property name="active">False</property>
-		      <signal name="activate" handler="on_allow_downgrade_activate" last_modification_time="Fri, 17 Aug 2007 04:32:55 GMT"/>
+		      <signal name="activate" handler="on_menu_allow_downgrade_activate" last_modification_time="Sat, 18 Aug 2007 15:48:14 GMT"/>
 		    </widget>
 		  </child>
 
 		  <child>
-		    <widget class="GtkCheckMenuItem" id="allow_reflash">
+		    <widget class="GtkCheckMenuItem" id="menu_allow_reflash">
 		      <property name="visible">True</property>
 		      <property name="label" translatable="yes">Allow _Reflash</property>
 		      <property name="use_underline">True</property>
 		      <property name="active">False</property>
-		      <signal name="activate" handler="on_allow_reflash_activate" last_modification_time="Fri, 17 Aug 2007 04:32:55 GMT"/>
+		      <signal name="activate" handler="on_menu_allow_reflash_activate" last_modification_time="Sat, 18 Aug 2007 15:48:14 GMT"/>
 		    </widget>
 		  </child>
 		</widget>
@@ -234,7 +234,7 @@ Now</property>
 	      </child>
 
 	      <child>
-		<widget class="GtkToggleToolButton" id="AllowDowngrade">
+		<widget class="GtkToggleToolButton" id="toolbar_allow_downgrade">
 		  <property name="visible">True</property>
 		  <property name="label" translatable="yes">Allow
 Downgrade</property>
@@ -244,6 +244,7 @@ Downgrade</property>
 		  <property name="visible_vertical">True</property>
 		  <property name="is_important">False</property>
 		  <property name="active">False</property>
+		  <signal name="toggled" handler="on_toolbar_allow_downgrade_toggled" last_modification_time="Sat, 18 Aug 2007 15:49:15 GMT"/>
 		</widget>
 		<packing>
 		  <property name="expand">False</property>
@@ -252,7 +253,7 @@ Downgrade</property>
 	      </child>
 
 	      <child>
-		<widget class="GtkToggleToolButton" id="AllowReflash">
+		<widget class="GtkToggleToolButton" id="toolbar_allow_reflash">
 		  <property name="visible">True</property>
 		  <property name="label" translatable="yes">Allow
 Reflash</property>
@@ -262,6 +263,7 @@ Reflash</property>
 		  <property name="visible_vertical">True</property>
 		  <property name="is_important">False</property>
 		  <property name="active">False</property>
+		  <signal name="toggled" handler="on_toolbar_allow_reflash_toggled" last_modification_time="Sat, 18 Aug 2007 15:49:43 GMT"/>
 		</widget>
 		<packing>
 		  <property name="expand">False</property>

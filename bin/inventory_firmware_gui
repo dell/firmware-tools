@@ -37,42 +37,57 @@ class InventoryFirmware:
         self.main_window = self.wTree.get_widget("MainWindow")
         self.wTree.get_widget("about_dialog").destroy()
 
+        # set up toggles
+        self.allowDowngrade = False
+        self.allowReflash = False
+        self.toolbarAllowDowngrade = self.wTree.get_widget("toolbar_allow_downgrade")
+        self.toolbarAllowReflash = self.wTree.get_widget("toolbar_allow_reflash")
+        self.menuAllowDowngrade = self.wTree.get_widget("menu_allow_downgrade")
+        self.menuAllowReflash = self.wTree.get_widget("menu_allow_reflash")
+        
+
         # create model for src treeview
         self.inventoryTreeView = self.wTree.get_widget("inventory_treeview")
         self.inventoryTreeModel= gtk.TreeStore(
                 object,                # device or package
                 gobject.TYPE_BOOLEAN,  # for device == enable update for device (checkbox),
                                        # for package == update to this package
-                gobject.TYPE_STRING,   # display name
                 gobject.TYPE_STRING    # version
                 )
         self.inventoryTreeView.set_model(self.inventoryTreeModel)
         self.COLUMN_DEVICE = 0
         self.COLUMN_DEVICE_ENABLE_UPDATE = 1
-        self.COLUMN_DEVICE_DISPLAY_NAME = 2
-        self.COLUMN_DEVICE_FW_VER = 3
+        self.COLUMN_DEVICE_FW_VER = 2
 
         # add column headers to the src treeview
         self.inventoryTreeView.set_headers_visible(True)
 
+        # select, status, criticality, package name, component, type (bios/firmware/driver), current ver, repo ver
+
         renderer=gtk.CellRendererToggle()
+        renderer.set_property("radio", False)
         #renderer.set_property('activatable', True)
         #renderer.connect('toggled', self.toggle_enabled_cb, self.inventoryTreeModel)
-
         column=gtk.TreeViewColumn("Flash",renderer)
         column.add_attribute(renderer, "active", self.COLUMN_DEVICE_ENABLE_UPDATE)
         column.set_cell_data_func(renderer, self.cell_data_func_toggle)
         self.inventoryTreeView.append_column(column)
 
-        renderer=gtk.CellRendererText()
-        column=gtk.TreeViewColumn("Display Name",renderer, text=self.COLUMN_DEVICE_DISPLAY_NAME)
+        renderer=gtk.CellRendererToggle()
+        renderer.set_property("radio", True)
+        #renderer.set_property('activatable', True)
+        #renderer.connect('toggled', self.toggle_enabled_cb, self.inventoryTreeModel)
+        column=gtk.TreeViewColumn("Display Name",renderer)
         column.set_resizable(True)
+        renderer=gtk.CellRendererText()
+        column.pack_start(renderer)
         column.set_cell_data_func(renderer, self.cell_data_func_display_name)
         self.inventoryTreeView.append_column(column)
         self.inventoryTreeView.set_expander_column(column)
 
-        renderer=gtk.CellRendererText()
-        column=gtk.TreeViewColumn("Firmware Version",renderer, text=self.COLUMN_DEVICE_FW_VER)
+        renderer = gtk.CellRendererText()
+        column=gtk.TreeViewColumn("Current Version",renderer, text=self.COLUMN_DEVICE_FW_VER)
+        column.set_cell_data_func(renderer, self.cell_data_func_version)
         column.set_resizable(True)
         self.inventoryTreeView.append_column(column)
 
@@ -119,30 +134,68 @@ class InventoryFirmware:
         self.inventoryTreeModel.clear()
         for device in self.updateSet.iterDevices():
             guihelpers.gtkYield()
-            iter = self.inventoryTreeModel.append(None, [device, True, str(device), device.version])
+            toggle=False
+            if self.updateSet.getUpdatePackageForDevice(device) is not None:
+                toggle=True
+            iter = self.inventoryTreeModel.append(None, [device, toggle, device.version])
             for availPkg in self.updateSet.iterAvailableUpdates(device):
                 guihelpers.gtkYield()
                 toggle=False
                 if self.updateSet.getUpdatePackageForDevice(device) == availPkg:
                     toggle=True
-                self.inventoryTreeModel.append(iter, [availPkg, toggle, str(availPkg), availPkg.version])
+                self.inventoryTreeModel.append(iter, [availPkg, toggle, availPkg.version])
 
     def cell_data_func_display_name(self, column, cell, model, iter):
         pyobj = model.get_value(iter,self.COLUMN_DEVICE)
-        if not isinstance(pyobj, firmwaretools.package.Device):
-            text = cell.get_property("text")
-            cell.set_property("text", "available: %s" % text)
+        renderers = column.get_cell_renderers()
+        text = str(pyobj)
+        if isinstance(pyobj, firmwaretools.package.Device):
+            renderers[0].set_property("visible", False)
+            renderers[1].set_property("text", text)
+        else:
+            renderers[0].set_property("visible", True)
+            renderers[0].set_property("active", model.get_value(iter,self.COLUMN_DEVICE_ENABLE_UPDATE))
+            parentIter = model.iter_parent(iter)
+            device = model.get_value(parentIter,self.COLUMN_DEVICE)
+            text = str(pyobj.version)
+            if self.updateSet.getUpdatePackageForDevice(device) == pyobj:
+                renderers[1].set_property("text", "Available Version: %s  (suggested)" % text)
+            else:
+                renderers[1].set_property("text", "Available Version: %s" % text)
+
+    def cell_data_func_version(self, column, cell, model, iter):
+        pyobj = model.get_value(iter,self.COLUMN_DEVICE)
+        if isinstance(pyobj, firmwaretools.package.Device):
+            cell.set_property("visible", True)
+        else:
+            cell.set_property("visible", False)
 
     def cell_data_func_toggle(self, column, cell, model, iter):
         pyobj = model.get_value(iter,self.COLUMN_DEVICE)
         if isinstance(pyobj, firmwaretools.package.Device):
-            cell.set_property("radio", False)
+            cell.set_property("visible", True)
         else:
-            cell.set_property("radio", True)
+            cell.set_property("visible", False)
 
     def toggle_enabled_cb(self, renderer, path, user_data, *args, **kargs):
         model = user_data
         model[path][self.COLUMN_DEVICE_ENABLE_UPDATE] = not model[path][self.COLUMN_DEVICE_ENABLE_UPDATE]
+
+    def on_toolbar_allow_downgrade_toggled(self, *args, **kargs):
+        self.allowDowngrade = self.toolbarAllowDowngrade.get_active()
+        self.menuAllowDowngrade.set_active(self.allowDowngrade)
+
+    def on_toolbar_allow_reflash_toggled(self, *args, **kargs):
+        self.allowReflash = self.toolbarAllowReflash.get_active()
+        self.menuAllowReflash.set_active(self.allowReflash)
+
+    def on_menu_allow_downgrade_activate(self, *args, **kargs):
+        self.allowDowngrade = self.menuAllowDowngrade.get_active()
+        self.toolbarAllowDowngrade.set_active(self.allowDowngrade)
+
+    def on_menu_allow_reflash_activate(self, *args, **kargs):
+        self.allowReflash = self.menuAllowReflash.get_active()
+        self.toolbarAllowReflash.set_active(self.allowReflash)
 
     def on_help_about(self, *args):
         wTree = gtk.glade.XML(TOPDIR + self.GLADE_FILE, "about_dialog")
