@@ -24,6 +24,9 @@ from trace_decorator import trace, dprint, decorateAllFunctions
 
 class CircularDependencyError(Exception): pass
 
+# TODO:
+#  -- conf item should NEVER be used outside of constructor (makePackage)
+
 def makePackage(configFile):
     conf = ConfigParser.ConfigParser()
     conf.read(configFile)
@@ -126,14 +129,14 @@ class UpdateSet(object):
         # for now, check if we are on a specific system by checking for
         # a BIOS package w/ matching id. In future, may have specific 
         # system package.
-        if candidate.conf.has_option("package", "limit_system_support"):
+        if hasattr(candidate,"conf") and candidate.conf.has_option("package", "limit_system_support"):
             systemVenDev = candidate.conf.get("package", "limit_system_support")
             if not unionInventory.get( "system_bios(%s)" % systemVenDev ):
                 cb[0]( who="checkRules", what="fail_limit_system_check", package=candidate, cb=cb )
                 return 0
     
         #check generic dependencies
-        if candidate.conf.has_option("package", "requires"):
+        if hasattr(candidate,"conf") and candidate.conf.has_option("package", "requires"):
             requires = candidate.conf.get("package", "requires")
             if len(requires):
                 d = dep_parser.DepParser(requires, unionInventory, self.deviceList)
@@ -201,6 +204,56 @@ class Repository(object):
             self.dirList.append(i)
 
     def iterPackages(self, cb=(nullFunc, None)):
+        if os.environ.get("DEBUG_REPOSITORY", None) == "1":
+            yield package.MockRepositoryPackage(
+                displayname="DEBUG Test Device 1a",
+                name="test_device_1a",
+                version="0.9")
+            yield package.MockRepositoryPackage(
+                displayname="DEBUG Test Device 1b",
+                name="test_device_1b",
+                version="1.1")
+            yield package.MockRepositoryPackage(
+                displayname="DEBUG Test Device 2a",
+                name="test_device_2a",
+                version="1.1")
+            yield package.MockRepositoryPackage(
+                displayname="DEBUG Test Device 2a",
+                name="test_device_2a",
+                version="1.9")
+            yield package.MockRepositoryPackage(
+                displayname="DEBUG Test Device 2b",
+                name="test_device_2b",
+                version="1.1")
+            yield package.MockRepositoryPackage(
+                displayname="DEBUG Test Device 2b",
+                name="test_device_2b",
+                version="2.9")
+            yield package.MockRepositoryPackage(
+                displayname="DEBUG Test Device 3a",
+                name="test_device_3a",
+                version="2.1")
+            yield package.MockRepositoryPackage(
+                displayname="DEBUG Test Device 3a",
+                name="test_device_3a",
+                version="2.5")
+            yield package.MockRepositoryPackage(
+                displayname="DEBUG Test Device 3a",
+                name="test_device_3a",
+                version="3.0")
+            yield package.MockRepositoryPackage(
+                displayname="DEBUG Test Device 3b",
+                name="test_device_3b",
+                version="2.1")
+            yield package.MockRepositoryPackage(
+                displayname="DEBUG Test Device 3b",
+                name="test_device_3b",
+                version="3.0")
+            yield package.MockRepositoryPackage(
+                displayname="DEBUG Test Device 3b",
+                name="test_device_3b",
+                version="3.9")
+
         for dir in self.dirList:
             try:
                 for (path, dirs, files) in pycompat.walkPath(dir):
