@@ -20,7 +20,7 @@ set -e
 
 git tag -u libsmbios -m "tag for official release: $RELEASE_STRING" v${RELEASE_VERSION}
 
-make tarball srpm
+make clean tarball srpm
 
 mkdir -p $DEST
 for i in *.tar.{gz,bz2} *.zip *.src.rpm; do
