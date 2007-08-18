@@ -52,12 +52,10 @@ class InventoryFirmware:
                 object,                # device or package
                 gobject.TYPE_BOOLEAN,  # for device == enable update for device (checkbox),
                                        # for package == update to this package
-                gobject.TYPE_STRING    # version
                 )
         self.inventoryTreeView.set_model(self.inventoryTreeModel)
         self.COLUMN_DEVICE = 0
         self.COLUMN_DEVICE_ENABLE_UPDATE = 1
-        self.COLUMN_DEVICE_FW_VER = 2
 
         # add column headers to the src treeview
         self.inventoryTreeView.set_headers_visible(True)
@@ -66,8 +64,8 @@ class InventoryFirmware:
 
         renderer=gtk.CellRendererToggle()
         renderer.set_property("radio", False)
-        #renderer.set_property('activatable', True)
-        #renderer.connect('toggled', self.toggle_enabled_cb, self.inventoryTreeModel)
+        renderer.set_property('activatable', True)
+        renderer.connect('toggled', self.toggle_enabled_cb, self.inventoryTreeModel)
         column=gtk.TreeViewColumn("Flash",renderer)
         column.add_attribute(renderer, "active", self.COLUMN_DEVICE_ENABLE_UPDATE)
         column.set_cell_data_func(renderer, self.cell_data_func_toggle)
@@ -75,8 +73,8 @@ class InventoryFirmware:
 
         renderer=gtk.CellRendererToggle()
         renderer.set_property("radio", True)
-        #renderer.set_property('activatable', True)
-        #renderer.connect('toggled', self.toggle_enabled_cb, self.inventoryTreeModel)
+        renderer.set_property('activatable', True)
+        renderer.connect('toggled', self.toggle_enabled_cb, self.inventoryTreeModel)
         column=gtk.TreeViewColumn("Display Name",renderer)
         column.set_resizable(True)
         renderer=gtk.CellRendererText()
@@ -86,7 +84,7 @@ class InventoryFirmware:
         self.inventoryTreeView.set_expander_column(column)
 
         renderer = gtk.CellRendererText()
-        column=gtk.TreeViewColumn("Current Version",renderer, text=self.COLUMN_DEVICE_FW_VER)
+        column=gtk.TreeViewColumn("Current Version",renderer)
         column.set_cell_data_func(renderer, self.cell_data_func_version)
         column.set_resizable(True)
         self.inventoryTreeView.append_column(column)
@@ -137,13 +135,13 @@ class InventoryFirmware:
             toggle=False
             if self.updateSet.getUpdatePackageForDevice(device) is not None:
                 toggle=True
-            iter = self.inventoryTreeModel.append(None, [device, toggle, device.version])
+            iter = self.inventoryTreeModel.append(None, [device, toggle])
             for availPkg in self.updateSet.iterAvailableUpdates(device):
                 guihelpers.gtkYield()
                 toggle=False
                 if self.updateSet.getUpdatePackageForDevice(device) == availPkg:
                     toggle=True
-                self.inventoryTreeModel.append(iter, [availPkg, toggle, availPkg.version])
+                self.inventoryTreeModel.append(iter, [availPkg, toggle])
 
     def cell_data_func_display_name(self, column, cell, model, iter):
         pyobj = model.get_value(iter,self.COLUMN_DEVICE)
@@ -163,10 +161,20 @@ class InventoryFirmware:
             else:
                 renderers[1].set_property("text", "Available Version: %s" % text)
 
+            renderers[0].set_property('activatable', True)
+            if device.compareVersion(pyobj) == 0 and not self.allowReflash:
+                renderers[0].set_property('activatable', False)
+            if device.compareVersion(pyobj) > 0 and not self.allowDowngrade:
+                renderers[0].set_property('activatable', False)
+            if not model.get_value(parentIter, self.COLUMN_DEVICE_ENABLE_UPDATE):
+                renderers[0].set_property('activatable', False)
+
+
     def cell_data_func_version(self, column, cell, model, iter):
         pyobj = model.get_value(iter,self.COLUMN_DEVICE)
         if isinstance(pyobj, firmwaretools.package.Device):
             cell.set_property("visible", True)
+            cell.set_property("text", pyobj.version)
         else:
             cell.set_property("visible", False)
 
@@ -179,7 +187,30 @@ class InventoryFirmware:
 
     def toggle_enabled_cb(self, renderer, path, user_data, *args, **kargs):
         model = user_data
-        model[path][self.COLUMN_DEVICE_ENABLE_UPDATE] = not model[path][self.COLUMN_DEVICE_ENABLE_UPDATE]
+        iter = model.get_iter(path)
+        parentIter = model.iter_parent(iter)
+        if parentIter is None:
+            model[path][self.COLUMN_DEVICE_ENABLE_UPDATE] = not model[path][self.COLUMN_DEVICE_ENABLE_UPDATE]
+            device = model[path][self.COLUMN_DEVICE]
+            if model[path][self.COLUMN_DEVICE_ENABLE_UPDATE]:
+                for i in range(model.iter_n_children(iter)):
+                    child_path = model.get_path(model.iter_nth_child(iter, i))
+                    if model[child_path][self.COLUMN_DEVICE] == self.updateSet.getUpdatePackageForDevice(device):
+                        model[child_path][self.COLUMN_DEVICE_ENABLE_UPDATE] = True
+                    else:
+                        model[child_path][self.COLUMN_DEVICE_ENABLE_UPDATE] = False
+            else:
+                for i in range(model.iter_n_children(iter)):
+                    child_path = model.get_path(model.iter_nth_child(iter, i))
+                    model[child_path][self.COLUMN_DEVICE_ENABLE_UPDATE] = False
+                    # TODO: unpin update package
+        else:
+            for i in range(model.iter_n_children(parentIter)):
+                child_path = model.get_path(model.iter_nth_child(parentIter, i))
+                model[child_path][self.COLUMN_DEVICE_ENABLE_UPDATE] = False
+
+            model[path][self.COLUMN_DEVICE_ENABLE_UPDATE] = True
+        # TODO: set updateSet to enable/disable
 
     def on_toolbar_allow_downgrade_toggled(self, *args, **kargs):
         self.allowDowngrade = self.toolbarAllowDowngrade.get_active()
@@ -201,8 +232,7 @@ class InventoryFirmware:
         wTree = gtk.glade.XML(TOPDIR + self.GLADE_FILE, "about_dialog")
         wTree.get_widget("about_dialog").set_property('name',PROGRAM_NAME)
         wTree.get_widget("about_dialog").set_property('version',version)
-        # 'run' will make this dialog modal
-        wTree.get_widget("about_dialog").run()
+        wTree.get_widget("about_dialog").run() # modal until 'close'
         wTree.get_widget("about_dialog").destroy()
 
     def on_file_quit(self, *args):
