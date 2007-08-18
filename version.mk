@@ -9,5 +9,5 @@ RPM_RELEASE=1
 DEB_RELEASE=1
 DEBARCH=all
 RPM_TYPE=noarch
-PY_VER_UPDATES=
+PY_VER_UPDATES=bin/inventory_firmware_gui
 
