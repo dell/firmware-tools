@@ -74,6 +74,7 @@ def runSomething(ini, prefix, pluginName, function):
                 yield thing
 
         except ImportError, e:
+            dprint("module is missing.\n\tModule: %s\n\tFunction: %s\n" % (module, function))
             dprint(traceback.format_exc())
         except AttributeError, e:
             dprint("AttributeError usually means the module is missing the specified function.\n\tModule: %s\n\tFunction: %s\n" % (module, function))
