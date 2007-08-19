@@ -90,7 +90,10 @@ class InventoryFirmware:
         self.menuAllowDowngrade = self.wTree.get_widget("menu_allow_downgrade")
         self.menuAllowReflash = self.wTree.get_widget("menu_allow_reflash")
         self.recursiveCallback=0
-        
+
+        # internal accounting
+        self.numDowngradeSelected = 0
+        self.numReflashSelected = 0
 
         # create model for inventory treeview
         self.inventoryTreeView = self.wTree.get_widget("inventory_treeview")
@@ -298,31 +301,48 @@ class InventoryFirmware:
         parentIter = model.iter_parent(iter)
         device = model.get_value(parentIter, self.COLUMN_DEVICE)
         update = model[path][self.COLUMN_DEVICE]
+
         self._executeCommand(UpdateSetPinCommand(self.updateSet, self.updateSet.pinUpdatePackage, (device, update), {}))
         self._fixupChildren(model, parentIter)
 
     # this method sets the enable toggle on packages appropriately
+    # it also interlocks the allow reflash/downgrade toggles
     def _fixupChildren(self, model, iter):
         for i in range(model.iter_n_children(iter)):
             child_path = model.get_path(model.iter_nth_child(iter, i))
+            curValue = model[child_path][self.COLUMN_DEVICE_ENABLE_UPDATE]
             if model[child_path][self.COLUMN_DEVICE] == self.updateSet.getUpdatePackageForDevice(model.get_value(iter,self.COLUMN_DEVICE)):
+                if curValue == False and model[child_path][self.COLUMN_FLAGS] & self.FLAG_DOWNGRADE:
+                    self.numDowngradeSelected = self.numDowngradeSelected + 1
+                if curValue == False and model[child_path][self.COLUMN_FLAGS] & self.FLAG_REFLASH:
+                    self.numReflashSelected = self.numReflashSelected + 1
                 model[child_path][self.COLUMN_DEVICE_ENABLE_UPDATE] = True
             else:
+                if curValue == True and model[child_path][self.COLUMN_FLAGS] & self.FLAG_DOWNGRADE:
+                    self.numDowngradeSelected = self.numDowngradeSelected - 1
+                if curValue == True and model[child_path][self.COLUMN_FLAGS] & self.FLAG_REFLASH:
+                    self.numReflashSelected = self.numReflashSelected - 1
                 model[child_path][self.COLUMN_DEVICE_ENABLE_UPDATE] = False
-
 
     def on_allow_downgrade_toggled(self, widget, *args, **kargs):
         # guard against executeCommand being called while we are in a refresh
         if not self.recursiveCallback:
-            self._executeCommand(Command(self.updateSet, self.updateSet.setAllowDowngrade, (widget.get_active(),), {}))
+            if self.numDowngradeSelected > 0:
+                active = 1
+            else:
+                active = widget.get_active()
+            self._executeCommand(Command(self.updateSet, self.updateSet.setAllowDowngrade, (active,), {}))
             self._refresh_allow_toggles()
 
     def on_allow_reflash_toggled(self, widget, *args, **kargs):
         # guard against executeCommand being called while we are in a refresh
         if not self.recursiveCallback:
-            self._executeCommand(Command(self.updateSet, self.updateSet.setAllowReflash, (widget.get_active(),), {}))
+            if self.numReflashSelected > 0:
+                active = 1
+            else:
+                active = widget.get_active()
+            self._executeCommand(Command(self.updateSet, self.updateSet.setAllowReflash, (active,), {}))
             self._refresh_allow_toggles()
-
 
     def on_help_about(self, *args):
         wTree = gtk.glade.XML(TOPDIR + self.GLADE_FILE, "about_dialog")
@@ -334,6 +354,7 @@ class InventoryFirmware:
     def _executeCommand(self, command):
         command.execute()
         self.commandStack.append(command)
+        self._enableUndo()
         if len(self.commandStack) > 20:
             self.commandStack = self.commandStack[-20:]
 
@@ -341,7 +362,15 @@ class InventoryFirmware:
         if self.commandStack:
             command = self.commandStack.pop()
             command.undo()
+        if not self.commandStack:
+            self._disableUndo()
         self._refresh()
+
+    def _enableUndo(self):
+        pass
+
+    def _disableUndo(self):
+        pass
 
     def on_file_quit(self, *args):
         self.on_quit_app( allowCancel = 1 )
@@ -389,7 +418,6 @@ def main():
             if not ini.has_section(section):
                 ini.add_section(section)
             ini.set(section, key, value)
-
 
         gnome.init(PROGRAM_NAME, version)
         test = InventoryFirmware(ini)
