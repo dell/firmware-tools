@@ -95,6 +95,10 @@ class InventoryFirmware:
         self.numDowngradeSelected = 0
         self.numReflashSelected = 0
 
+        # set up command stack, used for undo/redo
+        self.commandStack = []
+        self.redoStack = []
+
         # create model for inventory treeview
         self.inventoryTreeView = self.wTree.get_widget("inventory_treeview")
         self.inventoryTreeModel= gtk.TreeStore(
@@ -179,13 +183,10 @@ class InventoryFirmware:
 
         self._populate()
         self.inventoryTreeView.expand_all()
+        self._refresh()
 
         # set status == ready
         self.statusBar.pop(ctx)
-
-        # set up command stack, used for undo/redo
-        self.commandStack = []
-        self.redoStack = []
 
     # this is a helper function to initially populate the tree model.
     # should only ever be called once.
@@ -214,6 +215,7 @@ class InventoryFirmware:
     def _refresh(self):
         self._refresh_update_enable_toggles()
         self._refresh_allow_toggles()
+        self._refreshEnableUndoRedo()
 
     # only refreshes the toggles and radio buttons to reflect current package set.
     def _refresh_update_enable_toggles(self):
@@ -234,7 +236,37 @@ class InventoryFirmware:
         self.menuAllowReflash.set_property("active", self.updateSet.allowReflash)
         self.toolbarAllowDowngrade.set_property("active", self.updateSet.allowDowngrade)
         self.toolbarAllowReflash.set_property("active", self.updateSet.allowReflash)
+
+        if self.numDowngradeSelected:
+            self.menuAllowDowngrade.set_sensitive(0)
+            self.toolbarAllowDowngrade.set_sensitive(0)
+        else:
+            self.menuAllowDowngrade.set_sensitive(1)
+            self.toolbarAllowDowngrade.set_sensitive(1)
+
+        if self.numReflashSelected:
+            self.menuAllowReflash.set_sensitive(0)
+            self.toolbarAllowReflash.set_sensitive(0)
+        else:
+            self.menuAllowReflash.set_sensitive(1)
+            self.toolbarAllowReflash.set_sensitive(1)
+
         self.recursiveCallback=0
+
+    def _refreshEnableUndoRedo(self):
+        if self.commandStack:
+            self.wTree.get_widget("undo_button").set_sensitive(1)
+            self.wTree.get_widget("undo_menu").set_sensitive(1)
+        else:
+            self.wTree.get_widget("undo_button").set_sensitive(0)
+            self.wTree.get_widget("undo_menu").set_sensitive(0)
+
+        if self.redoStack:
+            self.wTree.get_widget("redo_button").set_sensitive(1)
+            self.wTree.get_widget("redo_menu").set_sensitive(1)
+        else:
+            self.wTree.get_widget("redo_button").set_sensitive(0)
+            self.wTree.get_widget("redo_menu").set_sensitive(0)
 
     def cell_data_func_display_name(self, column, cell, model, iter):
         pyobj = model.get_value(iter,self.COLUMN_DEVICE)
@@ -296,6 +328,7 @@ class InventoryFirmware:
             self._executeCommand(UpdateSetPinCommand(self.updateSet, self.updateSet.pinUpdatePackage, (device, None), {}))
 
         self._fixupChildren(model, model.get_iter(path))
+        self._refresh_allow_toggles()
 
     def toggle_update_cb(self, renderer, path, model, *args, **kargs):
         iter = model.get_iter(path)
@@ -305,6 +338,7 @@ class InventoryFirmware:
 
         self._executeCommand(UpdateSetPinCommand(self.updateSet, self.updateSet.pinUpdatePackage, (device, update), {}))
         self._fixupChildren(model, parentIter)
+        self._refresh_allow_toggles()
 
     # this method sets the enable toggle on packages appropriately
     # it also interlocks the allow reflash/downgrade toggles
@@ -345,23 +379,6 @@ class InventoryFirmware:
             self._executeCommand(Command(self.updateSet, self.updateSet.setAllowReflash, (active,), {}))
             self._refresh_allow_toggles()
 
-    def on_toolbar_allow_downgrade_set_focus_child(self, *args, **kargs):
-        print "on_toolbar_allow_downgrade_set_focus_child"
-
-    def on_toolbar_allow_downgrade_focus(self, *args, **kargs):
-        print "focus"
-
-    def on_toolbar_allow_downgrade_focus_in_event(self, *args, **kargs):
-        print "focus in event"
-        if self.numReflashSelected:
-            ctx = self.statusBar.get_context_id("allow downgrade")
-            self.statusBar.push(ctx, "Cannot deactive 'Allow Downgrade' because some downgraded packages are selected.")
-
-    def on_toolbar_allow_downgrade_focus_out_event(self, *args, **kargs):
-        print "focus out event"
-        ctx = self.statusBar.get_context_id("allow downgrade")
-        self.statusBar.pop(ctx)
-
     def on_help_about(self, *args):
         wTree = gtk.glade.XML(TOPDIR + self.GLADE_FILE, "about_dialog")
         wTree.get_widget("about_dialog").set_property('name',PROGRAM_NAME)
@@ -373,7 +390,7 @@ class InventoryFirmware:
         command.execute()
         self.commandStack.append(command)
         self.redoStack = []
-        self._condEnableUndoRedo()
+        self._refreshEnableUndoRedo()
         if len(self.commandStack) > 20:
             self.commandStack = self.commandStack[-20:]
 
@@ -383,7 +400,6 @@ class InventoryFirmware:
             command.undo()
             self.redoStack.append(command)
 
-        self._condEnableUndoRedo()
         self._refresh()
 
     def on_redo_activate(self, *args, **kargs):
@@ -392,28 +408,15 @@ class InventoryFirmware:
             command.execute()
             self.commandStack.append(command)
 
-        self._condEnableUndoRedo()
         self._refresh()
 
     def on_reset_activate(self, *args, **kargs):
         self.updateSet.reset()
         self.commandStack = []
         self.redoStack = []
-        self._condEnableUndoRedo()
         self.updateSet.setAllowReflash(0)
         self.updateSet.setAllowDowngrade(0)
         self._refresh()
-
-    def _condEnableUndoRedo(self):
-        if self.commandStack:
-            pass # TODO: enable undo buttons
-        else:
-            pass # TODO: disable undo buttons
-
-        if self.redoStack:
-            pass # TODO: enable undo buttons
-        else:
-            pass # TODO: disable undo buttons
 
     def on_update_now_activate(self, *args, **kargs):
         print "Going to update the following devices:"
@@ -424,6 +427,52 @@ class InventoryFirmware:
                 print "\t\tFrom Version: %s" % device.version
                 print "\t\tTo Version  : %s" % pkg.version
                 print
+
+
+        dialog = gtk.MessageDialog(parent=None,
+                   flags=0,
+                   type=gtk.MESSAGE_WARNING,
+                   buttons=gtk.BUTTONS_NONE,
+                   message_format=_( "<big><b>The following devices will be updated.</b></big>"))
+        dialog.set_title(_("Update Firmware"))
+        #dialog.set_property("has-separator", False)
+        #dialog.vbox.get_children()[0].get_children()[1].set_property("use-markup", True)
+
+        dialog.add_button(_("Show Details"), 1)
+        dialog.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE)
+
+        # Details
+        textview = gtk.TextView(); 
+        textview.show()
+        textview.set_editable(False)
+        textview.modify_font(pango.FontDescription("Monospace"))
+        sw = gtk.ScrolledWindow(); sw.show()
+        sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        sw.add(textview)
+        frame = gtk.Frame();
+        frame.set_shadow_type(gtk.SHADOW_IN)
+        frame.add(sw)
+        frame.set_border_width(6)
+        dialog.vbox.add(frame)
+        textbuffer = textview.get_buffer()
+        trace = cStringIO.StringIO()
+        trace.write("FOO")
+        textbuffer.set_text(trace.getvalue())
+        textview.set_size_request(gtk.gdk.screen_width()/2, gtk.gdk.screen_height()/3)
+    
+        dialog.details = frame
+        dialog.set_position(gtk.WIN_POS_CENTER)
+        dialog.set_gravity(gtk.gdk.GRAVITY_CENTER)
+    
+        while 1:
+            resp = dialog.run()
+            if resp == 1:
+                dialog.details.show()
+                dialog.action_area.get_children()[1].set_sensitive(0)
+                continue
+            else:
+                dialog.destroy()
+                break
 
     def on_file_quit(self, *args):
         self.on_quit_app( allowCancel = 1 )

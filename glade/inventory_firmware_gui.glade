@@ -51,7 +51,7 @@
 		      <signal name="activate" handler="on_update_now_activate" last_modification_time="Sun, 19 Aug 2007 18:15:32 GMT"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image4">
+			<widget class="GtkImage" id="image7">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-jump-to</property>
 			  <property name="icon_size">1</property>
@@ -93,7 +93,7 @@
 		<widget class="GtkMenu" id="menuitem2_menu">
 
 		  <child>
-		    <widget class="GtkImageMenuItem" id="undo">
+		    <widget class="GtkImageMenuItem" id="undo_menu">
 		      <property name="visible">True</property>
 		      <property name="label">gtk-undo</property>
 		      <property name="use_stock">True</property>
@@ -102,7 +102,7 @@
 		  </child>
 
 		  <child>
-		    <widget class="GtkImageMenuItem" id="redo">
+		    <widget class="GtkImageMenuItem" id="redo_menu">
 		      <property name="visible">True</property>
 		      <property name="label">gtk-redo</property>
 		      <property name="use_stock">True</property>
@@ -118,7 +118,7 @@
 		      <signal name="activate" handler="on_reset_activate" last_modification_time="Sun, 19 Aug 2007 18:15:32 GMT"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image5">
+			<widget class="GtkImage" id="image8">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-goto-first</property>
 			  <property name="icon_size">1</property>
@@ -208,6 +208,7 @@
 	      <child>
 		<widget class="GtkToolButton" id="undo_button">
 		  <property name="visible">True</property>
+		  <property name="sensitive">False</property>
 		  <property name="stock_id">gtk-undo</property>
 		  <property name="visible_horizontal">True</property>
 		  <property name="visible_vertical">True</property>
@@ -223,6 +224,7 @@
 	      <child>
 		<widget class="GtkToolButton" id="redo_button">
 		  <property name="visible">True</property>
+		  <property name="sensitive">False</property>
 		  <property name="stock_id">gtk-redo</property>
 		  <property name="visible_horizontal">True</property>
 		  <property name="visible_vertical">True</property>
@@ -277,10 +279,6 @@ Downgrade</property>
 		  <property name="is_important">False</property>
 		  <property name="active">False</property>
 		  <signal name="toggled" handler="on_allow_downgrade_toggled" last_modification_time="Sun, 19 Aug 2007 05:14:34 GMT"/>
-		  <signal name="focus_in_event" handler="on_toolbar_allow_downgrade_focus_in_event" last_modification_time="Sun, 19 Aug 2007 18:54:16 GMT"/>
-		  <signal name="focus_out_event" handler="on_toolbar_allow_downgrade_focus_out_event" last_modification_time="Sun, 19 Aug 2007 18:54:29 GMT"/>
-		  <signal name="focus" handler="on_toolbar_allow_downgrade_focus" last_modification_time="Sun, 19 Aug 2007 18:59:28 GMT"/>
-		  <signal name="set_focus_child" handler="on_toolbar_allow_downgrade_set_focus_child" last_modification_time="Sun, 19 Aug 2007 19:00:16 GMT"/>
 		</widget>
 		<packing>
 		  <property name="expand">False</property>
