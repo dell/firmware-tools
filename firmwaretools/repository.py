@@ -102,6 +102,14 @@ class UpdateSet(object):
     def hasDevice(self, device):
         return self.deviceList.has_key(device.name)
 
+    def iterDevices(self):
+        for device, details in self.deviceList.items():
+            yield details["device"]
+
+    def iterAvailableUpdates(self, device):
+        for pkg in self.deviceList[device.name]["available_updates"]:
+            yield pkg
+
     def getSuggestedUpdatePackageForDevice(self, device):
         ret = None
         if self.deviceList.has_key(device.name):
@@ -118,6 +126,7 @@ class UpdateSet(object):
         return ret
 
     def pinUpdatePackage(self, device, pkg):
+        #TODO: ensure that pkg is in 'available_pkgs'
         hasOldPin = False
         if self.deviceList[device.name].has_key("pinned_update"):
             hasOldPin = True
@@ -140,10 +149,6 @@ class UpdateSet(object):
     def unPinPackage(self, device):
         if self.deviceList[device.name].has_key("pinned_update"):
             del(self.deviceList[device.name]["pinned_update"])
-
-    def iterDevices(self):
-        for device, details in self.deviceList.items():
-            yield details["device"]
 
     def getMemento(self, deviceHint=None):
         memento = {}
@@ -181,10 +186,6 @@ class UpdateSet(object):
 
     def getAllowReflash(self):
         return self.allowReflash
-
-    def iterAvailableUpdates(self, device):
-        for pkg in self.deviceList[device.name]["available_updates"]:
-            yield pkg
 
     def checkRules(self, candidate, unionInventory, cb=(nullFunc, None)):
         # check if candidate update even applies to this system
@@ -283,6 +284,7 @@ class Repository(object):
 
     def iterPackages(self, cb=(nullFunc, None)):
         if os.environ.get("DEBUG_REPOSITORY", None) == "1":
+            # TODO: put this in a separate function
             yield package.MockRepositoryPackage(
                 displayname="DEBUG Test Device 1a",
                 name="test_device_1a",
