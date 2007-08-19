@@ -345,6 +345,23 @@ class InventoryFirmware:
             self._executeCommand(Command(self.updateSet, self.updateSet.setAllowReflash, (active,), {}))
             self._refresh_allow_toggles()
 
+    def on_toolbar_allow_downgrade_set_focus_child(self, *args, **kargs):
+        print "on_toolbar_allow_downgrade_set_focus_child"
+
+    def on_toolbar_allow_downgrade_focus(self, *args, **kargs):
+        print "focus"
+
+    def on_toolbar_allow_downgrade_focus_in_event(self, *args, **kargs):
+        print "focus in event"
+        if self.numReflashSelected:
+            ctx = self.statusBar.get_context_id("allow downgrade")
+            self.statusBar.push(ctx, "Cannot deactive 'Allow Downgrade' because some downgraded packages are selected.")
+
+    def on_toolbar_allow_downgrade_focus_out_event(self, *args, **kargs):
+        print "focus out event"
+        ctx = self.statusBar.get_context_id("allow downgrade")
+        self.statusBar.pop(ctx)
+
     def on_help_about(self, *args):
         wTree = gtk.glade.XML(TOPDIR + self.GLADE_FILE, "about_dialog")
         wTree.get_widget("about_dialog").set_property('name',PROGRAM_NAME)
@@ -397,6 +414,16 @@ class InventoryFirmware:
             pass # TODO: enable undo buttons
         else:
             pass # TODO: disable undo buttons
+
+    def on_update_now_activate(self, *args, **kargs):
+        print "Going to update the following devices:"
+        for device in self.updateSet.iterDevices():
+            pkg = self.updateSet.getUpdatePackageForDevice(device)
+            if pkg is not None:
+                print "\t%s" % str(device)
+                print "\t\tFrom Version: %s" % device.version
+                print "\t\tTo Version  : %s" % pkg.version
+                print
 
     def on_file_quit(self, *args):
         self.on_quit_app( allowCancel = 1 )

@@ -198,7 +198,7 @@ class UpdateSet(object):
             return 0
             
         # is candidate newer than what is either installed or scheduled for install
-        if not self.allowDowngrade and unionInventory[candidate.name].compareVersion(candidate) >= 0:
+        if not self.allowDowngrade and unionInventory[candidate.name].compareVersion(candidate) > 0:
             cb[0]( who="checkRules", what="package_not_newer", package=candidate, systemPackage=unionInventory[candidate.name], cb=cb)
             return 0
     

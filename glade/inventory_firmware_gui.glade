@@ -277,6 +277,10 @@ Downgrade</property>
 		  <property name="is_important">False</property>
 		  <property name="active">False</property>
 		  <signal name="toggled" handler="on_allow_downgrade_toggled" last_modification_time="Sun, 19 Aug 2007 05:14:34 GMT"/>
+		  <signal name="focus_in_event" handler="on_toolbar_allow_downgrade_focus_in_event" last_modification_time="Sun, 19 Aug 2007 18:54:16 GMT"/>
+		  <signal name="focus_out_event" handler="on_toolbar_allow_downgrade_focus_out_event" last_modification_time="Sun, 19 Aug 2007 18:54:29 GMT"/>
+		  <signal name="focus" handler="on_toolbar_allow_downgrade_focus" last_modification_time="Sun, 19 Aug 2007 18:59:28 GMT"/>
+		  <signal name="set_focus_child" handler="on_toolbar_allow_downgrade_set_focus_child" last_modification_time="Sun, 19 Aug 2007 19:00:16 GMT"/>
 		</widget>
 		<packing>
 		  <property name="expand">False</property>
