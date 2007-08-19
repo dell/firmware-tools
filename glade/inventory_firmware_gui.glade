@@ -323,12 +323,12 @@ Reflash</property>
 		<widget class="GtkToolButton" id="update_now_button">
 		  <property name="visible">True</property>
 		  <property name="label" translatable="yes">Update
-Now</property>
+Firmware...</property>
 		  <property name="use_underline">True</property>
 		  <property name="stock_id">gtk-jump-to</property>
 		  <property name="visible_horizontal">True</property>
 		  <property name="visible_vertical">True</property>
-		  <property name="is_important">False</property>
+		  <property name="is_important">True</property>
 		  <signal name="clicked" handler="on_update_now_activate" last_modification_time="Sun, 19 Aug 2007 18:13:27 GMT"/>
 		</widget>
 		<packing>

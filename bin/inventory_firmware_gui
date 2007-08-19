@@ -29,16 +29,6 @@ import firmwaretools.package
 PROGRAM_NAME="Firmware Inventory and Update GUI"
 version="1.4.3"
 
-# bugs:
-#   circular dependency:
-#       allow-downgrade
-#       select downgrade
-#       disallow-downgrade
-#       allow-downgrade
-#       undo
-#       BANG
-#     Fix by unpinning any downgraded packages if allow-downgrade de-selected.
-
 class CommandAlreadyExecuted(Exception): pass
 class CommandAlreadyUndone(Exception): pass
 class Command(object):
@@ -339,14 +329,16 @@ class InventoryFirmware:
         self._refresh_allow_toggles()
 
     def toggle_update_cb(self, renderer, path, model, *args, **kargs):
-        iter = model.get_iter(path)
-        parentIter = model.iter_parent(iter)
-        device = model.get_value(parentIter, self.COLUMN_DEVICE)
-        update = model[path][self.COLUMN_DEVICE]
-
-        self._executeCommand(UpdateSetPinCommand(self.updateSet, self.updateSet.pinUpdatePackage, (device, update), {}))
-        self._fixupChildren(model, parentIter)
-        self._refresh_allow_toggles()
+        # dont re-activate if it is already the active update
+        if not model[path][self.COLUMN_DEVICE_ENABLE_UPDATE]:
+            iter = model.get_iter(path)
+            parentIter = model.iter_parent(iter)
+            device = model.get_value(parentIter, self.COLUMN_DEVICE)
+            update = model[path][self.COLUMN_DEVICE]
+    
+            self._executeCommand(UpdateSetPinCommand(self.updateSet, self.updateSet.pinUpdatePackage, (device, update), {}))
+            self._fixupChildren(model, parentIter)
+            self._refresh_allow_toggles()
 
     # this method sets the enable toggle on packages appropriately
     # it also interlocks the allow reflash/downgrade toggles
@@ -427,34 +419,32 @@ class InventoryFirmware:
         self._refresh()
 
     def on_update_now_activate(self, *args, **kargs):
-        print "Going to update the following devices:"
+        detailsStr = cStringIO.StringIO()
+        detailsStr.write("Going to update the following devices:\n\n")
         for device in self.updateSet.iterDevices():
             pkg = self.updateSet.getUpdatePackageForDevice(device)
             if pkg is not None:
-                print "\t%s" % str(device)
-                print "\t\tFrom Version: %s" % device.version
-                print "\t\tTo Version  : %s" % pkg.version
-                print
-
+                detailsStr.write("\t%s\n" % str(device))
+                detailsStr.write("\t\tFrom Version: %s\n" % device.version)
+                detailsStr.write("\t\tTo Version  : %s\n" % pkg.version)
+                detailsStr.write("\n")
 
         dialog = gtk.MessageDialog(parent=None,
                    flags=0,
                    type=gtk.MESSAGE_WARNING,
-                   buttons=gtk.BUTTONS_NONE,
-                   message_format=_( "<big><b>The following devices will be updated.</b></big>"))
+                   buttons=gtk.BUTTONS_NONE)
         dialog.set_title(_("Update Firmware"))
-        #dialog.set_property("has-separator", False)
-        #dialog.vbox.get_children()[0].get_children()[1].set_property("use-markup", True)
+        dialog.set_markup(_( "<big>Your system will now be updated.</big>\n\nPress the 'Show Details' button to see which devices are set to be updated."))
 
-        dialog.add_button(_("Show Details"), 1)
-        dialog.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE)
+        showButton = dialog.add_button(_("Show Details..."), 1)
+        dialog.add_button(_("Update Now"), 2)
+        dialog.add_button(_("Cancel Update"), 3)
 
         # Details
         textview = gtk.TextView(); 
-        textview.show()
         textview.set_editable(False)
         textview.modify_font(pango.FontDescription("Monospace"))
-        sw = gtk.ScrolledWindow(); sw.show()
+        sw = gtk.ScrolledWindow(); 
         sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         sw.add(textview)
         frame = gtk.Frame();
@@ -463,21 +453,28 @@ class InventoryFirmware:
         frame.set_border_width(6)
         dialog.vbox.add(frame)
         textbuffer = textview.get_buffer()
-        trace = cStringIO.StringIO()
-        trace.write("FOO")
-        textbuffer.set_text(trace.getvalue())
+        textbuffer.set_text(detailsStr.getvalue())
         textview.set_size_request(gtk.gdk.screen_width()/2, gtk.gdk.screen_height()/3)
     
         dialog.details = frame
         dialog.set_position(gtk.WIN_POS_CENTER)
         dialog.set_gravity(gtk.gdk.GRAVITY_CENTER)
     
+        show = False
         while 1:
             resp = dialog.run()
             if resp == 1:
-                dialog.details.show()
-                dialog.action_area.get_children()[1].set_sensitive(0)
-                continue
+                show = not show
+                if show:
+                    print "show"
+                    dialog.details.show_all()
+                    showButton.set_label("Hide Details")
+                else:
+                    print "hide"
+                    dialog.details.hide_all()
+                    showButton.set_label("Show Details...")
+            elif resp == 2:
+                pass # update now
             else:
                 dialog.destroy()
                 break
@@ -529,7 +526,7 @@ def main():
                 ini.add_section(section)
             ini.set(section, key, value)
 
-        gnome.init(PROGRAM_NAME, version)
+        #gnome.init(PROGRAM_NAME, version)
         test = InventoryFirmware(ini)
         gtk.main()
 
