@@ -146,23 +146,41 @@ class UpdateSet(object):
             yield details["device"]
 
     def getMemento(self, deviceHint=None):
-        if deviceHint:
-            hasOldPin = False
-            oldPin = None
-            if self.deviceList[deviceHint.name].has_key("pinned_update"):
-                hasOldPin = True
-                oldPin = self.deviceList[deviceHint.name]["pinned_update"]
-        else:
-            raise RuntimeError("getMemento() called on updateSet without deviceHint")
-
-        return (deviceHint, hasOldPin, oldPin)
+        memento = {}
+        memento['savePin'] = {}
+        for deviceName, details in self.deviceList.items():
+            if deviceHint:
+                if deviceHint.name != deviceName:
+                    continue
+            if details.has_key("pinned_update"):
+                memento['savePin'][deviceName] = { 'device': details["device"], 'hasPin': 1, 'oldPin': details["pinned_update"] }
+            else:
+                memento['savePin'][deviceName] = { 'device': details["device"], 'hasPin': 0, 'oldPin': None }
+                
+        memento["internal.allowReflash"] = self.allowReflash
+        memento["internal.allowDowngrade"] = self.allowDowngrade
+        return memento
 
     def setMemento(self, memento):
-        device, hasOldPin, oldPin = memento
-        if hasOldPin:
-            self.pinUpdatePackage(device, oldPin)
-        else:
-            self.unPinPackage(device)
+        self.allowReflash = memento["internal.allowReflash"]
+        self.allowDowngrade = memento["internal.allowDowngrade"]
+        for deviceName, details in memento['savePin'].items():
+            if details['hasPin']:
+                self.pinUpdatePackage(details["device"], details["oldPin"])
+            else:
+                self.unPinPackage(details["device"])
+
+    def setAllowDowngrade(self, val):
+        self.allowDowngrade = val
+
+    def getAllowDowngrade(self):
+        return self.allowDowngrade
+
+    def setAllowReflash(self, val):
+        self.allowReflash = val
+
+    def getAllowReflash(self):
+        return self.allowReflash
 
     def iterAvailableUpdates(self, device):
         for pkg in self.deviceList[device.name]["available_updates"]:
