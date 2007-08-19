@@ -253,11 +253,16 @@ class InventoryFirmware:
 
         self.recursiveCallback=0
 
+    # enables/disables the undo/redo/reset buttons so only valid actions are enabled
     def _refreshEnableUndoRedo(self):
         if self.commandStack:
+            self.wTree.get_widget("reset_button").set_sensitive(1)
+            self.wTree.get_widget("reset_menu").set_sensitive(1)
             self.wTree.get_widget("undo_button").set_sensitive(1)
             self.wTree.get_widget("undo_menu").set_sensitive(1)
         else:
+            self.wTree.get_widget("reset_button").set_sensitive(0)
+            self.wTree.get_widget("reset_menu").set_sensitive(0)
             self.wTree.get_widget("undo_button").set_sensitive(0)
             self.wTree.get_widget("undo_menu").set_sensitive(0)
 
@@ -289,14 +294,17 @@ class InventoryFirmware:
                 renderers[0].set_property('activatable', False)
 
             if self.updateSet.getSuggestedUpdatePackageForDevice(device) == pyobj:
+                # TODO: picture?
                 renderers[1].set_property("text", "Available Version: %s  (suggested)" % text)
 
             if flags & self.FLAG_REFLASH:
+                # TODO: picture?
                 renderers[1].set_property("text", "Available Version: %s  (reflash)" % text)
                 if not self.updateSet.allowReflash: 
                     renderers[0].set_property('activatable', False)
 
             if flags & self.FLAG_DOWNGRADE:
+                # TODO: picture?
                 renderers[1].set_property("text", "Available Version: %s  (downgrade)" % text)
                 if not self.updateSet.allowDowngrade:
                     renderers[0].set_property('activatable', False)

@@ -51,7 +51,7 @@
 		      <signal name="activate" handler="on_update_now_activate" last_modification_time="Sun, 19 Aug 2007 18:15:32 GMT"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image7">
+			<widget class="GtkImage" id="image8">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-jump-to</property>
 			  <property name="icon_size">1</property>
@@ -111,14 +111,14 @@
 		  </child>
 
 		  <child>
-		    <widget class="GtkImageMenuItem" id="reset">
+		    <widget class="GtkImageMenuItem" id="reset_menu">
 		      <property name="visible">True</property>
 		      <property name="label" translatable="yes">Rese_t</property>
 		      <property name="use_underline">True</property>
 		      <signal name="activate" handler="on_reset_activate" last_modification_time="Sun, 19 Aug 2007 18:15:32 GMT"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image8">
+			<widget class="GtkImage" id="image9">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-goto-first</property>
 			  <property name="icon_size">1</property>
@@ -240,6 +240,7 @@
 	      <child>
 		<widget class="GtkToolButton" id="reset_button">
 		  <property name="visible">True</property>
+		  <property name="sensitive">False</property>
 		  <property name="label" translatable="yes">Reset</property>
 		  <property name="use_underline">True</property>
 		  <property name="stock_id">gtk-goto-first</property>
