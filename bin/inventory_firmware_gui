@@ -185,6 +185,7 @@ class InventoryFirmware:
 
         # set up command stack, used for undo/redo
         self.commandStack = []
+        self.redoStack = []
 
     # this is a helper function to initially populate the tree model.
     # should only ever be called once.
@@ -289,7 +290,7 @@ class InventoryFirmware:
         device = model[path][self.COLUMN_DEVICE]
         if model[path][self.COLUMN_DEVICE_ENABLE_UPDATE]:
             # unpin it and calculated pkg takes over
-            self._executeCommand(UpdateSetPinCommand(self.updateSet, self.updateSet.unPinPackage, (device,), {}))
+            self._executeCommand(UpdateSetPinCommand(self.updateSet, self.updateSet.unPinDevice, (device,), {}))
         else:
             # pin it to None to disable update for this device
             self._executeCommand(UpdateSetPinCommand(self.updateSet, self.updateSet.pinUpdatePackage, (device, None), {}))
@@ -354,7 +355,8 @@ class InventoryFirmware:
     def _executeCommand(self, command):
         command.execute()
         self.commandStack.append(command)
-        self._enableUndo()
+        self.redoStack = []
+        self._condEnableUndoRedo()
         if len(self.commandStack) > 20:
             self.commandStack = self.commandStack[-20:]
 
@@ -362,15 +364,39 @@ class InventoryFirmware:
         if self.commandStack:
             command = self.commandStack.pop()
             command.undo()
-        if not self.commandStack:
-            self._disableUndo()
+            self.redoStack.append(command)
+
+        self._condEnableUndoRedo()
         self._refresh()
 
-    def _enableUndo(self):
-        pass
+    def on_redo_activate(self, *args, **kargs):
+        if self.redoStack:
+            command = self.redoStack.pop()
+            command.execute()
+            self.commandStack.append(command)
 
-    def _disableUndo(self):
-        pass
+        self._condEnableUndoRedo()
+        self._refresh()
+
+    def on_reset_activate(self, *args, **kargs):
+        self.updateSet.reset()
+        self.commandStack = []
+        self.redoStack = []
+        self._condEnableUndoRedo()
+        self.updateSet.setAllowReflash(0)
+        self.updateSet.setAllowDowngrade(0)
+        self._refresh()
+
+    def _condEnableUndoRedo(self):
+        if self.commandStack:
+            pass # TODO: enable undo buttons
+        else:
+            pass # TODO: disable undo buttons
+
+        if self.redoStack:
+            pass # TODO: enable undo buttons
+        else:
+            pass # TODO: disable undo buttons
 
     def on_file_quit(self, *args):
         self.on_quit_app( allowCancel = 1 )

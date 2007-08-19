@@ -146,9 +146,13 @@ class UpdateSet(object):
             raise
             
 
-    def unPinPackage(self, device):
+    def unPinDevice(self, device):
         if self.deviceList[device.name].has_key("pinned_update"):
             del(self.deviceList[device.name]["pinned_update"])
+
+    def reset(self):
+        for device in self.iterDevices():
+            self.unPinDevice(device)
 
     def getMemento(self, deviceHint=None):
         memento = {}
@@ -173,7 +177,7 @@ class UpdateSet(object):
             if details['hasPin']:
                 self.pinUpdatePackage(details["device"], details["oldPin"])
             else:
-                self.unPinPackage(details["device"])
+                self.unPinDevice(details["device"])
 
     def setAllowDowngrade(self, val):
         self.allowDowngrade = val
