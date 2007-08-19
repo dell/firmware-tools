@@ -7,7 +7,7 @@
   <property name="width_request">460</property>
   <property name="height_request">380</property>
   <property name="visible">True</property>
-  <property name="title" translatable="yes">Inventory and Upgrade Firmware</property>
+  <property name="title" translatable="yes">Update Firmware</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
   <property name="window_position">GTK_WIN_POS_NONE</property>
   <property name="modal">False</property>
@@ -72,38 +72,11 @@
 		<widget class="GtkMenu" id="menuitem2_menu">
 
 		  <child>
-		    <widget class="GtkImageMenuItem" id="cut1">
+		    <widget class="GtkImageMenuItem" id="undo">
 		      <property name="visible">True</property>
-		      <property name="label">gtk-cut</property>
+		      <property name="label">gtk-undo</property>
 		      <property name="use_stock">True</property>
-		      <signal name="activate" handler="on_cut1_activate" last_modification_time="Wed, 15 Aug 2007 04:37:26 GMT"/>
-		    </widget>
-		  </child>
-
-		  <child>
-		    <widget class="GtkImageMenuItem" id="copy1">
-		      <property name="visible">True</property>
-		      <property name="label">gtk-copy</property>
-		      <property name="use_stock">True</property>
-		      <signal name="activate" handler="on_copy1_activate" last_modification_time="Wed, 15 Aug 2007 04:37:26 GMT"/>
-		    </widget>
-		  </child>
-
-		  <child>
-		    <widget class="GtkImageMenuItem" id="paste1">
-		      <property name="visible">True</property>
-		      <property name="label">gtk-paste</property>
-		      <property name="use_stock">True</property>
-		      <signal name="activate" handler="on_paste1_activate" last_modification_time="Wed, 15 Aug 2007 04:37:26 GMT"/>
-		    </widget>
-		  </child>
-
-		  <child>
-		    <widget class="GtkImageMenuItem" id="delete1">
-		      <property name="visible">True</property>
-		      <property name="label">gtk-delete</property>
-		      <property name="use_stock">True</property>
-		      <signal name="activate" handler="on_delete1_activate" last_modification_time="Wed, 15 Aug 2007 04:37:26 GMT"/>
+		      <signal name="activate" handler="on_undo_activate" last_modification_time="Sun, 19 Aug 2007 03:46:31 GMT"/>
 		    </widget>
 		  </child>
 
@@ -190,12 +163,13 @@
 	      <property name="show_arrow">True</property>
 
 	      <child>
-		<widget class="GtkToolButton" id="Undo">
+		<widget class="GtkToolButton" id="undo_button">
 		  <property name="visible">True</property>
 		  <property name="stock_id">gtk-undo</property>
 		  <property name="visible_horizontal">True</property>
 		  <property name="visible_vertical">True</property>
 		  <property name="is_important">False</property>
+		  <signal name="clicked" handler="on_undo_activate" last_modification_time="Sun, 19 Aug 2007 03:47:20 GMT"/>
 		</widget>
 		<packing>
 		  <property name="expand">False</property>

@@ -87,28 +87,82 @@ def generateUpdateSet(repo, systemInventory, cb=(nullFunc, None)):
 class UpdateSet(object): 
     def __init__(self, *args, **kargs):
         self.deviceList = {}
+        self.allowDowngrade=False
+        self.allowReflash=False
 
     def addDevice(self, device):
         self.deviceList[device.name] = { "device": device, "update": None, "available_updates": []}
 
     def addAvailablePackage(self, package):
         if self.deviceList.has_key(package.name):
-            available_updates = self.deviceList[package.name]['available_updates']
+            available_updates = self.deviceList[package.name]["available_updates"]
             available_updates.append(package)
-            self.deviceList[package.name]['available_updates'] = available_updates
+            self.deviceList[package.name]["available_updates"] = available_updates
 
     def hasDevice(self, device):
         return self.deviceList.has_key(device.name)
 
+    def getSuggestedUpdatePackageForDevice(self, device):
+        ret = None
+        if self.deviceList.has_key(device.name):
+            ret = self.deviceList[device.name]["update"]
+        return ret
+
     def getUpdatePackageForDevice(self, device):
         ret = None
         if self.deviceList.has_key(device.name):
-            ret = self.deviceList[device.name]['update']
+            if self.deviceList[device.name].has_key("pinned_update"):
+                ret = self.deviceList[device.name]["pinned_update"]
+            else:
+                ret = self.deviceList[device.name]["update"]
         return ret
+
+    def pinUpdatePackage(self, device, pkg):
+        hasOldPin = False
+        if self.deviceList[device.name].has_key("pinned_update"):
+            hasOldPin = True
+            oldPin = self.deviceList[device.name]["pinned_update"]
+
+        self.deviceList[device.name]["pinned_update"] = pkg
+
+        # just check the rules... not actually installing
+        try:
+            for i in self.generateInstallationOrder(): pass
+        except CircularDependencyError, e:
+            # roll back
+            if hasOldPin:
+                self.deviceList[device.name]["pinned_update"] = oldPin
+            else:
+                del(self.deviceList[device.name]["pinned_update"])
+            raise
+            
+
+    def unPinPackage(self, device):
+        if self.deviceList[device.name].has_key("pinned_update"):
+            del(self.deviceList[device.name]["pinned_update"])
 
     def iterDevices(self):
         for device, details in self.deviceList.items():
             yield details["device"]
+
+    def getMemento(self, deviceHint=None):
+        if deviceHint:
+            hasOldPin = False
+            oldPin = None
+            if self.deviceList[deviceHint.name].has_key("pinned_update"):
+                hasOldPin = True
+                oldPin = self.deviceList[deviceHint.name]["pinned_update"]
+        else:
+            raise RuntimeError("getMemento() called on updateSet without deviceHint")
+
+        return (deviceHint, hasOldPin, oldPin)
+
+    def setMemento(self, memento):
+        device, hasOldPin, oldPin = memento
+        if hasOldPin:
+            self.pinUpdatePackage(device, oldPin)
+        else:
+            self.unPinPackage(device)
 
     def iterAvailableUpdates(self, device):
         for pkg in self.deviceList[device.name]["available_updates"]:
@@ -121,8 +175,13 @@ class UpdateSet(object):
             return 0
             
         # is candidate newer than what is either installed or scheduled for install
-        if unionInventory[candidate.name].compareVersion(candidate) >= 0:
+        if not self.allowDowngrade and unionInventory[candidate.name].compareVersion(candidate) >= 0:
             cb[0]( who="checkRules", what="package_not_newer", package=candidate, systemPackage=unionInventory[candidate.name], cb=cb)
+            return 0
+    
+        # is candidate newer than what is either installed or scheduled for install
+        if not self.allowReflash and unionInventory[candidate.name].compareVersion(candidate) == 0:
+            cb[0]( who="checkRules", what="package_same_version", package=candidate, systemPackage=unionInventory[candidate.name], cb=cb)
             return 0
     
         #check to see if this package has specific system requirements
@@ -157,7 +216,7 @@ class UpdateSet(object):
         while workToDo:
             workToDo = 0
             for pkgName, details in self.deviceList.items():
-                for candidate in details['available_updates']:
+                for candidate in details["available_updates"]:
                     if self.checkRules(candidate, unionInventory, cb=cb):
                         self.deviceList[candidate.name]["update"] = candidate
                         # update union inventory
@@ -175,8 +234,9 @@ class UpdateSet(object):
         # as we install them
         updateDeviceList = [] # [ pkg, pkg, pkg ]
         for pkgName, details in self.deviceList.items():
-            if details["update"]:
-                updateDeviceList.append(details["update"])
+            update = self.getUpdatePackageForDevice(details["device"])
+            if update:
+                updateDeviceList.append(update)
     
         workToDo = 1
         while workToDo:

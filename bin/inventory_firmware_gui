@@ -29,6 +29,42 @@ import firmwaretools.package
 PROGRAM_NAME="Firmware Inventory and Update GUI"
 version="1.4.3"
 
+class CommandAlreadyExecuted(Exception): pass
+class CommandAlreadyUndone(Exception): pass
+class Command(object):
+    def __init__(self, object, method, args, kargs):
+        self.object = object
+        self.method = method
+        self.args = args
+        self.kargs = kargs
+        self.memento = None
+        self.executed = False
+        self.undone = False
+
+    def execute(self):
+        if self.executed:
+            raise CommandAlreadyExecuted()
+        self.executed=True
+        self.undone = False
+        self.memento = self.object.getMemento()
+        self.method(*self.args, **self.kargs)
+
+    def undo(self):
+        if self.undone:
+            raise CommandAlreadyUndone()
+        self.undone = True
+        self.executed = False
+        self.object.setMemento(self.memento)
+
+class UpdateSetCommand(Command):
+    def execute(self):
+        if self.executed:
+            raise CommandAlreadyExecuted()
+        self.executed=True
+        self.undone = False
+        self.memento = self.object.getMemento(deviceHint = self.args[0])
+        self.method(*self.args, **self.kargs)
+
 class InventoryFirmware:
     GLADE_FILE = '/glade/inventory_firmware_gui.glade'
     def __init__(self, ini):
@@ -38,44 +74,49 @@ class InventoryFirmware:
         self.wTree.get_widget("about_dialog").destroy()
 
         # set up toggles
-        self.allowDowngrade = False
-        self.allowReflash = False
         self.toolbarAllowDowngrade = self.wTree.get_widget("toolbar_allow_downgrade")
         self.toolbarAllowReflash = self.wTree.get_widget("toolbar_allow_reflash")
         self.menuAllowDowngrade = self.wTree.get_widget("menu_allow_downgrade")
         self.menuAllowReflash = self.wTree.get_widget("menu_allow_reflash")
         
 
-        # create model for src treeview
+        # create model for inventory treeview
         self.inventoryTreeView = self.wTree.get_widget("inventory_treeview")
         self.inventoryTreeModel= gtk.TreeStore(
                 object,                # device or package
                 gobject.TYPE_BOOLEAN,  # for device == enable update for device (checkbox),
                                        # for package == update to this package
+                gobject.TYPE_INT,      # flags
                 )
         self.inventoryTreeView.set_model(self.inventoryTreeModel)
         self.COLUMN_DEVICE = 0
         self.COLUMN_DEVICE_ENABLE_UPDATE = 1
+        self.COLUMN_FLAGS = 2
+        self.FLAG_REFLASH = 1
+        self.FLAG_DOWNGRADE = 2
 
-        # add column headers to the src treeview
+        # add column headers to the inventory treeview
         self.inventoryTreeView.set_headers_visible(True)
 
         # select, status, criticality, package name, component, type (bios/firmware/driver), current ver, repo ver
 
+        # add column: Flash yes/no checkbox column
         renderer=gtk.CellRendererToggle()
         renderer.set_property("radio", False)
         renderer.set_property('activatable', True)
-        renderer.connect('toggled', self.toggle_enabled_cb, self.inventoryTreeModel)
+        renderer.connect('toggled', self.toggle_device_cb, self.inventoryTreeModel)
         column=gtk.TreeViewColumn("Flash",renderer)
         column.add_attribute(renderer, "active", self.COLUMN_DEVICE_ENABLE_UPDATE)
         column.set_cell_data_func(renderer, self.cell_data_func_toggle)
         self.inventoryTreeView.append_column(column)
 
+        # add column: Display name for devices, version select for updates
         renderer=gtk.CellRendererToggle()
         renderer.set_property("radio", True)
         renderer.set_property('activatable', True)
-        renderer.connect('toggled', self.toggle_enabled_cb, self.inventoryTreeModel)
+        renderer.connect('toggled', self.toggle_update_cb, self.inventoryTreeModel)
         column=gtk.TreeViewColumn("Display Name",renderer)
+        column.add_attribute(renderer, "active", self.COLUMN_DEVICE_ENABLE_UPDATE)
         column.set_resizable(True)
         renderer=gtk.CellRendererText()
         column.pack_start(renderer)
@@ -83,6 +124,7 @@ class InventoryFirmware:
         self.inventoryTreeView.append_column(column)
         self.inventoryTreeView.set_expander_column(column)
 
+        # add column: Firmware version
         renderer = gtk.CellRendererText()
         column=gtk.TreeViewColumn("Current Version",renderer)
         column.set_cell_data_func(renderer, self.cell_data_func_version)
@@ -107,15 +149,13 @@ class InventoryFirmware:
         # set status == collecting inventory
         ctx = self.statusBar.get_context_id("inventory")
         self.statusBar.push(ctx, "Performing system inventory...")
+        guihelpers.gtkYield() # make sure current GUI is fully displayed
 
         # special function to make sure GUI updates smoothly while we
         # generate the update set
         def myYield(*args, **kargs):
             # eats all its args...
             guihelpers.gtkYield()
-
-        # make sure current GUI is fully displayed
-        guihelpers.gtkYield()
 
         # collect inventory
         r = firmwaretools.repository.Repository( ini.get("main", "storage_topdir") )
@@ -128,20 +168,40 @@ class InventoryFirmware:
         # set status == ready
         self.statusBar.pop(ctx)
 
+        # set up command stack
+        self.commandStack = []
+
     def _populate(self):
         self.inventoryTreeModel.clear()
         for device in self.updateSet.iterDevices():
             guihelpers.gtkYield()
+            flags = 0
             toggle=False
             if self.updateSet.getUpdatePackageForDevice(device) is not None:
                 toggle=True
-            iter = self.inventoryTreeModel.append(None, [device, toggle])
+            iter = self.inventoryTreeModel.append(None, [device, toggle, flags])
             for availPkg in self.updateSet.iterAvailableUpdates(device):
                 guihelpers.gtkYield()
+                flags = 0
+                if device.compareVersion(availPkg) == 0:
+                    flags = flags | self.FLAG_REFLASH
+                if device.compareVersion(availPkg) > 0:
+                    flags = flags | self.FLAG_DOWNGRADE
                 toggle=False
                 if self.updateSet.getUpdatePackageForDevice(device) == availPkg:
                     toggle=True
-                self.inventoryTreeModel.append(iter, [availPkg, toggle])
+                self.inventoryTreeModel.append(iter, [availPkg, toggle, flags])
+    
+    def _refresh(self):
+        for i in range(self.inventoryTreeModel.iter_n_children(None)):
+            device_path = self.inventoryTreeModel.get_path(self.inventoryTreeModel.iter_nth_child(None, i))
+            device = self.inventoryTreeModel[device_path][self.COLUMN_DEVICE]
+            if self.updateSet.getUpdatePackageForDevice(device) is not None:
+                self.inventoryTreeModel[device_path][self.COLUMN_DEVICE_ENABLE_UPDATE]=True
+            else:
+                self.inventoryTreeModel[device_path][self.COLUMN_DEVICE_ENABLE_UPDATE]=False
+
+            self._fixupChildren(self.inventoryTreeModel, self.inventoryTreeModel.get_iter(device_path))
 
     def cell_data_func_display_name(self, column, cell, model, iter):
         pyobj = model.get_value(iter,self.COLUMN_DEVICE)
@@ -151,23 +211,30 @@ class InventoryFirmware:
             renderers[0].set_property("visible", False)
             renderers[1].set_property("text", text)
         else:
+            flags = model.get_value(iter,self.COLUMN_FLAGS)
             renderers[0].set_property("visible", True)
-            renderers[0].set_property("active", model.get_value(iter,self.COLUMN_DEVICE_ENABLE_UPDATE))
             parentIter = model.iter_parent(iter)
             device = model.get_value(parentIter,self.COLUMN_DEVICE)
             text = str(pyobj.version)
-            if self.updateSet.getUpdatePackageForDevice(device) == pyobj:
-                renderers[1].set_property("text", "Available Version: %s  (suggested)" % text)
-            else:
-                renderers[1].set_property("text", "Available Version: %s" % text)
 
+            renderers[1].set_property("text", "Available Version: %s" % text)
             renderers[0].set_property('activatable', True)
-            if device.compareVersion(pyobj) == 0 and not self.allowReflash:
-                renderers[0].set_property('activatable', False)
-            if device.compareVersion(pyobj) > 0 and not self.allowDowngrade:
-                renderers[0].set_property('activatable', False)
+
             if not model.get_value(parentIter, self.COLUMN_DEVICE_ENABLE_UPDATE):
                 renderers[0].set_property('activatable', False)
+
+            if self.updateSet.getSuggestedUpdatePackageForDevice(device) == pyobj:
+                renderers[1].set_property("text", "Available Version: %s  (suggested)" % text)
+
+            if flags & self.FLAG_REFLASH:
+                renderers[1].set_property("text", "Available Version: %s  (reflash)" % text)
+                if not self.updateSet.allowReflash: 
+                    renderers[0].set_property('activatable', False)
+
+            if flags & self.FLAG_DOWNGRADE:
+                renderers[1].set_property("text", "Available Version: %s  (downgrade)" % text)
+                if not self.updateSet.allowDowngrade:
+                    renderers[0].set_property('activatable', False)
 
 
     def cell_data_func_version(self, column, cell, model, iter):
@@ -185,48 +252,54 @@ class InventoryFirmware:
         else:
             cell.set_property("visible", False)
 
-    def toggle_enabled_cb(self, renderer, path, user_data, *args, **kargs):
-        model = user_data
+    def toggle_device_cb(self, renderer, path, model, *args, **kargs):
+        model[path][self.COLUMN_DEVICE_ENABLE_UPDATE] = not model[path][self.COLUMN_DEVICE_ENABLE_UPDATE]
+        device = model[path][self.COLUMN_DEVICE]
+        if model[path][self.COLUMN_DEVICE_ENABLE_UPDATE]:
+            # unpin it and calculated pkg takes over
+            self._executeCommand(UpdateSetCommand(self.updateSet, self.updateSet.unPinPackage, (device,), {}))
+        else:
+            # pin it to None to disable update for this device
+            self._executeCommand(UpdateSetCommand(self.updateSet, self.updateSet.pinUpdatePackage, (device, None), {}))
+
+        self._fixupChildren(model, model.get_iter(path))
+
+    def toggle_update_cb(self, renderer, path, model, *args, **kargs):
         iter = model.get_iter(path)
         parentIter = model.iter_parent(iter)
-        if parentIter is None:
-            model[path][self.COLUMN_DEVICE_ENABLE_UPDATE] = not model[path][self.COLUMN_DEVICE_ENABLE_UPDATE]
-            device = model[path][self.COLUMN_DEVICE]
-            if model[path][self.COLUMN_DEVICE_ENABLE_UPDATE]:
-                for i in range(model.iter_n_children(iter)):
-                    child_path = model.get_path(model.iter_nth_child(iter, i))
-                    if model[child_path][self.COLUMN_DEVICE] == self.updateSet.getUpdatePackageForDevice(device):
-                        model[child_path][self.COLUMN_DEVICE_ENABLE_UPDATE] = True
-                    else:
-                        model[child_path][self.COLUMN_DEVICE_ENABLE_UPDATE] = False
+        device = model.get_value(parentIter, self.COLUMN_DEVICE)
+        update = model[path][self.COLUMN_DEVICE]
+        self._executeCommand(UpdateSetCommand(self.updateSet, self.updateSet.pinUpdatePackage, (device, update), {}))
+        self._fixupChildren(model, parentIter)
+
+    # this method sets the enable toggle on packages appropriately
+    def _fixupChildren(self, model, iter):
+        for i in range(model.iter_n_children(iter)):
+            child_path = model.get_path(model.iter_nth_child(iter, i))
+            if model[child_path][self.COLUMN_DEVICE] == self.updateSet.getUpdatePackageForDevice(model.get_value(iter,self.COLUMN_DEVICE)):
+                model[child_path][self.COLUMN_DEVICE_ENABLE_UPDATE] = True
             else:
-                for i in range(model.iter_n_children(iter)):
-                    child_path = model.get_path(model.iter_nth_child(iter, i))
-                    model[child_path][self.COLUMN_DEVICE_ENABLE_UPDATE] = False
-                    # TODO: unpin update package
-        else:
-            for i in range(model.iter_n_children(parentIter)):
-                child_path = model.get_path(model.iter_nth_child(parentIter, i))
                 model[child_path][self.COLUMN_DEVICE_ENABLE_UPDATE] = False
 
-            model[path][self.COLUMN_DEVICE_ENABLE_UPDATE] = True
-        # TODO: set updateSet to enable/disable
-
     def on_toolbar_allow_downgrade_toggled(self, *args, **kargs):
-        self.allowDowngrade = self.toolbarAllowDowngrade.get_active()
-        self.menuAllowDowngrade.set_active(self.allowDowngrade)
+        self.updateSet.allowDowngrade = self.toolbarAllowDowngrade.get_active()
+        self.menuAllowDowngrade.set_active(self.updateSet.allowDowngrade)
+        # TODO: traverse list and deselect invalid
 
     def on_toolbar_allow_reflash_toggled(self, *args, **kargs):
-        self.allowReflash = self.toolbarAllowReflash.get_active()
-        self.menuAllowReflash.set_active(self.allowReflash)
+        self.updateSet.allowReflash = self.toolbarAllowReflash.get_active()
+        self.menuAllowReflash.set_active(self.updateSet.allowReflash)
+        # TODO: traverse list and deselect invalid
 
     def on_menu_allow_downgrade_activate(self, *args, **kargs):
-        self.allowDowngrade = self.menuAllowDowngrade.get_active()
-        self.toolbarAllowDowngrade.set_active(self.allowDowngrade)
+        self.updateSet.allowDowngrade = self.menuAllowDowngrade.get_active()
+        self.toolbarAllowDowngrade.set_active(self.updateSet.allowDowngrade)
+        # TODO: traverse list and deselect invalid
 
     def on_menu_allow_reflash_activate(self, *args, **kargs):
-        self.allowReflash = self.menuAllowReflash.get_active()
-        self.toolbarAllowReflash.set_active(self.allowReflash)
+        self.updateSet.allowReflash = self.menuAllowReflash.get_active()
+        self.toolbarAllowReflash.set_active(self.updateSet.allowReflash)
+        # TODO: traverse list and deselect invalid
 
     def on_help_about(self, *args):
         wTree = gtk.glade.XML(TOPDIR + self.GLADE_FILE, "about_dialog")
@@ -234,6 +307,18 @@ class InventoryFirmware:
         wTree.get_widget("about_dialog").set_property('version',version)
         wTree.get_widget("about_dialog").run() # modal until 'close'
         wTree.get_widget("about_dialog").destroy()
+
+    def _executeCommand(self, command):
+        command.execute()
+        self.commandStack.append(command)
+        if len(self.commandStack) > 20:
+            self.commandStack = self.commandStack[-20:]
+
+    def on_undo_activate(self, *args, **kargs):
+        if self.commandStack:
+            command = self.commandStack.pop()
+            command.undo()
+        self._refresh()
 
     def on_file_quit(self, *args):
         self.on_quit_app( allowCancel = 1 )
