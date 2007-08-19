@@ -29,6 +29,16 @@ import firmwaretools.package
 PROGRAM_NAME="Firmware Inventory and Update GUI"
 version="1.4.3"
 
+# bugs:
+#   circular dependency:
+#       allow-downgrade
+#       select downgrade
+#       disallow-downgrade
+#       allow-downgrade
+#       undo
+#       BANG
+#     Fix by unpinning any downgraded packages if allow-downgrade de-selected.
+
 class CommandAlreadyExecuted(Exception): pass
 class CommandAlreadyUndone(Exception): pass
 class Command(object):
@@ -56,7 +66,8 @@ class Command(object):
         self.executed = False
         self.object.setMemento(self.memento)
 
-class UpdateSetCommand(Command):
+# use only for pin/unpin, it is more efficent as it doesnt save full memento
+class UpdateSetPinCommand(Command):
     def execute(self):
         if self.executed:
             raise CommandAlreadyExecuted()
@@ -78,6 +89,7 @@ class InventoryFirmware:
         self.toolbarAllowReflash = self.wTree.get_widget("toolbar_allow_reflash")
         self.menuAllowDowngrade = self.wTree.get_widget("menu_allow_downgrade")
         self.menuAllowReflash = self.wTree.get_widget("menu_allow_reflash")
+        self.recursiveCallback=0
         
 
         # create model for inventory treeview
@@ -171,6 +183,8 @@ class InventoryFirmware:
         # set up command stack
         self.commandStack = []
 
+    # this is a helper function to initially populate the tree model.
+    # should only ever be called once.
     def _populate(self):
         self.inventoryTreeModel.clear()
         for device in self.updateSet.iterDevices():
@@ -191,8 +205,14 @@ class InventoryFirmware:
                 if self.updateSet.getUpdatePackageForDevice(device) == availPkg:
                     toggle=True
                 self.inventoryTreeModel.append(iter, [availPkg, toggle, flags])
-    
+   
+    # refresh the display when something happens behind the scenes. Should be rarely used.
     def _refresh(self):
+        self._refresh_update_enable_toggles()
+        self._refresh_allow_toggles()
+
+    # only refreshes the toggles and radio buttons to reflect current package set.
+    def _refresh_update_enable_toggles(self):
         for i in range(self.inventoryTreeModel.iter_n_children(None)):
             device_path = self.inventoryTreeModel.get_path(self.inventoryTreeModel.iter_nth_child(None, i))
             device = self.inventoryTreeModel[device_path][self.COLUMN_DEVICE]
@@ -202,6 +222,15 @@ class InventoryFirmware:
                 self.inventoryTreeModel[device_path][self.COLUMN_DEVICE_ENABLE_UPDATE]=False
 
             self._fixupChildren(self.inventoryTreeModel, self.inventoryTreeModel.get_iter(device_path))
+
+    # refreshes allow reflash/downgrade toggles
+    def _refresh_allow_toggles(self):
+        self.recursiveCallback=1
+        self.menuAllowDowngrade.set_property("active", self.updateSet.allowDowngrade)
+        self.menuAllowReflash.set_property("active", self.updateSet.allowReflash)
+        self.toolbarAllowDowngrade.set_property("active", self.updateSet.allowDowngrade)
+        self.toolbarAllowReflash.set_property("active", self.updateSet.allowReflash)
+        self.recursiveCallback=0
 
     def cell_data_func_display_name(self, column, cell, model, iter):
         pyobj = model.get_value(iter,self.COLUMN_DEVICE)
@@ -257,10 +286,10 @@ class InventoryFirmware:
         device = model[path][self.COLUMN_DEVICE]
         if model[path][self.COLUMN_DEVICE_ENABLE_UPDATE]:
             # unpin it and calculated pkg takes over
-            self._executeCommand(UpdateSetCommand(self.updateSet, self.updateSet.unPinPackage, (device,), {}))
+            self._executeCommand(UpdateSetPinCommand(self.updateSet, self.updateSet.unPinPackage, (device,), {}))
         else:
             # pin it to None to disable update for this device
-            self._executeCommand(UpdateSetCommand(self.updateSet, self.updateSet.pinUpdatePackage, (device, None), {}))
+            self._executeCommand(UpdateSetPinCommand(self.updateSet, self.updateSet.pinUpdatePackage, (device, None), {}))
 
         self._fixupChildren(model, model.get_iter(path))
 
@@ -269,7 +298,7 @@ class InventoryFirmware:
         parentIter = model.iter_parent(iter)
         device = model.get_value(parentIter, self.COLUMN_DEVICE)
         update = model[path][self.COLUMN_DEVICE]
-        self._executeCommand(UpdateSetCommand(self.updateSet, self.updateSet.pinUpdatePackage, (device, update), {}))
+        self._executeCommand(UpdateSetPinCommand(self.updateSet, self.updateSet.pinUpdatePackage, (device, update), {}))
         self._fixupChildren(model, parentIter)
 
     # this method sets the enable toggle on packages appropriately
@@ -281,25 +310,19 @@ class InventoryFirmware:
             else:
                 model[child_path][self.COLUMN_DEVICE_ENABLE_UPDATE] = False
 
-    def on_toolbar_allow_downgrade_toggled(self, *args, **kargs):
-        self.updateSet.allowDowngrade = self.toolbarAllowDowngrade.get_active()
-        self.menuAllowDowngrade.set_active(self.updateSet.allowDowngrade)
-        # TODO: traverse list and deselect invalid
 
-    def on_toolbar_allow_reflash_toggled(self, *args, **kargs):
-        self.updateSet.allowReflash = self.toolbarAllowReflash.get_active()
-        self.menuAllowReflash.set_active(self.updateSet.allowReflash)
-        # TODO: traverse list and deselect invalid
+    def on_allow_downgrade_toggled(self, widget, *args, **kargs):
+        # guard against executeCommand being called while we are in a refresh
+        if not self.recursiveCallback:
+            self._executeCommand(Command(self.updateSet, self.updateSet.setAllowDowngrade, (widget.get_active(),), {}))
+            self._refresh_allow_toggles()
 
-    def on_menu_allow_downgrade_activate(self, *args, **kargs):
-        self.updateSet.allowDowngrade = self.menuAllowDowngrade.get_active()
-        self.toolbarAllowDowngrade.set_active(self.updateSet.allowDowngrade)
-        # TODO: traverse list and deselect invalid
+    def on_allow_reflash_toggled(self, widget, *args, **kargs):
+        # guard against executeCommand being called while we are in a refresh
+        if not self.recursiveCallback:
+            self._executeCommand(Command(self.updateSet, self.updateSet.setAllowReflash, (widget.get_active(),), {}))
+            self._refresh_allow_toggles()
 
-    def on_menu_allow_reflash_activate(self, *args, **kargs):
-        self.updateSet.allowReflash = self.menuAllowReflash.get_active()
-        self.toolbarAllowReflash.set_active(self.updateSet.allowReflash)
-        # TODO: traverse list and deselect invalid
 
     def on_help_about(self, *args):
         wTree = gtk.glade.XML(TOPDIR + self.GLADE_FILE, "about_dialog")

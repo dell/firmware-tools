@@ -92,7 +92,7 @@
 		      <property name="label" translatable="yes">Allow _Downgrade</property>
 		      <property name="use_underline">True</property>
 		      <property name="active">False</property>
-		      <signal name="activate" handler="on_menu_allow_downgrade_activate" last_modification_time="Sat, 18 Aug 2007 15:48:14 GMT"/>
+		      <signal name="activate" handler="on_allow_downgrade_toggled" last_modification_time="Sun, 19 Aug 2007 05:15:04 GMT"/>
 		    </widget>
 		  </child>
 
@@ -102,7 +102,7 @@
 		      <property name="label" translatable="yes">Allow _Reflash</property>
 		      <property name="use_underline">True</property>
 		      <property name="active">False</property>
-		      <signal name="activate" handler="on_menu_allow_reflash_activate" last_modification_time="Sat, 18 Aug 2007 15:48:14 GMT"/>
+		      <signal name="activate" handler="on_allow_reflash_toggled" last_modification_time="Sun, 19 Aug 2007 05:15:14 GMT"/>
 		    </widget>
 		  </child>
 		</widget>
@@ -218,7 +218,7 @@ Downgrade</property>
 		  <property name="visible_vertical">True</property>
 		  <property name="is_important">False</property>
 		  <property name="active">False</property>
-		  <signal name="toggled" handler="on_toolbar_allow_downgrade_toggled" last_modification_time="Sat, 18 Aug 2007 15:49:15 GMT"/>
+		  <signal name="toggled" handler="on_allow_downgrade_toggled" last_modification_time="Sun, 19 Aug 2007 05:14:34 GMT"/>
 		</widget>
 		<packing>
 		  <property name="expand">False</property>
@@ -237,7 +237,7 @@ Reflash</property>
 		  <property name="visible_vertical">True</property>
 		  <property name="is_important">False</property>
 		  <property name="active">False</property>
-		  <signal name="toggled" handler="on_toolbar_allow_reflash_toggled" last_modification_time="Sat, 18 Aug 2007 15:49:43 GMT"/>
+		  <signal name="toggled" handler="on_allow_reflash_toggled" last_modification_time="Sun, 19 Aug 2007 05:22:23 GMT"/>
 		</widget>
 		<packing>
 		  <property name="expand">False</property>
