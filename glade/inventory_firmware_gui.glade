@@ -7,7 +7,7 @@
   <property name="width_request">460</property>
   <property name="height_request">380</property>
   <property name="visible">True</property>
-  <property name="title" translatable="yes">Update Firmware</property>
+  <property name="title" translatable="yes">Inventory and Update Firmware</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
   <property name="window_position">GTK_WIN_POS_NONE</property>
   <property name="modal">False</property>
