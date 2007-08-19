@@ -183,7 +183,7 @@ class InventoryFirmware:
         # set status == ready
         self.statusBar.pop(ctx)
 
-        # set up command stack
+        # set up command stack, used for undo/redo
         self.commandStack = []
 
     # this is a helper function to initially populate the tree model.
@@ -384,7 +384,7 @@ def main():
     pretty = 0
 
     global TOPDIR
-    TOPDIR = ""
+    TOPDIR = "/usr/share/firmware-tools/"
     ini = ConfigParser.ConfigParser()
     verbose = 0
     warnings = 0
