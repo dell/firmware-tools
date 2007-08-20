@@ -12,9 +12,9 @@ import unittest
 class TestCase(unittest.TestCase):
     def setUp(self):
         import firmwaretools.package as package
-        pkgA = package.Package(name="pkgA", version="a01")
-        pkgB = package.Package(name="pkgC", version="a02")
-        pkgC = package.Package(name="pkgC", version="a03")
+        pkgA = package.Package(name="pkgA", version="a01", displayname="test pkgA")
+        pkgB = package.Package(name="pkgC", version="a02", displayname="test pkgC")
+        pkgC = package.Package(name="pkgC", version="a03", displayname="test pkgC")
 
         self.inventory = {}
         self.inventory['pkgA'] = pkgA

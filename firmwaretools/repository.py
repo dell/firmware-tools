@@ -32,7 +32,13 @@ def makePackage(configFile):
     conf.read(configFile)
 
     # make a standard package
+    if conf.has_option("package", "displayname"):
+        displayname = conf.has_option("package", "displayname")
+    else:
+        displayname = "unknown"
+
     p = package.RepositoryPackage( 
+        displayname = displayname,
         name=conf.get("package", "name"),
         version=conf.get("package", "version"),
         conf=conf, 
@@ -52,6 +58,7 @@ def makePackage(configFile):
             dprint("direct instantiate\n")
             # direct instantiate class (new style)
             p = type(
+                displayname=displayname,
                 name=conf.get("package", "name"),
                 version=conf.get("package", "version"),
                 conf=conf,

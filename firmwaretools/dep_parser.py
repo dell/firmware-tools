@@ -68,7 +68,7 @@ class DepParser(object):
                | ID GT ID
         """
         op  = t[2]
-        reqPkg = package.Package (name=t[1], version=t[3])
+        reqPkg = package.Package (name=t[1], version=t[3], displayname="virtual package")
         pkg = self.inventory.get(t[1])
         if pkg:
             r = pkg.compareVersion(reqPkg)

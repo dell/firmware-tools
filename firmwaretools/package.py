@@ -19,6 +19,11 @@ class NoInstaller(Exception): pass
 def defaultCompareStrategy(ver1, ver2):
     return rpm.labelCompare( ("0", str(ver1), "0"), ("0", str(ver2), "0"))
 
+# Package public API:
+#   pkg.name
+#   pkg.version
+#   str(pkg) == display name
+#   pkg.compareVersion(otherPkg)
 class Package(object):
     def __init__(self, *args, **kargs):
         self.name = None
@@ -27,6 +32,10 @@ class Package(object):
         for key, value in kargs.items():
             setattr(self, key, value)
 
+        assert(hasattr(self, "name"))
+        assert(hasattr(self, "version"))
+        assert(hasattr(self, "displayname"))
+
     def __str__(self):
         if hasattr(self, "displayname"):
             return self.displayname
@@ -34,14 +43,6 @@ class Package(object):
 
     def compareVersion(self, otherPackage):
         return self.compareStrategy(self.version, otherPackage.version)
-
-# Base class for all devices on a system
-class Device(Package):
-    pass
-
-# required: pci bus, device, function, pci ven/dev
-class PciDevice(Device):
-    pass
 
 class RepositoryPackage(Package):
     mainIni = None
@@ -56,6 +57,30 @@ class RepositoryPackage(Package):
 
         raise NoInstaller("Attempt to install a package with no install function. Name: %s, Version: %s" % (self.name, self.version))
 
+
+# Base class for all devices on a system
+class Device(Package):
+    def __init__(self, *args, **kargs):
+        super(Device, self).__init__(*args, **kargs)
+        self.uniqueKey = self.name
+
+# required: 
+#   displayname
+#   name
+#   version
+#   pciDbdf
+# optional:
+#   compareStrategy
+class PciDevice(Device):
+    def __init__(self, *args, **kargs):
+        super(Device, self).__init__(*args, **kargs)
+        assert(hasattr(self, "pciDbdf"))
+        self.uniqueInstance = "%s_%s" % (self.name, self.pciDbdf)
+
+
+#
+# TESTING/DEBUG stuff below here
+#
 
 class MockRepositoryPackage(RepositoryPackage):
     def install(self):

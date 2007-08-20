@@ -70,103 +70,121 @@ class TestCase(unittest.TestCase):
     def testGenerateUpdateSet1(self):
         import firmwaretools.repository as repository
         import firmwaretools.package as package
-        p = package.Device()
-        p.name = "testpack"
-        p.version = "a04"
+        p = package.Device(
+            name = "testpack",
+            version = "a04",
+            displayname = "fake"
+            )
         systemInventory = [p,]
         r = repository.Repository(datafiles)
         updateSet = repository.generateUpdateSet(r, systemInventory)
 
-        self.assertEqual( updateSet.getUpdatePackageForDevice(package.Package(name="testpack")).name, "testpack" )
-        self.assertEqual( updateSet.getUpdatePackageForDevice(package.Package(name="testpack")).version, "a06" )
+        self.assertEqual( updateSet.getUpdatePackageForDevice(p).name, "testpack" )
+        self.assertEqual( updateSet.getUpdatePackageForDevice(p).version, "a06" )
 
     def testGenerateUpdateSet2(self):
         import firmwaretools.repository as repository
         import firmwaretools.package as package
-        p = package.Device()
-        p.name = "testpack_different"
-        p.version = "a04"
+        p = package.Device(
+            name = "testpack_different",
+            version = "a04",
+            displayname = "fake"
+            )
         systemInventory = [p,]
         r = repository.Repository(datafiles)
         updateSet = repository.generateUpdateSet(r, systemInventory)
 
-        self.assertEqual( updateSet.getUpdatePackageForDevice(package.Package(name="testpack_different")).name, "testpack_different" )
-        self.assertEqual( updateSet.getUpdatePackageForDevice(package.Package(name="testpack_different")).version, "a07" )
+        self.assertEqual( updateSet.getUpdatePackageForDevice(p).name, "testpack_different" )
+        self.assertEqual( updateSet.getUpdatePackageForDevice(p).version, "a07" )
 
     def testGenerateUpdateSet3(self):
         import firmwaretools.repository as repository
         import firmwaretools.package as package
-        p = package.Device()
-        p.name = "testpack"
-        p.version = "a08"
+        p = package.Device(
+            name = "testpack",
+            version = "a08",
+            displayname = "fake"
+            )
         systemInventory = [p,]
         r = repository.Repository(datafiles)
         updateSet = repository.generateUpdateSet(r, systemInventory)
 
-        self.failUnless( updateSet.getUpdatePackageForDevice(package.Package(name="testpack")) is None )
+        self.failUnless( updateSet.getUpdatePackageForDevice(p) is None )
 
     def testGenerateUpdateSet4_andInstall(self):
         import firmwaretools.repository as repository
         import firmwaretools.package as package
-        p = package.Device()
-        p.name = "testpack_newpkgstrat"
-        p.version = "a04"
+        p = package.Device(
+            name = "testpack_newpkgstrat",
+            version = "a04",
+            displayname = "fake"
+            )
         systemInventory = [p,]
         r = repository.Repository(datafiles)
         updateSet = repository.generateUpdateSet(r, systemInventory)
 
-        self.assertEqual( updateSet.getUpdatePackageForDevice(package.Package(name="testpack_newpkgstrat")).name, "testpack_newpkgstrat" )
-        self.assertEqual( updateSet.getUpdatePackageForDevice(package.Package(name="testpack_newpkgstrat")).version, "a08") 
-        res = updateSet.getUpdatePackageForDevice(package.Package(name="testpack_newpkgstrat")).install()
+        self.assertEqual( updateSet.getUpdatePackageForDevice(p).name, "testpack_newpkgstrat" )
+        self.assertEqual( updateSet.getUpdatePackageForDevice(p).version, "a08") 
+        res = updateSet.getUpdatePackageForDevice(p).install()
         self.assertEqual( res, "SUCCESS" )
 
     def testGenerateUpdateSetMultiple(self):
         import firmwaretools.repository as repository
         import firmwaretools.package as package
 
-        p = package.Device()
-        p.name = "testpack"
-        p.version = "a04"
+        p = package.Device(
+            name = "testpack",
+            version = "a04",
+            displayname = "fake"
+            )
 
-        q = package.Device()
-        q.name = "testpack_different"
-        q.version = "a04"
+        q = package.Device(
+            name = "testpack_different",
+            version = "a04",
+            displayname = "fake"
+            )
 
-        r = package.Device()
-        r.name = "testpack_another"
-        r.version = "a05"
+        r = package.Device(
+            name = "testpack_another",
+            version = "a05",
+            displayname = "fake"
+            )
 
         systemInventory = [p,q,r]
-        r = repository.Repository(datafiles)
-        updateSet = repository.generateUpdateSet(r, systemInventory)
+        repo = repository.Repository(datafiles)
+        updateSet = repository.generateUpdateSet(repo, systemInventory)
 
-        self.assertEqual( updateSet.getUpdatePackageForDevice(package.Package(name="testpack")).name, "testpack" )
-        self.assertEqual( updateSet.getUpdatePackageForDevice(package.Package(name="testpack")).version, "a06" )
-        self.assertEqual( updateSet.getUpdatePackageForDevice(package.Package(name="testpack_different")).name, "testpack_different" )
-        self.assertEqual( updateSet.getUpdatePackageForDevice(package.Package(name="testpack_different")).version, "a07" )
-        self.failUnless( updateSet.getUpdatePackageForDevice(package.Package(name="testpack_another")) is None )
+        self.assertEqual( updateSet.getUpdatePackageForDevice(p).name, "testpack" )
+        self.assertEqual( updateSet.getUpdatePackageForDevice(p).version, "a06" )
+        self.assertEqual( updateSet.getUpdatePackageForDevice(q).name, "testpack_different" )
+        self.assertEqual( updateSet.getUpdatePackageForDevice(q).version, "a07" )
+        self.failUnless( updateSet.getUpdatePackageForDevice(r) is None )
 
     def testGenerateUpdateSetInstallDefault(self):
         import firmwaretools.repository as repository
         import firmwaretools.package as package
-        p = package.Device()
-        p.name = "testpack"
-        p.version = "a04"
+        p = package.Device(
+            name = "testpack",
+            version = "a04",
+            displayname = "fake"
+            )
         systemInventory = [p,]
         r = repository.Repository(datafiles)
         updateSet = repository.generateUpdateSet(r, systemInventory)
-        self.assertRaises(package.NoInstaller, updateSet.getUpdatePackageForDevice(package.Package(name="testpack")).install)
+        self.assertRaises(package.NoInstaller, updateSet.getUpdatePackageForDevice(p).install)
 
     def testGenerateUpdateSetInstall(self):
         import firmwaretools.repository as repository
         import firmwaretools.package as package
-        p = package.Device()
-        p.name = "testpack_different"
-        p.version = "a04"
+        p = package.Device(
+            name = "testpack_different",
+            version = "a04",
+            displayname = "fake"
+            )
         systemInventory = [p,]
         r = repository.Repository(datafiles)
         updateSet = repository.generateUpdateSet(r, systemInventory)
-        res = updateSet.getUpdatePackageForDevice(package.Package(name="testpack_different")).install()
+        res = updateSet.getUpdatePackageForDevice(p).install()
         self.assertEqual( res, "SUCCESS" )
 
 
@@ -175,14 +193,16 @@ class TestCase(unittest.TestCase):
         # apply to current system
         import firmwaretools.repository as repository
         import firmwaretools.package as package
-        p = package.Device()
-        p.name = "system_specific"
-        p.version = "a01"
+        p = package.Device(
+            name = "system_specific",
+            version = "a01",
+            displayname = "fake"
+            )
         systemInventory = [p,]
         r = repository.Repository(datafiles)
         updateSet = repository.generateUpdateSet(r, systemInventory)
 
-        self.failUnless( updateSet.getUpdatePackageForDevice(package.Package(name="system_specific")) is None )
+        self.failUnless( updateSet.getUpdatePackageForDevice(p) is None )
 
     def testGenerateUpdateSet_SystemSpecific2(self):
         # test the case where system specific update available that does
@@ -190,20 +210,24 @@ class TestCase(unittest.TestCase):
         import firmwaretools.repository as repository
         import firmwaretools.package as package
 
-        p = package.Device()
-        p.name = "system_specific"
-        p.version = "a01"
+        p = package.Device(
+            name = "system_specific",
+            version = "a01",
+            displayname = "fake"
+            )
 
-        q = package.Device()
-        q.name = "system_bios(ven_0x5555_dev_0x1234)"
-        q.version = "a00"
+        q = package.Device(
+            name = "system_bios(ven_0x5555_dev_0x1234)",
+            version = "a00",
+            displayname = "fake"
+            )
 
         systemInventory = [p,q]
         r = repository.Repository(datafiles)
         updateSet = repository.generateUpdateSet(r, systemInventory)
 
-        self.assertEqual( updateSet.getUpdatePackageForDevice(package.Package(name="system_specific")).name, "system_specific" )
-        self.assertEqual( updateSet.getUpdatePackageForDevice(package.Package(name="system_specific")).version, "a04" )
+        self.assertEqual( updateSet.getUpdatePackageForDevice(p).name, "system_specific" )
+        self.assertEqual( updateSet.getUpdatePackageForDevice(p).version, "a04" )
 
     def testGenerateUpdateSet_SystemSpecific3(self):
         # test the case where system specific update available that does
@@ -211,20 +235,24 @@ class TestCase(unittest.TestCase):
         import firmwaretools.repository as repository
         import firmwaretools.package as package
 
-        p = package.Device()
-        p.name = "system_specific"
-        p.version = "a01"
+        p = package.Device(
+            name = "system_specific",
+            version = "a01",
+            displayname = "fake"
+            )
 
-        q = package.Device()
-        q.name = "system_bios(ven_0x5555_dev_0x4321)"
-        q.version = "a00"
+        q = package.Device(
+            name = "system_bios(ven_0x5555_dev_0x4321)",
+            version = "a00",
+            displayname = "fake"
+            )
 
         systemInventory = [p,q]
         r = repository.Repository(datafiles)
         updateSet = repository.generateUpdateSet(r, systemInventory)
 
-        self.assertEqual( updateSet.getUpdatePackageForDevice(package.Package(name="system_specific")).name, "system_specific" )
-        self.assertEqual( updateSet.getUpdatePackageForDevice(package.Package(name="system_specific")).version, "a09" )
+        self.assertEqual( updateSet.getUpdatePackageForDevice(p).name, "system_specific" )
+        self.assertEqual( updateSet.getUpdatePackageForDevice(p).version, "a09" )
 
 
     def testGenerateUpdateSet_testRequires1(self):
@@ -233,15 +261,17 @@ class TestCase(unittest.TestCase):
         import firmwaretools.repository as repository
         import firmwaretools.package as package
 
-        p = package.Device()
-        p.name = "test_requires"
-        p.version = "a01"
+        p = package.Device(
+            name = "test_requires",
+            version = "a01",
+            displayname = "fake"
+            )
 
         systemInventory = [p,]
         r = repository.Repository(datafiles)
         updateSet = repository.generateUpdateSet(r, systemInventory)
 
-        self.failUnless( updateSet.getUpdatePackageForDevice(package.Package(name="test_requires")) is None )
+        self.failUnless( updateSet.getUpdatePackageForDevice(p) is None )
 
     def testGenerateUpdateSet_testRequires2(self):
         # test the case where system specific update available that does
@@ -249,40 +279,52 @@ class TestCase(unittest.TestCase):
         import firmwaretools.repository as repository
         import firmwaretools.package as package
 
-        p = package.Device()
-        p.name = "test_requires"
-        p.version = "a01"
+        p = package.Device(
+            name = "test_requires",
+            version = "a01",
+            displayname = "fake"
+            )
 
-        q = package.Device()
-        q.name = "otherpackage"
-        q.version = "a00"
+        q = package.Device(
+            name = "otherpackage",
+            version = "a00",
+            displayname = "fake"
+            )
 
-        r = package.Device()
-        r.name = "foo"
-        r.version = "43"
+        r = package.Device(
+            name = "foo",
+            version = "43",
+            displayname = "fake"
+            )
 
         systemInventory = [p,q,r]
         r = repository.Repository(datafiles)
         updateSet = repository.generateUpdateSet(r, systemInventory)
 
-        self.assertEqual( updateSet.getUpdatePackageForDevice(package.Package(name="test_requires")).name, "test_requires" )
-        self.assertEqual( updateSet.getUpdatePackageForDevice(package.Package(name="test_requires")).version, "a09" )
+        self.assertEqual( updateSet.getUpdatePackageForDevice(p).name, "test_requires" )
+        self.assertEqual( updateSet.getUpdatePackageForDevice(p).version, "a09" )
 
     def testInstallationOrder1(self):
         import firmwaretools.repository as repository
         import firmwaretools.package as package
 
-        p = package.Device()
-        p.name = "testorder1"
-        p.version = "a01"
+        p = package.Device(
+            name = "testorder1",
+            version = "a01",
+            displayname = "fake"
+            )
 
-        q = package.Device()
-        q.name = "testorder2"
-        q.version = "a01"
+        q = package.Device(
+            name = "testorder2",
+            version = "a01",
+            displayname = "fake"
+            )
 
-        r = package.Device()
-        r.name = "testorder3"
-        r.version = "a01"
+        r = package.Device(
+            name = "testorder3",
+            version = "a01",
+            displayname = "fake"
+            )
 
         systemInventory = [r,p,q]
         r = repository.Repository(datafiles)
@@ -300,17 +342,23 @@ class TestCase(unittest.TestCase):
         import firmwaretools.repository as repository
         import firmwaretools.package as package
 
-        p = package.Device()
-        p.name = "testorder1"
-        p.version = "a01"
+        p = package.Device(
+            name = "testorder1",
+            version = "a01",
+            displayname = "fake"
+            )
 
-        q = package.Device()
-        q.name = "testorder2"
-        q.version = "a08"
+        q = package.Device(
+            name = "testorder2",
+            version = "a08",
+            displayname = "fake"
+            )
 
-        r = package.Device()
-        r.name = "testorder3"
-        r.version = "a01"
+        r = package.Device(
+            name = "testorder3",
+            version = "a01",
+            displayname = "fake"
+            )
 
         systemInventory = [r,p,q]
         r = repository.Repository(datafiles)

@@ -24,7 +24,9 @@ import package
 # new standard entry point. 
 def BootstrapGenerator(): 
     for i in lspciGeneratorFactory():
-        yield package.PciDevice(name=process_pci_dev(i))
+        # TODO: parse lspci output to get device name for displayname
+        # TODO: add pciDbdf
+        yield package.PciDevice(name=process_pci_dev(i), version='unknown', displayname='Unknown PCI Device', pciDbdf="foo")
 
 # this is a TEST generator. It only is active if you set the environment
 # variable DEBUG_INVENTORY=1

@@ -31,7 +31,7 @@ class TestCase(unittest.TestCase):
         import firmwaretools.clifuncs as clifuncs
         index = 0
         for pkg in clifuncs.runBootstrapInventory(ini):
-            self.assertEqual( module.mockExpectedOutput.split("\n")[index], str(pkg) )
+            self.assertEqual( module.mockExpectedOutput.split("\n")[index], pkg.name )
             index = index + 1
 
         # ensure it actually ran.
