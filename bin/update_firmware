@@ -64,7 +64,7 @@ def main():
 
         # load standard configuration
         if not altConfig:
-            firmwaretools.clifuncs.getConfig(ini, configLocations)
+            firmwaretools.clifuncs.getConfig(ini, firmwaretools.clifuncs.configLocations)
 
         for over in overrides:
             section, key, value = over.split(",", 2)
