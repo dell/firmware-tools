@@ -13,6 +13,7 @@ from gettext import gettext as _
 import os
 import pygtk
 import sys
+import threading
 import traceback
 
 pygtk.require('2.0')
@@ -88,12 +89,12 @@ class InventoryFirmware:
         # set up command stack, used for undo/redo
         self.undoStack = []
         self.redoStack = []
-    
+
         # setup tree views
         self._setupInventoryTreeView()
         self._setupBootstrapTreeView()
         self._setupUpdateStatusTreeView()
-        
+
         # get handle to status bar
         self.statusBar = self.wTree.get_widget("main_window_status_bar")
         ctx = self.statusBar.get_context_id("main")
@@ -162,9 +163,10 @@ class InventoryFirmware:
     def _setupUpdateStatusTreeView(self):
         # create model for update status treeview
         self.updateStatusTreeView = self.wTree.get_widget("status_treeview")
-        self.updateStatusTreeModel= gtk.TreeStore( object )
+        self.updateStatusTreeModel= gtk.TreeStore( object, int )
         self.updateStatusTreeView.set_model(self.updateStatusTreeModel)
         self.STATUS_COLUMN_PACKAGE = 0
+        self.STATUS_COLUMN_SERIAL = 1
 
         # add column headers to the inventory treeview
         self.updateStatusTreeView.set_headers_visible(True)
@@ -217,7 +219,7 @@ class InventoryFirmware:
                 gobject.TYPE_BOOLEAN,  # for device == enable update for device (checkbox),
                                        # for package == update to this package
                 gobject.TYPE_INT,      # flags
-                gobject.TYPE_INT,      # update serial 
+                gobject.TYPE_INT,      # update serial
                 )
         self.inventoryTreeView.set_model(self.inventoryTreeModel)
         self.INVENTORY_COLUMN_DEVICE = 0
@@ -289,7 +291,7 @@ class InventoryFirmware:
                 if self.updateSet.getUpdatePackageForDevice(device) == availPkg:
                     toggle=True
                 self.inventoryTreeModel.append(iter, [availPkg, toggle, flags, 0])
- 
+
     # this is a helper function to initially populate the tree model.
     # should only ever be called once.
     def _populateBootstrapTree(self, ini):
@@ -301,7 +303,7 @@ class InventoryFirmware:
     def _populateUpdateStatusTree(self):
         self.updateStatusTreeModel.clear()
         for obj in self.updateSet.generateInstallationOrder():
-            self.updateStatusTreeModel.append(None, [obj,])
+            self.updateStatusTreeModel.append(None, [obj, 0])
 
     # refresh the display when something happens behind the scenes. Should be rarely used.
     def _refresh(self):
@@ -391,7 +393,7 @@ class InventoryFirmware:
             if flags & self.FLAG_REFLASH:
                 # TODO: picture?
                 renderers[1].set_property("text", _("Available Version: %s  (reflash)") % text)
-                if not self.updateSet.allowReflash: 
+                if not self.updateSet.allowReflash:
                     renderers[0].set_property('activatable', False)
 
             if flags & self.FLAG_DOWNGRADE:
@@ -436,7 +438,7 @@ class InventoryFirmware:
             parentIter = model.iter_parent(iter)
             device = model.get_value(parentIter, self.INVENTORY_COLUMN_DEVICE)
             update = model[path][self.INVENTORY_COLUMN_DEVICE]
-    
+
             self._executeCommand(UpdateSetPinCommand(self.updateSet, self.updateSet.pinUpdatePackage, (device, update), {}))
             self._fixupChildren(model, parentIter)
             self._refreshAllowToggles()
@@ -587,11 +589,11 @@ class InventoryFirmware:
         textbuffer = textview.get_buffer()
         textbuffer.set_text(detailsStr.getvalue())
         textview.set_size_request(gtk.gdk.screen_width()/2, gtk.gdk.screen_height()/3)
-    
+
         dialog.details = frame
         dialog.set_position(gtk.WIN_POS_CENTER)
         dialog.set_gravity(gtk.gdk.GRAVITY_CENTER)
-    
+
         show = False
         while 1:
             resp = dialog.run()
@@ -638,25 +640,94 @@ class InventoryFirmware:
         cell.set_property("text", firmwaretools.package.packageStatusEnum[pkg.status])
 
     def cell_data_func_us_component(self, column, cell, model, iter):
-        #TODO: this is sort-of broken. genupdateorder needs to 
+        #TODO: this is sort-of broken. genupdateorder needs to
         # return a (device, update_package) tuple
         pkg = model.get_value(iter,self.STATUS_COLUMN_PACKAGE)
         cell.set_property("text", str(pkg.getDeviceList()[0]))
 
     def cell_data_func_us_cur_version(self, column, cell, model, iter):
-        #TODO: this is sort-of broken. genupdateorder needs to 
+        #TODO: this is sort-of broken. genupdateorder needs to
         # return a (device, update_package) tuple
         pkg = model.get_value(iter,self.STATUS_COLUMN_PACKAGE)
         cell.set_property("text", pkg.getDeviceList()[0].version)
 
     def cell_data_func_us_update_version(self, column, cell, model, iter):
-        #TODO: this is sort-of broken. genupdateorder needs to 
+        #TODO: this is sort-of broken. genupdateorder needs to
         # return a (device, update_package) tuple
         pkg = model.get_value(iter,self.STATUS_COLUMN_PACKAGE)
         cell.set_property("text", pkg.version)
 
     def on_really_update_now_button_clicked(self, *args, **kargs):
-        print "hi"
+        # disable update button...
+        ctx = self.statusBar.get_context_id("update page")
+        self.statusBar.pop(ctx)
+        self.statusBar.push(ctx, "Performing updates now...")
+        self.wTree.get_widget("really_update_now_button").set_sensitive(0)
+
+        success = 1
+        for pkg in self.updateSet.generateInstallationOrder():
+            installThread = InstallThread(pkg)
+            while installThread.running:
+                self._refreshUpdateStatus()
+                guihelpers.gtkYield() # make sure current GUI is fully displayed
+
+            self._refreshUpdateStatus()
+            if installThread.exception is not None:
+                success = 0
+                stop = self.wTree.get_widget("stop_on_errors").get_active()
+                if stop:
+                    # set bad status?
+                    print "stop on errors selected. error detected, so I'm stopping."
+                    break
+
+        self.statusBar.pop(ctx)
+        if success:
+            self.statusBar.push(ctx, "All updates successfully completed.")
+        else:
+            self.statusBar.push(ctx, "Some updates failed.")
+
+    def _refreshUpdateStatus(self):
+        model = self.updateStatusTreeModel
+        for i in range(model.iter_n_children(None)):
+            path = model.get_path(model.iter_nth_child(None, i))
+            model[path][self.STATUS_COLUMN_SERIAL] = model[path][self.STATUS_COLUMN_SERIAL] + 1
+
+
+
+class InstallThread(threading.Thread):
+    def __init__ (self, pkg):
+        threading.Thread.__init__(self)
+        self.pkg = pkg
+        self.exception = None
+        self.returnCode = None
+        self.running=1
+        self.start()
+
+    def run(self):
+        try:
+            self.returnCode = self.pkg.install()
+        except (firmwaretools.package.NoInstaller,), e:
+            print "package %s - %s does not have an installer available." % (pkg.name, pkg.version)
+            print "skipping this package for now."
+            self.exception = e
+        except (firmwaretools.package.InstallError,), e:
+            print "Installation failed for package: %s - %s" % (pkg.name, pkg.version)
+            print "aborting update..."
+            print
+            print "The error message from the low-level command was:"
+            print
+            print e
+            self.exception = e
+        except (Exception,), e:
+            print "unknown exception during install:"
+            print
+            print e
+            self.exception = e
+        except:
+            print "something really funky happened. weird unknown exception thrown..."
+            self.exception = Exception("funky exception")
+
+        self.running=0
 
 
 def main():
@@ -670,7 +741,7 @@ def main():
     altConfig = 0
     overrides = []
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hvwt:c:o:", ["help", "verbose", "warnings", "topdir=", "config=", "overrides=",])
+        opts, args = getopt.getopt(sys.argv[1:], "c:fho:t:vw", ["help", "verbose", "warnings", "topdir=", "config=", "overrides=", "fake-mode"])
         for option, argument in opts:
             if option in ("-h", "--help"):
                 print __doc__
@@ -687,6 +758,9 @@ def main():
                 warnings = warnings + 1
             if option in ("-t", "--topdir"):
                 TOPDIR = argument
+            if option in ("-f", "--fake-mode"):
+                os.environ['DEBUG_REPOSITORY'] = "1"
+                os.environ['DEBUG_INVENTORY'] = "1"
 
         # load standard configuration
         if not altConfig:
