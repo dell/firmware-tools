@@ -441,13 +441,13 @@ class InventoryFirmware:
         dialog.add_button(_("Cancel Update"), 3)
 
         # Details
-        textview = gtk.TextView(); 
+        textview = gtk.TextView()
         textview.set_editable(False)
         textview.modify_font(pango.FontDescription("Monospace"))
-        sw = gtk.ScrolledWindow(); 
+        sw = gtk.ScrolledWindow()
         sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         sw.add(textview)
-        frame = gtk.Frame();
+        frame = gtk.Frame()
         frame.set_shadow_type(gtk.SHADOW_IN)
         frame.add(sw)
         frame.set_border_width(6)
@@ -466,11 +466,9 @@ class InventoryFirmware:
             if resp == 1:
                 show = not show
                 if show:
-                    print "show"
                     dialog.details.show_all()
                     showButton.set_label("Hide Details")
                 else:
-                    print "hide"
                     dialog.details.hide_all()
                     showButton.set_label("Show Details...")
             elif resp == 2:
@@ -561,13 +559,13 @@ def _info(type, value, tb):
     dialog.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE)
 
     # Details
-    textview = gtk.TextView(); textview.show()
+    textview = gtk.TextView()
     textview.set_editable(False)
     textview.modify_font(pango.FontDescription("Monospace"))
-    sw = gtk.ScrolledWindow(); sw.show()
+    sw = gtk.ScrolledWindow()
     sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
     sw.add(textview)
-    frame = gtk.Frame();
+    frame = gtk.Frame()
     frame.set_shadow_type(gtk.SHADOW_IN)
     frame.add(sw)
     frame.set_border_width(6)
@@ -585,7 +583,7 @@ def _info(type, value, tb):
     while 1:
         resp = dialog.run()
         if resp == 1:
-            dialog.details.show()
+            dialog.details.show_all()
             dialog.action_area.get_children()[1].set_sensitive(0)
             continue
         else:
