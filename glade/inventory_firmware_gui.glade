@@ -228,7 +228,6 @@
       <child>
 	<widget class="GtkNotebook" id="notebook">
 	  <property name="visible">True</property>
-	  <property name="can_focus">True</property>
 	  <property name="show_tabs">False</property>
 	  <property name="show_border">True</property>
 	  <property name="tab_pos">GTK_POS_TOP</property>
@@ -522,6 +521,7 @@ Firmware...</property>
 		      <property name="visible_horizontal">True</property>
 		      <property name="visible_vertical">True</property>
 		      <property name="is_important">False</property>
+		      <signal name="clicked" handler="on_really_update_now_button_clicked" last_modification_time="Mon, 20 Aug 2007 08:15:55 GMT"/>
 		    </widget>
 		    <packing>
 		      <property name="expand">False</property>

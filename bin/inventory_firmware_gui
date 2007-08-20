@@ -655,6 +655,9 @@ class InventoryFirmware:
         pkg = model.get_value(iter,self.STATUS_COLUMN_PACKAGE)
         cell.set_property("text", pkg.version)
 
+    def on_really_update_now_button_clicked(self, *args, **kargs):
+        print "hi"
+
 
 def main():
     pretty = 0
