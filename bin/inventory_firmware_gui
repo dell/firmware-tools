@@ -86,63 +86,13 @@ class InventoryFirmware:
         self.numReflashSelected = 0
 
         # set up command stack, used for undo/redo
-        self.commandStack = []
+        self.undoStack = []
         self.redoStack = []
-
-        # create model for inventory treeview
-        self.inventoryTreeView = self.wTree.get_widget("inventory_treeview")
-        self.inventoryTreeModel= gtk.TreeStore(
-                object,                # device or package
-                gobject.TYPE_BOOLEAN,  # for device == enable update for device (checkbox),
-                                       # for package == update to this package
-                gobject.TYPE_INT,      # flags
-                )
-        self.inventoryTreeView.set_model(self.inventoryTreeModel)
-        self.COLUMN_DEVICE = 0
-        self.COLUMN_DEVICE_ENABLE_UPDATE = 1
-        self.COLUMN_FLAGS = 2
-        self.FLAG_REFLASH = 1
-        self.FLAG_DOWNGRADE = 2
-
-        # add column headers to the inventory treeview
-        self.inventoryTreeView.set_headers_visible(True)
-
-        # select, status, criticality, package name, component, type (bios/firmware/driver), current ver, repo ver
-
-        # add column: Flash yes/no checkbox column
-        renderer=gtk.CellRendererToggle()
-        renderer.set_property("radio", False)
-        renderer.set_property('activatable', True)
-        renderer.connect('toggled', self.toggle_device_cb, self.inventoryTreeModel)
-        column=gtk.TreeViewColumn("Flash",renderer)
-        column.add_attribute(renderer, "active", self.COLUMN_DEVICE_ENABLE_UPDATE)
-        column.set_cell_data_func(renderer, self.cell_data_func_toggle)
-        self.inventoryTreeView.append_column(column)
-
-        # add column: Display name for devices, version select for updates
-        renderer=gtk.CellRendererToggle()
-        renderer.set_property("radio", True)
-        renderer.set_property('activatable', True)
-        renderer.connect('toggled', self.toggle_update_cb, self.inventoryTreeModel)
-        column=gtk.TreeViewColumn("Display Name",renderer)
-        column.add_attribute(renderer, "active", self.COLUMN_DEVICE_ENABLE_UPDATE)
-        column.set_resizable(True)
-        renderer=gtk.CellRendererText()
-        column.pack_start(renderer)
-        column.set_cell_data_func(renderer, self.cell_data_func_display_name)
-        self.inventoryTreeView.append_column(column)
-        self.inventoryTreeView.set_expander_column(column)
-
-        # add column: Firmware version
-        renderer = gtk.CellRendererText()
-        column=gtk.TreeViewColumn("Current Version",renderer)
-        column.set_cell_data_func(renderer, self.cell_data_func_version)
-        column.set_resizable(True)
-        self.inventoryTreeView.append_column(column)
-
-        # let us select multiple releases
-        self.inventoryTreeView.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
-
+    
+        # setup tree views
+        self._setupInventoryTreeView()
+        self._setupBootstrapTreeView()
+        
         # get handle to status bar
         self.statusBar = self.wTree.get_widget("main_window_status_bar")
         ctx = self.statusBar.get_context_id("main")
@@ -171,16 +121,95 @@ class InventoryFirmware:
         firmwaretools.package.RepositoryPackage.mainIni = ini
         self.updateSet = repository.generateUpdateSet(r, firmwaretools.clifuncs.runInventory(ini), cb=(myYield, None))
 
-        self._populate()
+        self._populateInventoryTree()
+        self._populateBootstrapTree(ini)
         self.inventoryTreeView.expand_all()
         self._refresh()
 
         # set status == ready
         self.statusBar.pop(ctx)
 
+    def _setupBootstrapTreeView(self):
+        # create model for bootstrap treeview
+        self.bootstrapTreeView = self.wTree.get_widget("bootstrap_treeview")
+        self.bootstrapTreeModel= gtk.TreeStore( gobject.TYPE_STRING,)
+        self.bootstrapTreeView.set_model(self.bootstrapTreeModel)
+        self.BOOTSTRAP_COLUMN_NAME = 0
+
+        # add column headers to the inventory treeview
+        self.bootstrapTreeView.set_headers_visible(True)
+
+        # add column: Display name for devices, version select for updates
+        renderer=gtk.CellRendererText()
+        column=gtk.TreeViewColumn("Bootstrap Package Name",renderer)
+        column.add_attribute(renderer, "text", self.BOOTSTRAP_COLUMN_NAME)
+        column.set_resizable(True)
+        self.bootstrapTreeView.append_column(column)
+
+        # let us select multiple releases
+        self.bootstrapTreeView.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
+
+
+
+    def _setupInventoryTreeView(self):
+        # create model for inventory treeview
+        self.inventoryTreeView = self.wTree.get_widget("inventory_treeview")
+        self.inventoryTreeModel= gtk.TreeStore(
+                object,                # device or package
+                gobject.TYPE_BOOLEAN,  # for device == enable update for device (checkbox),
+                                       # for package == update to this package
+                gobject.TYPE_INT,      # flags
+                )
+        self.inventoryTreeView.set_model(self.inventoryTreeModel)
+        self.INVENTORY_COLUMN_DEVICE = 0
+        self.INVENTORY_COLUMN_DEVICE_ENABLE_UPDATE = 1
+        self.INVENTORY_COLUMN_FLAGS = 2
+        self.FLAG_REFLASH = 1
+        self.FLAG_DOWNGRADE = 2
+
+        # add column headers to the inventory treeview
+        self.inventoryTreeView.set_headers_visible(True)
+
+        # select, status, criticality, package name, component, type (bios/firmware/driver), current ver, repo ver
+
+        # add column: Flash yes/no checkbox column
+        renderer=gtk.CellRendererToggle()
+        renderer.set_property("radio", False)
+        renderer.set_property('activatable', True)
+        renderer.connect('toggled', self.toggle_device_cb, self.inventoryTreeModel)
+        column=gtk.TreeViewColumn("Flash",renderer)
+        column.add_attribute(renderer, "active", self.INVENTORY_COLUMN_DEVICE_ENABLE_UPDATE)
+        column.set_cell_data_func(renderer, self.cell_data_func_toggle)
+        self.inventoryTreeView.append_column(column)
+
+        # add column: Display name for devices, version select for updates
+        renderer=gtk.CellRendererToggle()
+        renderer.set_property("radio", True)
+        renderer.set_property('activatable', True)
+        renderer.connect('toggled', self.toggle_update_cb, self.inventoryTreeModel)
+        column=gtk.TreeViewColumn("Display Name",renderer)
+        column.add_attribute(renderer, "active", self.INVENTORY_COLUMN_DEVICE_ENABLE_UPDATE)
+        column.set_resizable(True)
+        renderer=gtk.CellRendererText()
+        column.pack_start(renderer)
+        column.set_cell_data_func(renderer, self.cell_data_func_display_name)
+        self.inventoryTreeView.append_column(column)
+        self.inventoryTreeView.set_expander_column(column)
+
+        # add column: Firmware version
+        renderer = gtk.CellRendererText()
+        column=gtk.TreeViewColumn("Current Version",renderer)
+        column.set_cell_data_func(renderer, self.cell_data_func_version)
+        column.set_resizable(True)
+        self.inventoryTreeView.append_column(column)
+
+        # let us select multiple releases
+        self.inventoryTreeView.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
+
+
     # this is a helper function to initially populate the tree model.
     # should only ever be called once.
-    def _populate(self):
+    def _populateInventoryTree(self):
         self.inventoryTreeModel.clear()
         for device in self.updateSet.iterDevices():
             guihelpers.gtkYield()
@@ -200,7 +229,15 @@ class InventoryFirmware:
                 if self.updateSet.getUpdatePackageForDevice(device) == availPkg:
                     toggle=True
                 self.inventoryTreeModel.append(iter, [availPkg, toggle, flags])
-   
+ 
+    # this is a helper function to initially populate the tree model.
+    # should only ever be called once.
+    def _populateBootstrapTree(self, ini):
+        self.bootstrapTreeModel.clear()
+        for pkg in firmwaretools.clifuncs.runBootstrapInventory(ini):
+            guihelpers.gtkYield()
+            self.bootstrapTreeModel.append(None, [pkg.name,])
+
     # refresh the display when something happens behind the scenes. Should be rarely used.
     def _refresh(self):
         self._refresh_update_enable_toggles()
@@ -211,11 +248,11 @@ class InventoryFirmware:
     def _refresh_update_enable_toggles(self):
         for i in range(self.inventoryTreeModel.iter_n_children(None)):
             device_path = self.inventoryTreeModel.get_path(self.inventoryTreeModel.iter_nth_child(None, i))
-            device = self.inventoryTreeModel[device_path][self.COLUMN_DEVICE]
+            device = self.inventoryTreeModel[device_path][self.INVENTORY_COLUMN_DEVICE]
             if self.updateSet.getUpdatePackageForDevice(device) is not None:
-                self.inventoryTreeModel[device_path][self.COLUMN_DEVICE_ENABLE_UPDATE]=True
+                self.inventoryTreeModel[device_path][self.INVENTORY_COLUMN_DEVICE_ENABLE_UPDATE]=True
             else:
-                self.inventoryTreeModel[device_path][self.COLUMN_DEVICE_ENABLE_UPDATE]=False
+                self.inventoryTreeModel[device_path][self.INVENTORY_COLUMN_DEVICE_ENABLE_UPDATE]=False
 
             self._fixupChildren(self.inventoryTreeModel, self.inventoryTreeModel.get_iter(device_path))
 
@@ -245,7 +282,7 @@ class InventoryFirmware:
 
     # enables/disables the undo/redo/reset buttons so only valid actions are enabled
     def _refreshEnableUndoRedo(self):
-        if self.commandStack:
+        if self.undoStack:
             self.wTree.get_widget("reset_button").set_sensitive(1)
             self.wTree.get_widget("reset_menu").set_sensitive(1)
             self.wTree.get_widget("undo_button").set_sensitive(1)
@@ -264,23 +301,23 @@ class InventoryFirmware:
             self.wTree.get_widget("redo_menu").set_sensitive(0)
 
     def cell_data_func_display_name(self, column, cell, model, iter):
-        pyobj = model.get_value(iter,self.COLUMN_DEVICE)
+        pyobj = model.get_value(iter,self.INVENTORY_COLUMN_DEVICE)
         renderers = column.get_cell_renderers()
         text = str(pyobj)
         if isinstance(pyobj, firmwaretools.package.Device):
             renderers[0].set_property("visible", False)
             renderers[1].set_property("text", text)
         else:
-            flags = model.get_value(iter,self.COLUMN_FLAGS)
+            flags = model.get_value(iter,self.INVENTORY_COLUMN_FLAGS)
             renderers[0].set_property("visible", True)
             parentIter = model.iter_parent(iter)
-            device = model.get_value(parentIter,self.COLUMN_DEVICE)
+            device = model.get_value(parentIter,self.INVENTORY_COLUMN_DEVICE)
             text = str(pyobj.version)
 
             renderers[1].set_property("text", "Available Version: %s" % text)
             renderers[0].set_property('activatable', True)
 
-            if not model.get_value(parentIter, self.COLUMN_DEVICE_ENABLE_UPDATE):
+            if not model.get_value(parentIter, self.INVENTORY_COLUMN_DEVICE_ENABLE_UPDATE):
                 renderers[0].set_property('activatable', False)
 
             if self.updateSet.getSuggestedUpdatePackageForDevice(device) == pyobj:
@@ -301,7 +338,7 @@ class InventoryFirmware:
 
 
     def cell_data_func_version(self, column, cell, model, iter):
-        pyobj = model.get_value(iter,self.COLUMN_DEVICE)
+        pyobj = model.get_value(iter,self.INVENTORY_COLUMN_DEVICE)
         if isinstance(pyobj, firmwaretools.package.Device):
             cell.set_property("visible", True)
             cell.set_property("text", pyobj.version)
@@ -309,16 +346,16 @@ class InventoryFirmware:
             cell.set_property("visible", False)
 
     def cell_data_func_toggle(self, column, cell, model, iter):
-        pyobj = model.get_value(iter,self.COLUMN_DEVICE)
+        pyobj = model.get_value(iter,self.INVENTORY_COLUMN_DEVICE)
         if isinstance(pyobj, firmwaretools.package.Device):
             cell.set_property("visible", True)
         else:
             cell.set_property("visible", False)
 
     def toggle_device_cb(self, renderer, path, model, *args, **kargs):
-        model[path][self.COLUMN_DEVICE_ENABLE_UPDATE] = not model[path][self.COLUMN_DEVICE_ENABLE_UPDATE]
-        device = model[path][self.COLUMN_DEVICE]
-        if model[path][self.COLUMN_DEVICE_ENABLE_UPDATE]:
+        model[path][self.INVENTORY_COLUMN_DEVICE_ENABLE_UPDATE] = not model[path][self.INVENTORY_COLUMN_DEVICE_ENABLE_UPDATE]
+        device = model[path][self.INVENTORY_COLUMN_DEVICE]
+        if model[path][self.INVENTORY_COLUMN_DEVICE_ENABLE_UPDATE]:
             # unpin it and calculated pkg takes over
             self._executeCommand(UpdateSetPinCommand(self.updateSet, self.updateSet.unPinDevice, (device,), {}))
         else:
@@ -330,11 +367,11 @@ class InventoryFirmware:
 
     def toggle_update_cb(self, renderer, path, model, *args, **kargs):
         # dont re-activate if it is already the active update
-        if not model[path][self.COLUMN_DEVICE_ENABLE_UPDATE]:
+        if not model[path][self.INVENTORY_COLUMN_DEVICE_ENABLE_UPDATE]:
             iter = model.get_iter(path)
             parentIter = model.iter_parent(iter)
-            device = model.get_value(parentIter, self.COLUMN_DEVICE)
-            update = model[path][self.COLUMN_DEVICE]
+            device = model.get_value(parentIter, self.INVENTORY_COLUMN_DEVICE)
+            update = model[path][self.INVENTORY_COLUMN_DEVICE]
     
             self._executeCommand(UpdateSetPinCommand(self.updateSet, self.updateSet.pinUpdatePackage, (device, update), {}))
             self._fixupChildren(model, parentIter)
@@ -345,19 +382,19 @@ class InventoryFirmware:
     def _fixupChildren(self, model, iter):
         for i in range(model.iter_n_children(iter)):
             child_path = model.get_path(model.iter_nth_child(iter, i))
-            curValue = model[child_path][self.COLUMN_DEVICE_ENABLE_UPDATE]
-            if model[child_path][self.COLUMN_DEVICE] == self.updateSet.getUpdatePackageForDevice(model.get_value(iter,self.COLUMN_DEVICE)):
-                if curValue == False and model[child_path][self.COLUMN_FLAGS] & self.FLAG_DOWNGRADE:
+            curValue = model[child_path][self.INVENTORY_COLUMN_DEVICE_ENABLE_UPDATE]
+            if model[child_path][self.INVENTORY_COLUMN_DEVICE] == self.updateSet.getUpdatePackageForDevice(model.get_value(iter,self.INVENTORY_COLUMN_DEVICE)):
+                if curValue == False and model[child_path][self.INVENTORY_COLUMN_FLAGS] & self.FLAG_DOWNGRADE:
                     self.numDowngradeSelected = self.numDowngradeSelected + 1
-                if curValue == False and model[child_path][self.COLUMN_FLAGS] & self.FLAG_REFLASH:
+                if curValue == False and model[child_path][self.INVENTORY_COLUMN_FLAGS] & self.FLAG_REFLASH:
                     self.numReflashSelected = self.numReflashSelected + 1
-                model[child_path][self.COLUMN_DEVICE_ENABLE_UPDATE] = True
+                model[child_path][self.INVENTORY_COLUMN_DEVICE_ENABLE_UPDATE] = True
             else:
-                if curValue == True and model[child_path][self.COLUMN_FLAGS] & self.FLAG_DOWNGRADE:
+                if curValue == True and model[child_path][self.INVENTORY_COLUMN_FLAGS] & self.FLAG_DOWNGRADE:
                     self.numDowngradeSelected = self.numDowngradeSelected - 1
-                if curValue == True and model[child_path][self.COLUMN_FLAGS] & self.FLAG_REFLASH:
+                if curValue == True and model[child_path][self.INVENTORY_COLUMN_FLAGS] & self.FLAG_REFLASH:
                     self.numReflashSelected = self.numReflashSelected - 1
-                model[child_path][self.COLUMN_DEVICE_ENABLE_UPDATE] = False
+                model[child_path][self.INVENTORY_COLUMN_DEVICE_ENABLE_UPDATE] = False
 
     def on_allow_downgrade_toggled(self, widget, *args, **kargs):
         # guard against executeCommand being called while we are in a refresh
@@ -388,15 +425,15 @@ class InventoryFirmware:
 
     def _executeCommand(self, command):
         command.execute()
-        self.commandStack.append(command)
+        self.undoStack.append(command)
         self.redoStack = []
         self._refreshEnableUndoRedo()
-        if len(self.commandStack) > 20:
-            self.commandStack = self.commandStack[-20:]
+        if len(self.undoStack) > 20:
+            self.undoStack = self.undoStack[-20:]
 
     def on_undo_activate(self, *args, **kargs):
-        if self.commandStack:
-            command = self.commandStack.pop()
+        if self.undoStack:
+            command = self.undoStack.pop()
             command.undo()
             self.redoStack.append(command)
 
@@ -406,17 +443,29 @@ class InventoryFirmware:
         if self.redoStack:
             command = self.redoStack.pop()
             command.execute()
-            self.commandStack.append(command)
+            self.undoStack.append(command)
 
         self._refresh()
 
     def on_reset_activate(self, *args, **kargs):
         self.updateSet.reset()
-        self.commandStack = []
+        self.undoStack = []
         self.redoStack = []
         self.updateSet.setAllowReflash(0)
         self.updateSet.setAllowDowngrade(0)
         self._refresh()
+
+    def on_system_inventory_menu_activate(self, *args, **kargs):
+        notebook = self.wTree.get_widget("notebook")
+        widget = self.wTree.get_widget("inventory_vbox")
+        page = notebook.page_num(widget)
+        notebook.set_current_page(page)
+
+    def on_bootstrap_inventory_menu_activate(self, *args, **kargs):
+        notebook = self.wTree.get_widget("notebook")
+        widget = self.wTree.get_widget("bootstrap_scrolledwindow")
+        page = notebook.page_num(widget)
+        notebook.set_current_page(page)
 
     def on_update_now_activate(self, *args, **kargs):
         detailsStr = cStringIO.StringIO()
