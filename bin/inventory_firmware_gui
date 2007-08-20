@@ -217,11 +217,13 @@ class InventoryFirmware:
                 gobject.TYPE_BOOLEAN,  # for device == enable update for device (checkbox),
                                        # for package == update to this package
                 gobject.TYPE_INT,      # flags
+                gobject.TYPE_INT,      # update serial 
                 )
         self.inventoryTreeView.set_model(self.inventoryTreeModel)
         self.INVENTORY_COLUMN_DEVICE = 0
         self.INVENTORY_COLUMN_DEVICE_ENABLE_UPDATE = 1
         self.INVENTORY_COLUMN_FLAGS = 2
+        self.INVENTORY_COLUMN_SERIAL = 3
         self.FLAG_REFLASH = 1
         self.FLAG_DOWNGRADE = 2
 
@@ -275,7 +277,7 @@ class InventoryFirmware:
             toggle=False
             if self.updateSet.getUpdatePackageForDevice(device) is not None:
                 toggle=True
-            iter = self.inventoryTreeModel.append(None, [device, toggle, flags])
+            iter = self.inventoryTreeModel.append(None, [device, toggle, flags, 0])
             for availPkg in self.updateSet.iterAvailableUpdates(device):
                 guihelpers.gtkYield()
                 flags = 0
@@ -286,7 +288,7 @@ class InventoryFirmware:
                 toggle=False
                 if self.updateSet.getUpdatePackageForDevice(device) == availPkg:
                     toggle=True
-                self.inventoryTreeModel.append(iter, [availPkg, toggle, flags])
+                self.inventoryTreeModel.append(iter, [availPkg, toggle, flags, 0])
  
     # this is a helper function to initially populate the tree model.
     # should only ever be called once.
@@ -316,7 +318,6 @@ class InventoryFirmware:
                 self.inventoryTreeModel[device_path][self.INVENTORY_COLUMN_DEVICE_ENABLE_UPDATE]=True
             else:
                 self.inventoryTreeModel[device_path][self.INVENTORY_COLUMN_DEVICE_ENABLE_UPDATE]=False
-
             self._fixupChildren(self.inventoryTreeModel, self.inventoryTreeModel.get_iter(device_path))
 
     # refreshes allow reflash/downgrade toggles
@@ -459,6 +460,10 @@ class InventoryFirmware:
                     self.numReflashSelected = self.numReflashSelected - 1
                 model[child_path][self.INVENTORY_COLUMN_DEVICE_ENABLE_UPDATE] = False
 
+            # force update serial so rows get redisplayed
+            self.inventoryTreeModel[child_path][self.INVENTORY_COLUMN_SERIAL]= (
+                self.inventoryTreeModel[child_path][self.INVENTORY_COLUMN_SERIAL] + 1)
+
     def on_allow_downgrade_toggled(self, widget, *args, **kargs):
         # guard against executeCommand being called while we are in a refresh
         if not self.recursiveCallback:
@@ -468,6 +473,10 @@ class InventoryFirmware:
                 active = widget.get_active()
             self._executeCommand(Command(self.updateSet, self.updateSet.setAllowDowngrade, (active,), {}))
             self._refreshAllowToggles()
+            # force update serial so rows get redisplayed
+            for i in range(self.inventoryTreeModel.iter_n_children(None)):
+                device_path = self.inventoryTreeModel.get_path(self.inventoryTreeModel.iter_nth_child(None, i))
+                self._fixupChildren(self.inventoryTreeModel, self.inventoryTreeModel.get_iter(device_path))
 
     def on_allow_reflash_toggled(self, widget, *args, **kargs):
         # guard against executeCommand being called while we are in a refresh
@@ -478,6 +487,10 @@ class InventoryFirmware:
                 active = widget.get_active()
             self._executeCommand(Command(self.updateSet, self.updateSet.setAllowReflash, (active,), {}))
             self._refreshAllowToggles()
+            # force update serial so rows get redisplayed
+            for i in range(self.inventoryTreeModel.iter_n_children(None)):
+                device_path = self.inventoryTreeModel.get_path(self.inventoryTreeModel.iter_nth_child(None, i))
+                self._fixupChildren(self.inventoryTreeModel, self.inventoryTreeModel.get_iter(device_path))
 
     def on_help_about(self, *args):
         wTree = gtk.glade.XML(TOPDIR + self.GLADE_FILE, "about_dialog")
