@@ -98,16 +98,12 @@ class InventoryFirmware:
         ctx = self.statusBar.get_context_id("main")
         self.statusBar.push(ctx, "Ready")
 
-        # make sure to do this after all gui elements have been set up.
-        # set up mappers and unit of work. populate treeviews
-        self.tooltips = gtk.Tooltips()
-
         # show main window
         self.main_window.show()
 
         # set status == collecting inventory
         ctx = self.statusBar.get_context_id("inventory")
-        self.statusBar.push(ctx, "Performing system inventory...")
+        self.statusBar.push(ctx, _("Performing system inventory..."))
         guihelpers.gtkYield() # make sure current GUI is fully displayed
 
         # special function to make sure GUI updates smoothly while we
@@ -141,15 +137,34 @@ class InventoryFirmware:
 
         # add column: Display name for devices, version select for updates
         renderer=gtk.CellRendererText()
-        column=gtk.TreeViewColumn("Bootstrap Package Name",renderer)
-        column.add_attribute(renderer, "text", self.BOOTSTRAP_COLUMN_NAME)
+        column=gtk.TreeViewColumn(_("Bootstrap Package Name"),renderer, text=self.BOOTSTRAP_COLUMN_NAME)
         column.set_resizable(True)
         self.bootstrapTreeView.append_column(column)
 
         # let us select multiple releases
         self.bootstrapTreeView.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
 
+    def _setupUpdateStatusTreeView(self):
+        # create model for update status treeview
+        self.updateStatusTreeView = self.wTree.get_widget("status_treeview")
+        self.updateStatusTreeModel= gtk.TreeStore( gobject.TYPE_STRING,)
+        self.updateStatusTreeView.set_model(self.updateStatusTreeModel)
+        self.STATUS_COLUMN_NAME = 0
 
+        # add column headers to the inventory treeview
+        self.updateStatusTreeView.set_headers_visible(True)
+
+        # status, component, status description, log?
+
+        # add column: Display name for devices, version select for updates
+        renderer=gtk.CellRendererText()
+        column=gtk.TreeViewColumn(_("Status"),renderer)
+        column.add_attribute(renderer, "text", self.STATUS_COLUMN_NAME)
+        column.set_resizable(True)
+        self.updateStatusTreeView.append_column(column)
+
+        # let us select multiple releases
+        self.updateStatusTreeView.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
 
     def _setupInventoryTreeView(self):
         # create model for inventory treeview
@@ -177,7 +192,7 @@ class InventoryFirmware:
         renderer.set_property("radio", False)
         renderer.set_property('activatable', True)
         renderer.connect('toggled', self.toggle_device_cb, self.inventoryTreeModel)
-        column=gtk.TreeViewColumn("Flash",renderer)
+        column=gtk.TreeViewColumn(_("Flash"),renderer)
         column.add_attribute(renderer, "active", self.INVENTORY_COLUMN_DEVICE_ENABLE_UPDATE)
         column.set_cell_data_func(renderer, self.cell_data_func_toggle)
         self.inventoryTreeView.append_column(column)
@@ -187,7 +202,7 @@ class InventoryFirmware:
         renderer.set_property("radio", True)
         renderer.set_property('activatable', True)
         renderer.connect('toggled', self.toggle_update_cb, self.inventoryTreeModel)
-        column=gtk.TreeViewColumn("Display Name",renderer)
+        column=gtk.TreeViewColumn(_("Device Name"),renderer)
         column.add_attribute(renderer, "active", self.INVENTORY_COLUMN_DEVICE_ENABLE_UPDATE)
         column.set_resizable(True)
         renderer=gtk.CellRendererText()
@@ -198,7 +213,7 @@ class InventoryFirmware:
 
         # add column: Firmware version
         renderer = gtk.CellRendererText()
-        column=gtk.TreeViewColumn("Current Version",renderer)
+        column=gtk.TreeViewColumn(_("Current Version"),renderer)
         column.set_cell_data_func(renderer, self.cell_data_func_version)
         column.set_resizable(True)
         self.inventoryTreeView.append_column(column)
@@ -314,7 +329,7 @@ class InventoryFirmware:
             device = model.get_value(parentIter,self.INVENTORY_COLUMN_DEVICE)
             text = str(pyobj.version)
 
-            renderers[1].set_property("text", "Available Version: %s" % text)
+            renderers[1].set_property("text", _("Available Version: %s") % text)
             renderers[0].set_property('activatable', True)
 
             if not model.get_value(parentIter, self.INVENTORY_COLUMN_DEVICE_ENABLE_UPDATE):
@@ -322,17 +337,17 @@ class InventoryFirmware:
 
             if self.updateSet.getSuggestedUpdatePackageForDevice(device) == pyobj:
                 # TODO: picture?
-                renderers[1].set_property("text", "Available Version: %s  (suggested)" % text)
+                renderers[1].set_property("text", _("Available Version: %s  (suggested)") % text)
 
             if flags & self.FLAG_REFLASH:
                 # TODO: picture?
-                renderers[1].set_property("text", "Available Version: %s  (reflash)" % text)
+                renderers[1].set_property("text", _("Available Version: %s  (reflash)") % text)
                 if not self.updateSet.allowReflash: 
                     renderers[0].set_property('activatable', False)
 
             if flags & self.FLAG_DOWNGRADE:
                 # TODO: picture?
-                renderers[1].set_property("text", "Available Version: %s  (downgrade)" % text)
+                renderers[1].set_property("text", _("Available Version: %s  (downgrade)") % text)
                 if not self.updateSet.allowDowngrade:
                     renderers[0].set_property('activatable', False)
 
@@ -469,13 +484,13 @@ class InventoryFirmware:
 
     def on_update_now_activate(self, *args, **kargs):
         detailsStr = cStringIO.StringIO()
-        detailsStr.write("Going to update the following devices:\n\n")
+        detailsStr.write( _("Going to update the following devices:\n\n") )
         for device in self.updateSet.iterDevices():
             pkg = self.updateSet.getUpdatePackageForDevice(device)
             if pkg is not None:
                 detailsStr.write("\t%s\n" % str(device))
-                detailsStr.write("\t\tFrom Version: %s\n" % device.version)
-                detailsStr.write("\t\tTo Version  : %s\n" % pkg.version)
+                detailsStr.write(_("\t\tFrom Version: %s\n") % device.version)
+                detailsStr.write(_("\t\tTo Version  : %s\n") % pkg.version)
                 detailsStr.write("\n")
 
         dialog = gtk.MessageDialog(parent=None,
@@ -483,10 +498,10 @@ class InventoryFirmware:
                    type=gtk.MESSAGE_WARNING,
                    buttons=gtk.BUTTONS_NONE)
         dialog.set_title(_("Update Firmware"))
-        dialog.set_markup(_( "<big>Your system will now be updated.</big>\n\nPress the 'Show Details' button to see which devices are set to be updated."))
+        dialog.set_markup(_( "<big>Your system will now be updated.</big>\n\nYou will not be able to come back to this page after you continue.\nPress the 'Show Details' button to see which devices are set to be updated."))
 
         showButton = dialog.add_button(_("Show Details..."), 1)
-        dialog.add_button(_("Update Now"), 2)
+        dialog.add_button(_("Continue to update page..."), 2)
         dialog.add_button(_("Cancel Update"), 3)
 
         # Details
@@ -516,10 +531,10 @@ class InventoryFirmware:
                 show = not show
                 if show:
                     dialog.details.show_all()
-                    showButton.set_label("Hide Details")
+                    showButton.set_label(_("Hide Details"))
                 else:
                     dialog.details.hide_all()
-                    showButton.set_label("Show Details...")
+                    showButton.set_label(_("Show Details..."))
             elif resp == 2:
                 pass # update now
             else:
