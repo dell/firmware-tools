@@ -79,6 +79,9 @@ class RepositoryPackage(Package):
         self.status = "failed"
         raise NoInstaller(_("Attempt to install a package with no install function. Name: %s, Version: %s") % (self.name, self.version))
 
+    def getCapability(self, capability):
+        return self.capabilities.get(capability, None)
+
     def attachToDevice(self, device):
         self.deviceList.append(device)
 
@@ -134,7 +137,7 @@ class PciDevice(Device):
 
 class MockRepositoryPackage(RepositoryPackage):
     def __init__(self, *args, **kargs):
-        super(RepositoryPackage, self).__init__(*args, **kargs)
+        super(MockRepositoryPackage, self).__init__(*args, **kargs)
         self.capabilities['can_downgrade'] = True
         self.capabilities['can_reflash'] = True
 
