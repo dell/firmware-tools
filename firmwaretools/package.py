@@ -63,6 +63,11 @@ class RepositoryPackage(Package):
         self.path = None
         super(RepositoryPackage, self).__init__(*args, **kargs)
 
+        self.capabilities = {
+            'can_downgrade': False,
+            'can_reflash': False,
+            }
+
         self.status = "not_installed"
         self.deviceList = []
         
@@ -82,19 +87,40 @@ class RepositoryPackage(Package):
 
 
 # Base class for all devices on a system
-class Device(Package):
-    def __init__(self, *args, **kargs):
-        super(Device, self).__init__(*args, **kargs)
-        if not hasattr(self, "uniqueInstance"):
-            self.uniqueInstance = self.name
-
 # required: 
 #   displayname
 #   name
 #   version
-#   pciDbdf
 # optional:
 #   compareStrategy
+class Device(Package):
+    def __init__(self, *args, **kargs):
+        self.name = None
+        self.version = None
+        self.compareStrategy = defaultCompareStrategy
+        for key, value in kargs.items():
+            setattr(self, key, value)
+
+        if not hasattr(self, "uniqueInstance"):
+            self.uniqueInstance = self.name
+
+        assert(hasattr(self, "name"))
+        assert(hasattr(self, "version"))
+        assert(hasattr(self, "displayname"))
+
+        status = "unknown"
+
+    def __str__(self):
+        if hasattr(self, "displayname"):
+            return self.displayname
+        return self.name
+
+    def compareVersion(self, otherPackage):
+        return self.compareStrategy(self.version, otherPackage.version)
+
+
+# required:  (in addition to base class)
+#   pciDbdf
 class PciDevice(Device):
     def __init__(self, *args, **kargs):
         super(Device, self).__init__(*args, **kargs)
@@ -107,6 +133,11 @@ class PciDevice(Device):
 #
 
 class MockRepositoryPackage(RepositoryPackage):
+    def __init__(self, *args, **kargs):
+        super(RepositoryPackage, self).__init__(*args, **kargs)
+        self.capabilities['can_downgrade'] = True
+        self.capabilities['can_reflash'] = True
+
     def install(self):
         self.status = "in_progress"
         print "MockRepositoryPackage -> Install pkg(%s)  version(%s)" % (str(self), self.version)
