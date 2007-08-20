@@ -92,6 +92,7 @@ class InventoryFirmware:
         # setup tree views
         self._setupInventoryTreeView()
         self._setupBootstrapTreeView()
+        self._setupUpdateStatusTreeView()
         
         # get handle to status bar
         self.statusBar = self.wTree.get_widget("main_window_status_bar")
@@ -255,12 +256,12 @@ class InventoryFirmware:
 
     # refresh the display when something happens behind the scenes. Should be rarely used.
     def _refresh(self):
-        self._refresh_update_enable_toggles()
-        self._refresh_allow_toggles()
+        self._refreshUpdateEnableToggles()
+        self._refreshAllowToggles()
         self._refreshEnableUndoRedo()
 
     # only refreshes the toggles and radio buttons to reflect current package set.
-    def _refresh_update_enable_toggles(self):
+    def _refreshUpdateEnableToggles(self):
         for i in range(self.inventoryTreeModel.iter_n_children(None)):
             device_path = self.inventoryTreeModel.get_path(self.inventoryTreeModel.iter_nth_child(None, i))
             device = self.inventoryTreeModel[device_path][self.INVENTORY_COLUMN_DEVICE]
@@ -272,7 +273,7 @@ class InventoryFirmware:
             self._fixupChildren(self.inventoryTreeModel, self.inventoryTreeModel.get_iter(device_path))
 
     # refreshes allow reflash/downgrade toggles
-    def _refresh_allow_toggles(self):
+    def _refreshAllowToggles(self):
         self.recursiveCallback=1
         self.menuAllowDowngrade.set_property("active", self.updateSet.allowDowngrade)
         self.menuAllowReflash.set_property("active", self.updateSet.allowReflash)
@@ -378,7 +379,7 @@ class InventoryFirmware:
             self._executeCommand(UpdateSetPinCommand(self.updateSet, self.updateSet.pinUpdatePackage, (device, None), {}))
 
         self._fixupChildren(model, model.get_iter(path))
-        self._refresh_allow_toggles()
+        self._refreshAllowToggles()
 
     def toggle_update_cb(self, renderer, path, model, *args, **kargs):
         # dont re-activate if it is already the active update
@@ -390,7 +391,7 @@ class InventoryFirmware:
     
             self._executeCommand(UpdateSetPinCommand(self.updateSet, self.updateSet.pinUpdatePackage, (device, update), {}))
             self._fixupChildren(model, parentIter)
-            self._refresh_allow_toggles()
+            self._refreshAllowToggles()
 
     # this method sets the enable toggle on packages appropriately
     # it also interlocks the allow reflash/downgrade toggles
@@ -419,7 +420,7 @@ class InventoryFirmware:
             else:
                 active = widget.get_active()
             self._executeCommand(Command(self.updateSet, self.updateSet.setAllowDowngrade, (active,), {}))
-            self._refresh_allow_toggles()
+            self._refreshAllowToggles()
 
     def on_allow_reflash_toggled(self, widget, *args, **kargs):
         # guard against executeCommand being called while we are in a refresh
@@ -429,7 +430,7 @@ class InventoryFirmware:
             else:
                 active = widget.get_active()
             self._executeCommand(Command(self.updateSet, self.updateSet.setAllowReflash, (active,), {}))
-            self._refresh_allow_toggles()
+            self._refreshAllowToggles()
 
     def on_help_about(self, *args):
         wTree = gtk.glade.XML(TOPDIR + self.GLADE_FILE, "about_dialog")
@@ -536,10 +537,27 @@ class InventoryFirmware:
                     dialog.details.hide_all()
                     showButton.set_label(_("Show Details..."))
             elif resp == 2:
-                pass # update now
+                dialog.destroy()
+                self._gotoUpdatePage()
+                break
             else:
                 dialog.destroy()
                 break
+
+    def _gotoUpdatePage(self):
+        notebook = self.wTree.get_widget("notebook")
+        widget = self.wTree.get_widget("update_status_scrolledwindow")
+        page = notebook.page_num(widget)
+        notebook.set_current_page(page)
+        # disable view menu
+        view_menu = self.wTree.get_widget("view_menu")
+        view_menu.set_sensitive(0)
+        self.menuAllowDowngrade.set_sensitive(0)
+        self.menuAllowReflash.set_sensitive(0)
+        self.wTree.get_widget("update_now_menu").set_sensitive(0)
+        self.redoStack = []
+        self.undoStack = []
+        self._refreshEnableUndoRedo()
 
     def on_file_quit(self, *args):
         self.on_quit_app( allowCancel = 1 )

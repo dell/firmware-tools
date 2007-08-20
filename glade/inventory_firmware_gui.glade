@@ -44,14 +44,14 @@
 		<widget class="GtkMenu" id="menuitem1_menu">
 
 		  <child>
-		    <widget class="GtkImageMenuItem" id="update_now1">
+		    <widget class="GtkImageMenuItem" id="update_now_menu">
 		      <property name="visible">True</property>
-		      <property name="label" translatable="yes">_Update Now</property>
+		      <property name="label" translatable="yes">_Update Firmware...</property>
 		      <property name="use_underline">True</property>
 		      <signal name="activate" handler="on_update_now_activate" last_modification_time="Sun, 19 Aug 2007 18:15:32 GMT"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image13">
+			<widget class="GtkImage" id="image14">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-jump-to</property>
 			  <property name="icon_size">1</property>
@@ -118,7 +118,7 @@
 		      <signal name="activate" handler="on_reset_activate" last_modification_time="Sun, 19 Aug 2007 18:15:32 GMT"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image14">
+			<widget class="GtkImage" id="image15">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-goto-first</property>
 			  <property name="icon_size">1</property>
@@ -186,7 +186,7 @@
 		      <property name="visible">True</property>
 		      <property name="label" translatable="yes">Bootstrap Inventory</property>
 		      <property name="use_underline">True</property>
-		      <property name="active">False</property>
+		      <property name="active">True</property>
 		      <property name="group">system_inventory_menu</property>
 		      <signal name="activate" handler="on_bootstrap_inventory_menu_activate" last_modification_time="Sun, 19 Aug 2007 23:15:47 GMT"/>
 		    </widget>
@@ -228,7 +228,8 @@
       <child>
 	<widget class="GtkNotebook" id="notebook">
 	  <property name="visible">True</property>
-	  <property name="show_tabs">False</property>
+	  <property name="can_focus">True</property>
+	  <property name="show_tabs">True</property>
 	  <property name="show_border">True</property>
 	  <property name="tab_pos">GTK_POS_TOP</property>
 	  <property name="scrollable">False</property>
@@ -499,26 +500,101 @@ Firmware...</property>
 	  </child>
 
 	  <child>
-	    <widget class="GtkScrolledWindow" id="update_status_scrolledwindow">
+	    <widget class="GtkVBox" id="vbox2">
 	      <property name="visible">True</property>
-	      <property name="can_focus">True</property>
-	      <property name="hscrollbar_policy">GTK_POLICY_ALWAYS</property>
-	      <property name="vscrollbar_policy">GTK_POLICY_ALWAYS</property>
-	      <property name="shadow_type">GTK_SHADOW_IN</property>
-	      <property name="window_placement">GTK_CORNER_TOP_LEFT</property>
+	      <property name="homogeneous">False</property>
+	      <property name="spacing">0</property>
 
 	      <child>
-		<widget class="GtkTreeView" id="status_treeview">
+		<widget class="GtkToolbar" id="toolbar2">
+		  <property name="visible">True</property>
+		  <property name="orientation">GTK_ORIENTATION_HORIZONTAL</property>
+		  <property name="toolbar_style">GTK_TOOLBAR_BOTH</property>
+		  <property name="tooltips">True</property>
+		  <property name="show_arrow">True</property>
+
+		  <child>
+		    <widget class="GtkToolButton" id="really_update_now_button">
+		      <property name="visible">True</property>
+		      <property name="label" translatable="yes">Update Now</property>
+		      <property name="use_underline">True</property>
+		      <property name="stock_id">gtk-jump-to</property>
+		      <property name="visible_horizontal">True</property>
+		      <property name="visible_vertical">True</property>
+		      <property name="is_important">False</property>
+		    </widget>
+		    <packing>
+		      <property name="expand">False</property>
+		      <property name="homogeneous">True</property>
+		    </packing>
+		  </child>
+
+		  <child>
+		    <widget class="GtkSeparatorToolItem" id="separatortoolitem3">
+		      <property name="visible">True</property>
+		      <property name="draw">True</property>
+		      <property name="visible_horizontal">True</property>
+		      <property name="visible_vertical">True</property>
+		    </widget>
+		    <packing>
+		      <property name="expand">False</property>
+		      <property name="homogeneous">False</property>
+		    </packing>
+		  </child>
+
+		  <child>
+		    <widget class="GtkToggleToolButton" id="stop_on_errors">
+		      <property name="visible">True</property>
+		      <property name="label" translatable="yes">Stop on
+Update Errors</property>
+		      <property name="use_underline">True</property>
+		      <property name="stock_id">gtk-stop</property>
+		      <property name="visible_horizontal">True</property>
+		      <property name="visible_vertical">True</property>
+		      <property name="is_important">False</property>
+		      <property name="active">False</property>
+		    </widget>
+		    <packing>
+		      <property name="expand">False</property>
+		      <property name="homogeneous">True</property>
+		    </packing>
+		  </child>
+		</widget>
+		<packing>
+		  <property name="padding">0</property>
+		  <property name="expand">False</property>
+		  <property name="fill">False</property>
+		</packing>
+	      </child>
+
+	      <child>
+		<widget class="GtkScrolledWindow" id="update_status_scrolledwindow">
 		  <property name="visible">True</property>
 		  <property name="can_focus">True</property>
-		  <property name="headers_visible">True</property>
-		  <property name="rules_hint">False</property>
-		  <property name="reorderable">False</property>
-		  <property name="enable_search">True</property>
-		  <property name="fixed_height_mode">False</property>
-		  <property name="hover_selection">False</property>
-		  <property name="hover_expand">False</property>
+		  <property name="hscrollbar_policy">GTK_POLICY_ALWAYS</property>
+		  <property name="vscrollbar_policy">GTK_POLICY_ALWAYS</property>
+		  <property name="shadow_type">GTK_SHADOW_IN</property>
+		  <property name="window_placement">GTK_CORNER_TOP_LEFT</property>
+
+		  <child>
+		    <widget class="GtkTreeView" id="status_treeview">
+		      <property name="visible">True</property>
+		      <property name="can_focus">True</property>
+		      <property name="headers_visible">True</property>
+		      <property name="rules_hint">False</property>
+		      <property name="reorderable">False</property>
+		      <property name="enable_search">True</property>
+		      <property name="fixed_height_mode">False</property>
+		      <property name="hover_selection">False</property>
+		      <property name="hover_expand">False</property>
+		    </widget>
+		  </child>
 		</widget>
+		<packing>
+		  <property name="padding">0</property>
+		  <property name="expand">True</property>
+		  <property name="fill">True</property>
+		</packing>
 	      </child>
 	    </widget>
 	    <packing>
