@@ -403,16 +403,20 @@ class InventoryFirmware:
                 renderers[1].set_property("text", _("Available Version: %s  (reflash)") % text)
                 if not self.updateSet.allowReflash:
                     renderers[0].set_property('activatable', False)
+                    renderers[1].set_property("text", _("Available Version: %s  (reflash disabled per policy)") % text)
                 if not pyobj.getCapability("can_reflash"):
                     renderers[0].set_property('activatable', False)
+                    renderers[1].set_property("text", _("Available Version: %s  (reflash disabled due to package limitations)") % text)
 
             if flags & self.FLAG_DOWNGRADE:
                 # TODO: picture?
                 renderers[1].set_property("text", _("Available Version: %s  (downgrade)") % text)
                 if not self.updateSet.allowDowngrade:
                     renderers[0].set_property('activatable', False)
+                    renderers[1].set_property("text", _("Available Version: %s  (downgrade disabled per policy)") % text)
                 if not pyobj.getCapability("can_downgrade"):
                     renderers[0].set_property('activatable', False)
+                    renderers[1].set_property("text", _("Available Version: %s  (downgrade disabled due to package limitations)") % text)
 
 
     def cell_data_func_iv_version(self, column, cell, model, iter):
