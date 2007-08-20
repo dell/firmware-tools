@@ -287,57 +287,6 @@ class Repository(object):
             self.dirList.append(i)
 
     def iterPackages(self, cb=(nullFunc, None)):
-        if os.environ.get("DEBUG_REPOSITORY", None) == "1":
-            # TODO: put this in a separate function
-            yield package.MockRepositoryPackage(
-                displayname="DEBUG Test Device 1a",
-                name="test_device_1a",
-                version="0.9")
-            yield package.MockRepositoryPackage(
-                displayname="DEBUG Test Device 1b",
-                name="test_device_1b",
-                version="1.1")
-            yield package.MockRepositoryPackage(
-                displayname="DEBUG Test Device 2a",
-                name="test_device_2a",
-                version="1.1")
-            yield package.MockRepositoryPackage(
-                displayname="DEBUG Test Device 2a",
-                name="test_device_2a",
-                version="1.9")
-            yield package.MockRepositoryPackage(
-                displayname="DEBUG Test Device 2b",
-                name="test_device_2b",
-                version="1.1")
-            yield package.MockRepositoryPackage(
-                displayname="DEBUG Test Device 2b",
-                name="test_device_2b",
-                version="2.9")
-            yield package.MockRepositoryPackage(
-                displayname="DEBUG Test Device 3a",
-                name="test_device_3a",
-                version="2.1")
-            yield package.MockRepositoryPackage(
-                displayname="DEBUG Test Device 3a",
-                name="test_device_3a",
-                version="2.5")
-            yield package.MockRepositoryPackage(
-                displayname="DEBUG Test Device 3a",
-                name="test_device_3a",
-                version="3.0")
-            yield package.MockRepositoryPackage(
-                displayname="DEBUG Test Device 3b",
-                name="test_device_3b",
-                version="2.1")
-            yield package.MockRepositoryPackage(
-                displayname="DEBUG Test Device 3b",
-                name="test_device_3b",
-                version="3.0")
-            yield package.MockRepositoryPackage(
-                displayname="DEBUG Test Device 3b",
-                name="test_device_3b",
-                version="3.9")
-
         for dir in self.dirList:
             try:
                 for (path, dirs, files) in pycompat.walkPath(dir):
@@ -376,5 +325,64 @@ class Repository(object):
             yield latest[package]
 
     iterLatestPackages = trace(iterLatestPackages)
+
+#
+#
+# DEBUG ONLY
+#
+#
+def iterPackages_DEBUG(self, cb=(nullFunc, None)):
+    # TODO: put this in a separate function
+    yield package.MockRepositoryPackage(
+        displayname="DEBUG Test Device 1a",
+        name="test_device_1a",
+        version="0.9")
+    yield package.MockRepositoryPackage(
+        displayname="DEBUG Test Device 1b",
+        name="test_device_1b",
+        version="1.1")
+    yield package.MockRepositoryPackage(
+        displayname="DEBUG Test Device 2a",
+        name="test_device_2a",
+        version="1.1")
+    yield package.MockRepositoryPackage(
+        displayname="DEBUG Test Device 2a",
+        name="test_device_2a",
+        version="1.9")
+    yield package.MockRepositoryPackage(
+        displayname="DEBUG Test Device 2b",
+        name="test_device_2b",
+        version="1.1")
+    yield package.MockRepositoryPackage(
+        displayname="DEBUG Test Device 2b",
+        name="test_device_2b",
+        version="2.9")
+    yield package.MockRepositoryPackage(
+        displayname="DEBUG Test Device 3a",
+        name="test_device_3a",
+        version="2.1")
+    yield package.MockRepositoryPackage(
+        displayname="DEBUG Test Device 3a",
+        name="test_device_3a",
+        version="2.5")
+    yield package.MockRepositoryPackage(
+        displayname="DEBUG Test Device 3a",
+        name="test_device_3a",
+        version="3.0")
+    yield package.MockRepositoryPackage(
+        displayname="DEBUG Test Device 3b",
+        name="test_device_3b",
+        version="2.1")
+    yield package.MockRepositoryPackage(
+        displayname="DEBUG Test Device 3b",
+        name="test_device_3b",
+        version="3.0")
+    yield package.MockRepositoryPackage(
+        displayname="DEBUG Test Device 3b",
+        name="test_device_3b",
+        version="3.9")
+
+if os.environ.get("DEBUG_REPOSITORY", None) == "1":
+    Repository.iterPackages = iterPackages_DEBUG
 
 decorateAllFunctions(sys.modules[__name__])
