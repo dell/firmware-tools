@@ -108,17 +108,19 @@ def main():
         for device in updateSet.iterDevices():
             print "Checking %s - %s" % (device.name, device.version)
             for availPkg in updateSet.iterAvailableUpdates(device):
-                print "\tAvailable: %s - %s" % (pkg.name, pkg.version)
+                print "\tAvailable: %s - %s" % (availPkg.name, availPkg.version)
 
-            if pkg["update"] is None:
+            pkg = updateSet.getUpdatePackageForDevice(device)
+            if pkg is None:
                 print "\tDid not find a newer package to install that meets all installation checks."
             else:
-                print "\tFound Update: %s - %s" % (pkg["update"].name, pkg["update"].version)
+                print "\tFound Update: %s - %s" % (pkg.name, pkg.version)
                 needUpdate = 1
 
         if depFailures:
             print
             print "Following packages could apply, but have dependency failures:"
+
         for pkg, reason in depFailures.values():
             print "\t%s - %s" % (pkg.name, pkg.version)
             print "\t\t REASON: %s" % reason
