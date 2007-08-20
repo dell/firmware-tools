@@ -7,7 +7,7 @@
   # Dual Licenced under GNU GPL and OSL
   #
   #############################################################################
-"""inventory_firmware: 
+"""inventory_firmware:
 
 usage:
     -h | --help         print this message
