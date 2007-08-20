@@ -327,8 +327,8 @@ class InventoryFirmware:
         self.recursiveCallback=1
         self.menuAllowDowngrade.set_property("active", self.updateSet.allowDowngrade)
         self.menuAllowReflash.set_property("active", self.updateSet.allowReflash)
-        self.toolbarAllowDowngrade.set_property("active", self.updateSet.allowDowngrade)
-        self.toolbarAllowReflash.set_property("active", self.updateSet.allowReflash)
+        self.toolbarAllowDowngrade.set_active(self.updateSet.allowDowngrade)
+        self.toolbarAllowReflash.set_active(self.updateSet.allowReflash)
 
         if self.numDowngradeSelected:
             self.menuAllowDowngrade.set_sensitive(0)
@@ -641,7 +641,7 @@ class InventoryFirmware:
 
     def cell_data_func_us_status_description(self, column, cell, model, iter):
         pkg = model.get_value(iter,self.STATUS_COLUMN_PACKAGE)
-        cell.set_property("text", firmwaretools.package.packageStatusEnum[pkg.status])
+        cell.set_property("text", firmwaretools.package.packageStatusEnum.get(pkg.status, _("Programming error: status code not found.")))
 
     def cell_data_func_us_component(self, column, cell, model, iter):
         #TODO: this is sort-of broken. genupdateorder needs to
