@@ -105,6 +105,7 @@ class UpdateSet(object):
             available_updates = self.deviceList[package.name]["available_updates"]
             available_updates.append(package)
             self.deviceList[package.name]["available_updates"] = available_updates
+            package.attachToDevice(self.deviceList[package.name]['device'])
 
     def hasDevice(self, device):
         return self.deviceList.has_key(device.name)

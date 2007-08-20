@@ -28,39 +28,6 @@ def BootstrapGenerator():
         # TODO: add pciDbdf
         yield package.PciDevice(name=process_pci_dev(i), version='unknown', displayname='Unknown PCI Device', pciDbdf="foo")
 
-# this is a TEST generator. It only is active if you set the environment
-# variable DEBUG_INVENTORY=1
-def InventoryGenerator():
-    if os.environ.get("DEBUG_INVENTORY", None) == "1":
-        yield package.Device( 
-                name = "test_device_0",
-                displayname = "DEBUG Test Device 0",
-                version = "0.0")
-        yield package.Device( 
-                name = "test_device_1a",
-                displayname = "DEBUG Test Device 1a",
-                version = "1.0")
-        yield package.Device( 
-                name = "test_device_1b",
-                displayname = "DEBUG Test Device 1b",
-                version = "1.0")
-        yield package.Device( 
-                name = "test_device_2a",
-                displayname = "DEBUG Test Device 2a",
-                version = "2.0")
-        yield package.Device( 
-                name = "test_device_2b",
-                displayname = "DEBUG Test Device 2b",
-                version = "2.0")
-        yield package.Device( 
-                name = "test_device_3a",
-                displayname = "DEBUG Test Device 3a",
-                version = "3.0")
-        yield package.Device( 
-                name = "test_device_3b",
-                displayname = "DEBUG Test Device 3b",
-                version = "3.0")
-
 # a regular expression to parse 'lspci -n -m' output
 #                       "Class NNNN" "NNNN" "NNNN" -rXX... "NNNN" "NNNN"
 pciRe = re.compile(r'^.*?"[\w ]+"\s"(\w+)"\s"(\w+)"\s.*?"(\w*)"\s"(\w*)"')
@@ -112,6 +79,38 @@ decorateAllFunctions(sys.modules[__name__])
 #   plus expected data returns
 #==============================================================
 
+# this is a TEST generator. It only is active if you set the environment
+# variable DEBUG_INVENTORY=1
+def InventoryGenerator():
+    if os.environ.get("DEBUG_INVENTORY", None) == "1":
+        yield package.Device( 
+                name = "test_device_0",
+                displayname = "DEBUG Test Device 0",
+                version = "0.0")
+        yield package.Device( 
+                name = "test_device_1a",
+                displayname = "DEBUG Test Device 1a",
+                version = "1.0")
+        yield package.Device( 
+                name = "test_device_1b",
+                displayname = "DEBUG Test Device 1b",
+                version = "1.0")
+        yield package.Device( 
+                name = "test_device_2a",
+                displayname = "DEBUG Test Device 2a",
+                version = "2.0")
+        yield package.Device( 
+                name = "test_device_2b",
+                displayname = "DEBUG Test Device 2b",
+                version = "2.0")
+        yield package.Device( 
+                name = "test_device_3a",
+                displayname = "DEBUG Test Device 3a",
+                version = "3.0")
+        yield package.Device( 
+                name = "test_device_3b",
+                displayname = "DEBUG Test Device 3b",
+                version = "3.0")
 
 def mockLspciGenerator():
     mockInput = """00:00.0 "Class 0600" "1166" "0012" -r13 "" ""

@@ -186,7 +186,7 @@
 		      <property name="visible">True</property>
 		      <property name="label" translatable="yes">Bootstrap Inventory</property>
 		      <property name="use_underline">True</property>
-		      <property name="active">True</property>
+		      <property name="active">False</property>
 		      <property name="group">system_inventory_menu</property>
 		      <signal name="activate" handler="on_bootstrap_inventory_menu_activate" last_modification_time="Sun, 19 Aug 2007 23:15:47 GMT"/>
 		    </widget>
@@ -229,7 +229,7 @@
 	<widget class="GtkNotebook" id="notebook">
 	  <property name="visible">True</property>
 	  <property name="can_focus">True</property>
-	  <property name="show_tabs">True</property>
+	  <property name="show_tabs">False</property>
 	  <property name="show_border">True</property>
 	  <property name="tab_pos">GTK_POS_TOP</property>
 	  <property name="scrollable">False</property>

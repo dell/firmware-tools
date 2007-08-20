@@ -11,6 +11,7 @@ package module
 """
 
 import rpm
+from gettext import gettext as _
 
 class InternalError(Exception): pass
 class InstallError(Exception): pass
@@ -18,6 +19,14 @@ class NoInstaller(Exception): pass
 
 def defaultCompareStrategy(ver1, ver2):
     return rpm.labelCompare( ("0", str(ver1), "0"), ("0", str(ver2), "0"))
+
+packageStatusEnum = {
+    "unknown": _("The package status is not known."),
+    "not_installed": _("The device has not been updated to this version."),
+    "in_progress":   _("The device is being updated now"),
+    "failed":        _("Device update failed."),
+    "success":       _("Device update was successful."),
+    }
 
 # Package public API:
 #   pkg.name
@@ -36,6 +45,8 @@ class Package(object):
         assert(hasattr(self, "version"))
         assert(hasattr(self, "displayname"))
 
+        status = "unknown"
+
     def __str__(self):
         if hasattr(self, "displayname"):
             return self.displayname
@@ -50,19 +61,31 @@ class RepositoryPackage(Package):
         self.installFunction = None
         self.path = None
         super(RepositoryPackage, self).__init__(*args, **kargs)
+
+        self.status = "not_installed"
+        self.deviceList = []
         
     def install(self):
+        self.status = "in_progress"
         if self.installFunction is not None:
             return self.installFunction(self)
 
-        raise NoInstaller("Attempt to install a package with no install function. Name: %s, Version: %s" % (self.name, self.version))
+        self.status = "failed"
+        raise NoInstaller(_("Attempt to install a package with no install function. Name: %s, Version: %s") % (self.name, self.version))
+
+    def attachToDevice(self, device):
+        self.deviceList.append(device)
+
+    def getDeviceList(self):
+        return self.deviceList
 
 
 # Base class for all devices on a system
 class Device(Package):
     def __init__(self, *args, **kargs):
         super(Device, self).__init__(*args, **kargs)
-        self.uniqueKey = self.name
+        if not hasattr(self, "uniqueInstance"):
+            self.uniqueInstance = self.name
 
 # required: 
 #   displayname
@@ -84,4 +107,6 @@ class PciDevice(Device):
 
 class MockRepositoryPackage(RepositoryPackage):
     def install(self):
+        self.status = "in_progress"
         print "MockRepositoryPackage -> Install pkg(%s)  version(%s)" % (str(self), self.version)
+        self.status = "success"

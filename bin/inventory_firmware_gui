@@ -129,16 +129,30 @@ class InventoryFirmware:
     def _setupBootstrapTreeView(self):
         # create model for bootstrap treeview
         self.bootstrapTreeView = self.wTree.get_widget("bootstrap_treeview")
-        self.bootstrapTreeModel= gtk.TreeStore( gobject.TYPE_STRING,)
+        self.bootstrapTreeModel= gtk.TreeStore(gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING)
         self.bootstrapTreeView.set_model(self.bootstrapTreeModel)
-        self.BOOTSTRAP_COLUMN_NAME = 0
+        self.BOOTSTRAP_COLUMN_BOOTSTRAP_NAME = 0
+        self.BOOTSTRAP_COLUMN_DEVICE_NAME = 1
+        self.BOOTSTRAP_COLUMN_FW_VER = 2
 
         # add column headers to the inventory treeview
         self.bootstrapTreeView.set_headers_visible(True)
 
         # add column: Display name for devices, version select for updates
         renderer=gtk.CellRendererText()
-        column=gtk.TreeViewColumn(_("Bootstrap Package Name"),renderer, text=self.BOOTSTRAP_COLUMN_NAME)
+        column=gtk.TreeViewColumn(_("Bootstrap Name"),renderer, text=self.BOOTSTRAP_COLUMN_BOOTSTRAP_NAME)
+        column.set_resizable(True)
+        self.bootstrapTreeView.append_column(column)
+
+        # add column: Display name for devices, version select for updates
+        renderer=gtk.CellRendererText()
+        column=gtk.TreeViewColumn(_("Device Name"),renderer, text=self.BOOTSTRAP_COLUMN_DEVICE_NAME)
+        column.set_resizable(True)
+        self.bootstrapTreeView.append_column(column)
+
+        # add column: Display name for devices, version select for updates
+        renderer=gtk.CellRendererText()
+        column=gtk.TreeViewColumn(_("Firmware Version"),renderer, text=self.BOOTSTRAP_COLUMN_FW_VER)
         column.set_resizable(True)
         self.bootstrapTreeView.append_column(column)
 
@@ -148,9 +162,9 @@ class InventoryFirmware:
     def _setupUpdateStatusTreeView(self):
         # create model for update status treeview
         self.updateStatusTreeView = self.wTree.get_widget("status_treeview")
-        self.updateStatusTreeModel= gtk.TreeStore( gobject.TYPE_STRING,)
+        self.updateStatusTreeModel= gtk.TreeStore( object )
         self.updateStatusTreeView.set_model(self.updateStatusTreeModel)
-        self.STATUS_COLUMN_NAME = 0
+        self.STATUS_COLUMN_PACKAGE = 0
 
         # add column headers to the inventory treeview
         self.updateStatusTreeView.set_headers_visible(True)
@@ -160,8 +174,22 @@ class InventoryFirmware:
         # add column: Display name for devices, version select for updates
         renderer=gtk.CellRendererText()
         column=gtk.TreeViewColumn(_("Status"),renderer)
-        column.add_attribute(renderer, "text", self.STATUS_COLUMN_NAME)
         column.set_resizable(True)
+        column.set_cell_data_func(renderer, self.cell_data_func_us_status)
+        self.updateStatusTreeView.append_column(column)
+
+        # add column: Display name for devices, version select for updates
+        renderer=gtk.CellRendererText()
+        column=gtk.TreeViewColumn(_("Component"),renderer)
+        column.set_resizable(True)
+        column.set_cell_data_func(renderer, self.cell_data_func_us_component)
+        self.updateStatusTreeView.append_column(column)
+
+        # add column: Display name for devices, version select for updates
+        renderer=gtk.CellRendererText()
+        column=gtk.TreeViewColumn(_("Status Description"),renderer)
+        column.set_resizable(True)
+        column.set_cell_data_func(renderer, self.cell_data_func_us_status_description)
         self.updateStatusTreeView.append_column(column)
 
         # let us select multiple releases
@@ -195,7 +223,7 @@ class InventoryFirmware:
         renderer.connect('toggled', self.toggle_device_cb, self.inventoryTreeModel)
         column=gtk.TreeViewColumn(_("Flash"),renderer)
         column.add_attribute(renderer, "active", self.INVENTORY_COLUMN_DEVICE_ENABLE_UPDATE)
-        column.set_cell_data_func(renderer, self.cell_data_func_toggle)
+        column.set_cell_data_func(renderer, self.cell_data_func_iv_toggle)
         self.inventoryTreeView.append_column(column)
 
         # add column: Display name for devices, version select for updates
@@ -208,14 +236,14 @@ class InventoryFirmware:
         column.set_resizable(True)
         renderer=gtk.CellRendererText()
         column.pack_start(renderer)
-        column.set_cell_data_func(renderer, self.cell_data_func_display_name)
+        column.set_cell_data_func(renderer, self.cell_data_func_iv_display_name)
         self.inventoryTreeView.append_column(column)
         self.inventoryTreeView.set_expander_column(column)
 
         # add column: Firmware version
         renderer = gtk.CellRendererText()
         column=gtk.TreeViewColumn(_("Current Version"),renderer)
-        column.set_cell_data_func(renderer, self.cell_data_func_version)
+        column.set_cell_data_func(renderer, self.cell_data_func_iv_version)
         column.set_resizable(True)
         self.inventoryTreeView.append_column(column)
 
@@ -250,9 +278,14 @@ class InventoryFirmware:
     # should only ever be called once.
     def _populateBootstrapTree(self, ini):
         self.bootstrapTreeModel.clear()
-        for pkg in firmwaretools.clifuncs.runBootstrapInventory(ini):
+        for dev in firmwaretools.clifuncs.runBootstrapInventory(ini):
             guihelpers.gtkYield()
-            self.bootstrapTreeModel.append(None, [pkg.name,])
+            self.bootstrapTreeModel.append(None, [dev.name, dev.displayname, dev.version])
+
+    def _populateUpdateStatusTree(self):
+        self.updateStatusTreeModel.clear()
+        for obj in self.updateSet.generateInstallationOrder():
+            self.updateStatusTreeModel.append(None, [obj,])
 
     # refresh the display when something happens behind the scenes. Should be rarely used.
     def _refresh(self):
@@ -316,7 +349,7 @@ class InventoryFirmware:
             self.wTree.get_widget("redo_button").set_sensitive(0)
             self.wTree.get_widget("redo_menu").set_sensitive(0)
 
-    def cell_data_func_display_name(self, column, cell, model, iter):
+    def cell_data_func_iv_display_name(self, column, cell, model, iter):
         pyobj = model.get_value(iter,self.INVENTORY_COLUMN_DEVICE)
         renderers = column.get_cell_renderers()
         text = str(pyobj)
@@ -353,7 +386,7 @@ class InventoryFirmware:
                     renderers[0].set_property('activatable', False)
 
 
-    def cell_data_func_version(self, column, cell, model, iter):
+    def cell_data_func_iv_version(self, column, cell, model, iter):
         pyobj = model.get_value(iter,self.INVENTORY_COLUMN_DEVICE)
         if isinstance(pyobj, firmwaretools.package.Device):
             cell.set_property("visible", True)
@@ -361,7 +394,7 @@ class InventoryFirmware:
         else:
             cell.set_property("visible", False)
 
-    def cell_data_func_toggle(self, column, cell, model, iter):
+    def cell_data_func_iv_toggle(self, column, cell, model, iter):
         pyobj = model.get_value(iter,self.INVENTORY_COLUMN_DEVICE)
         if isinstance(pyobj, firmwaretools.package.Device):
             cell.set_property("visible", True)
@@ -483,6 +516,13 @@ class InventoryFirmware:
         page = notebook.page_num(widget)
         notebook.set_current_page(page)
 
+    def on_file_quit(self, *args):
+        self.on_quit_app( allowCancel = 1 )
+
+    def on_quit_app(self, *args, **kargs):
+        # check kargs['allowCancel']
+        gtk.main_quit()
+
     def on_update_now_activate(self, *args, **kargs):
         detailsStr = cStringIO.StringIO()
         detailsStr.write( _("Going to update the following devices:\n\n") )
@@ -545,6 +585,7 @@ class InventoryFirmware:
                 break
 
     def _gotoUpdatePage(self):
+        self._populateUpdateStatusTree()
         notebook = self.wTree.get_widget("notebook")
         widget = self.wTree.get_widget("update_status_scrolledwindow")
         page = notebook.page_num(widget)
@@ -559,12 +600,17 @@ class InventoryFirmware:
         self.undoStack = []
         self._refreshEnableUndoRedo()
 
-    def on_file_quit(self, *args):
-        self.on_quit_app( allowCancel = 1 )
+    def cell_data_func_us_status(self, column, cell, model, iter):
+        pkg = model.get_value(iter,self.STATUS_COLUMN_PACKAGE)
+        cell.set_property("text", pkg.status)
 
-    def on_quit_app(self, *args, **kargs):
-        # check kargs['allowCancel']
-        gtk.main_quit()
+    def cell_data_func_us_status_description(self, column, cell, model, iter):
+        pkg = model.get_value(iter,self.STATUS_COLUMN_PACKAGE)
+        cell.set_property("text", firmwaretools.package.packageStatusEnum[pkg.status])
+
+    def cell_data_func_us_component(self, column, cell, model, iter):
+        pkg = model.get_value(iter,self.STATUS_COLUMN_PACKAGE)
+        cell.set_property("text", str(pkg.getDeviceList()[0]))
 
 
 def main():
