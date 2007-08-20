@@ -26,6 +26,7 @@ packageStatusEnum = {
     "in_progress":   _("The device is being updated now"),
     "failed":        _("Device update failed."),
     "success":       _("Device update was successful."),
+    "disabled":       _("Device update is disabled for this device."),
     }
 
 # Package public API:
