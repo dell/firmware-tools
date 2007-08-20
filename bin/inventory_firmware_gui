@@ -395,11 +395,15 @@ class InventoryFirmware:
                 renderers[1].set_property("text", _("Available Version: %s  (reflash)") % text)
                 if not self.updateSet.allowReflash:
                     renderers[0].set_property('activatable', False)
+                if not pyobj.getCapability("can_reflash"):
+                    renderers[0].set_property('activatable', False)
 
             if flags & self.FLAG_DOWNGRADE:
                 # TODO: picture?
                 renderers[1].set_property("text", _("Available Version: %s  (downgrade)") % text)
                 if not self.updateSet.allowDowngrade:
+                    renderers[0].set_property('activatable', False)
+                if not pyobj.getCapability("can_downgrade"):
                     renderers[0].set_property('activatable', False)
 
 
