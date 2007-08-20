@@ -106,7 +106,7 @@ def main():
         print "\033[2K\033[0G"  # clear line
         needUpdate = 0
         for device in updateSet.iterDevices():
-            print "Checking %s - %s" % (device.name, device.version)
+            print "Checking %s - %s" % (str(device), device.version)
             for availPkg in updateSet.iterAvailableUpdates(device):
                 print "\tAvailable: %s - %s" % (availPkg.name, availPkg.version)
 
