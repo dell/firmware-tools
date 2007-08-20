@@ -100,6 +100,9 @@ class InventoryFirmware:
         ctx = self.statusBar.get_context_id("main")
         self.statusBar.push(ctx, "Ready")
 
+        # disable input in main window until we are finished initializing...
+        self.main_window.set_sensitive(0)
+
         # show main window
         self.main_window.show()
 
@@ -117,7 +120,11 @@ class InventoryFirmware:
         # collect inventory
         r = firmwaretools.repository.Repository( ini.get("main", "storage_topdir") )
         firmwaretools.package.RepositoryPackage.mainIni = ini
-        self.updateSet = repository.generateUpdateSet(r, firmwaretools.clifuncs.runInventory(ini), cb=(myYield, None))
+
+        # the following two lines are equivalent, but runLongProcess() does the
+        # action in a background thread so the GUI will update while it works.
+        #self.updateSet = repository.generateUpdateSet(r, firmwaretools.clifuncs.runInventory(ini), cb=(myYield, None))
+        self.updateSet = runLongProcess(repository.generateUpdateSet, args=(r, firmwaretools.clifuncs.runInventory(ini)), kargs={'cb':(myYield, None)})
 
         self._populateInventoryTree()
         self._populateBootstrapTree(ini)
@@ -126,6 +133,7 @@ class InventoryFirmware:
 
         # set status == ready
         self.statusBar.pop(ctx)
+        self.main_window.set_sensitive(1)
 
     def _setupBootstrapTreeView(self):
         # create model for bootstrap treeview
@@ -670,20 +678,24 @@ class InventoryFirmware:
 
         success = 1
         for pkg in self.updateSet.generateInstallationOrder():
-            installThread = InstallThread(pkg)
-            while installThread.running:
-                self._refreshUpdateStatus()
-                guihelpers.gtkYield() # make sure current GUI is fully displayed
+            stop = self.wTree.get_widget("stop_on_errors").get_active()
+            try:
+                ret = runLongProcess(pkg.install, waitLoopFunction=self._refreshUpdateStatus)
 
-            self._refreshUpdateStatus()
-            if installThread.exception is not None:
+            except (firmwaretools.package.NoInstaller,), e:
+                print "package %s - %s does not have an installer available." % (pkg.name, pkg.version)
+                print "skipping this package for now."
+            except (Exception,), e:
                 success = 0
-                stop = self.wTree.get_widget("stop_on_errors").get_active()
+                print "Installation failed for package: %s - %s" % (pkg.name, pkg.version)
+                print "The error message from the low-level command was:"
+                print e
                 if stop:
-                    # set bad status?
+                    print
                     print "stop on errors selected. error detected, so I'm stopping."
                     break
 
+        self._refreshUpdateStatus()
         self.statusBar.pop(ctx)
         if success:
             self.statusBar.push(ctx, "All updates successfully completed.")
@@ -697,39 +709,47 @@ class InventoryFirmware:
             model[path][self.STATUS_COLUMN_SERIAL] = model[path][self.STATUS_COLUMN_SERIAL] + 1
 
 
+def runLongProcess(function, args=None, kargs=None, waitLoopFunction=None):
+    thread = BackgroundWorker(function, args, kargs)
+    while thread.running:
+        if waitLoopFunction is not None:
+            waitLoopFunction()
+        guihelpers.gtkYield() # make sure current GUI is fully displayed
 
-class InstallThread(threading.Thread):
-    def __init__ (self, pkg):
+    if thread.exception:
+        raise thread.exception
+    return thread.returnCode
+
+class BackgroundWorker(threading.Thread):
+    def __init__ (self, function, args=None, kargs=None):
         threading.Thread.__init__(self)
-        self.pkg = pkg
+        self.function = function
+        self.args = args
+        self.kargs = kargs
+
         self.exception = None
         self.returnCode = None
         self.running=1
+
+        if self.args is None: self.args = []
+        if self.kargs is None: self.kargs = {}
+
         self.start()
 
     def run(self):
         try:
-            self.returnCode = self.pkg.install()
-        except (firmwaretools.package.NoInstaller,), e:
-            print "package %s - %s does not have an installer available." % (pkg.name, pkg.version)
-            print "skipping this package for now."
-            self.exception = e
-        except (firmwaretools.package.InstallError,), e:
-            print "Installation failed for package: %s - %s" % (pkg.name, pkg.version)
-            print "aborting update..."
-            print
-            print "The error message from the low-level command was:"
-            print
-            print e
-            self.exception = e
+            self.returnCode = self.function(*self.args, **self.kargs)
         except (Exception,), e:
-            print "unknown exception during install:"
+            print "unknown exception during background task:"
             print
             print e
             self.exception = e
-        except:
-            print "something really funky happened. weird unknown exception thrown..."
-            self.exception = Exception("funky exception")
+        except object, e:
+            print "something really funky happened. got an exception that wasnt a subclass of 'Exception'"
+            print "during background task:"
+            print
+            print str(e)
+            self.exception = e
 
         self.running=0
 
