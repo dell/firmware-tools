@@ -92,6 +92,7 @@ rm -rf $RPM_BUILD_ROOT
 %doc COPYING-GPL COPYING-OSL README
 %{python_sitelib}/*
 %attr(0755,root,root) %{_bindir}/*
+%{_datadir}/firmware-tools/
 %dir %{_sysconfdir}/firmware
 %dir %{_sysconfdir}/firmware/firmware.d
 %config(noreplace) %{_sysconfdir}/firmware/firmware.conf

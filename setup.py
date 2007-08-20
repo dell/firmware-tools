@@ -34,7 +34,8 @@ for i in ("RELEASE_MAJOR", "RELEASE_MINOR", "RELEASE_SUBLEVEL", "RELEASE_EXTRALE
         globals()[i] = os.environ.get(i)
 
 gen_scripts = [
-    "bin/inventory_firmware", "bin/bootstrap_firmware", "bin/update_firmware", "bin/apply_updates"
+    "bin/inventory_firmware", "bin/bootstrap_firmware", "bin/update_firmware", "bin/apply_updates",
+    "bin/inventory_firmware_gui",
     ]
 
 doc_files = [ "COPYING-GPL", "COPYING-OSL", "README", ]
@@ -51,6 +52,7 @@ MANIFEST.write("include pkg/debian/control\n" )
 MANIFEST.write("include pkg/debian/copyright\n" )
 MANIFEST.write("include pkg/debian/rules\n" )
 MANIFEST.write("include doc/firmware.conf\n" )
+MANIFEST.write("include glade/inventory_firmware_gui.glade\n" )
 MANIFEST.write("include version.mk\n" )
 MANIFEST.write("include pkg/firmware-tools.spec\n" )
 MANIFEST.write("include Makefile\n" )
@@ -60,6 +62,7 @@ MANIFEST.close()
 dataFileList = []
 dataFileList.append(  ("/usr/bin/", gen_scripts ) )
 dataFileList.append(  ("/etc/firmware/", ["doc/firmware.conf",] ) )
+dataFileList.append(  ("/usr/share/firmware-tools/glade/", ["glade/inventory_firmware_gui.glade",] ) )
 
 distutils.core.setup (
         name = 'firmware-tools',
