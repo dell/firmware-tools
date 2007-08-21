@@ -789,6 +789,7 @@ def main():
             if option in ("-f", "--fake-mode"):
                 os.environ['DEBUG_REPOSITORY'] = "1"
                 os.environ['DEBUG_INVENTORY'] = "1"
+                reload(firmwaretools.repository) # to pick up debugging
 
         # load standard configuration
         if not altConfig:
