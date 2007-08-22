@@ -26,9 +26,15 @@ class TestCase(unittest.TestCase):
         ini.add_section("bootstrap_pci")
         ini.set("bootstrap_pci", "bootstrap_inventory_plugin", "firmwaretools.bootstrap_pci")
 
-        # run bootstrap and compare.
-        import firmwaretools.clifuncs as clifuncs
+        # set lowlevel code to return fake data
         import firmwaretools.mockpackage
+        module.mockReadLspciWithDomain = firmwaretools.mockpackage.mockReadLspciWithDomain
+        module.mockExpectedOutput = firmwaretools.mockpackage.mockExpectedOutput
+
+        # import functions for bootstrap/compare
+        import firmwaretools.clifuncs as clifuncs
+
+        # run bootstrap and compare.
         index = 0
         for pkg in clifuncs.runBootstrapInventory(ini):
             self.assertEqual( module.mockExpectedOutput.split("\n")[index], pkg.name )

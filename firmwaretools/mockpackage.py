@@ -255,9 +255,6 @@ Rev:	10
     for line in mockInput.split("\n"):
         yield(line)
 
-bootstrap_pci.mockReadLspciWithDomain = mockReadLspciWithDomain
-
-
 mockExpectedOutput = """pci_firmware(ven_0x10de_dev_0x00e1)
 pci_firmware(ven_0x10de_dev_0x00e0_subven_0x10de_subdev_0x0c11)
 pci_firmware(ven_0x10de_dev_0x00e4_subven_0x10de_subdev_0x0c11)
@@ -277,5 +274,3 @@ pci_firmware(ven_0x1002_dev_0x4e47_subven_0x1002_subdev_0x0172)
 pci_firmware(ven_0x1002_dev_0x4e67_subven_0x1002_subdev_0x0173)
 pci_firmware(ven_0x1106_dev_0x3044_subven_0x1106_subdev_0x3044)
 pci_firmware(ven_0x13f6_dev_0x0111_subven_0x13f6_subdev_0x0111)"""
-
-bootstrap_pci.mockExpectedOutput = mockExpectedOutput
