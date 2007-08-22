@@ -20,7 +20,6 @@ class TestCase(unittest.TestCase):
         # set up unit test mode
         module = __import__("firmwaretools.bootstrap_pci", globals(),  locals(), [])
         module = getattr(module, "bootstrap_pci")
-        module.unit_test_mode=1
 
         # manually setup fake config file
         ini = ConfigParser.ConfigParser()
