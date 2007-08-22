@@ -789,6 +789,9 @@ def main():
             if option in ("-f", "--fake-mode"):
                 os.environ['DEBUG_REPOSITORY'] = "1"
                 os.environ['DEBUG_INVENTORY'] = "1"
+                os.environ['DEBUG_BOOTSTRAP'] = "1"
+                import firmwaretools.mockrepository
+                import firmwaretools.mockpackage
 
         # load standard configuration
         if not altConfig:
