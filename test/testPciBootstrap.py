@@ -29,6 +29,7 @@ class TestCase(unittest.TestCase):
 
         # run bootstrap and compare.
         import firmwaretools.clifuncs as clifuncs
+        import firmwaretools.mockpackage
         index = 0
         for pkg in clifuncs.runBootstrapInventory(ini):
             self.assertEqual( module.mockExpectedOutput.split("\n")[index], pkg.name )
