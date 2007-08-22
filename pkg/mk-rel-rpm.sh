@@ -23,7 +23,7 @@ git tag -u libsmbios -m "tag for official release: $RELEASE_STRING" v${RELEASE_V
 make clean tarball srpm
 
 mkdir -p $DEST
-for i in *.tar.{gz,bz2} *.zip *.src.rpm; do
+for i in dist/*.tar.{gz,bz2} dist/*.zip dist/*.src.rpm; do
     [ -e $i ] || continue
     [ ! -e $DEST/$(basename $i) ] || continue
     cp $i $DEST
