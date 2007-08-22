@@ -791,7 +791,6 @@ def main():
                 os.environ['DEBUG_INVENTORY'] = "1"
                 import firmwaretools.mockrepository
                 import firmwaretools.mockpackage
-                #reload(firmwaretools.repository) # to pick up debugging
 
         # load standard configuration
         if not altConfig:
