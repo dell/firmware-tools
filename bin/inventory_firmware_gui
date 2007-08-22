@@ -28,7 +28,7 @@ import firmwaretools.clifuncs
 import firmwaretools.package
 
 PROGRAM_NAME="Firmware Inventory and Update GUI"
-version="1.5.3"
+version="1.5.4"
 
 class CommandAlreadyExecuted(Exception): pass
 class CommandAlreadyUndone(Exception): pass
