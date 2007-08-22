@@ -80,7 +80,7 @@ def mockBootstrapPci_InventoryGenerator():
     yield package.Device( 
             name = "debug_system_bios",
             displayname = "System BIOS for Imaginary Server 1234",
-            version = "0.0")
+            version = "A02")
     yield package.Device( 
             name = "debug_system_bmc",
             displayname = "Baseboard Management Controller for Imaginary Server 1234",
@@ -104,7 +104,7 @@ def mockBootstrapPci_InventoryGenerator():
     yield package.Device( 
             name = "debug_pci_firmware_ven_draws_dev_polygons",
             displayname = "PixelPusher 2000 Video Adapter",
-            version = "3.0")
+            version = "4.0")
 
 import bootstrap_pci
 if os.environ.get("DEBUG_INVENTORY", None) == "1":

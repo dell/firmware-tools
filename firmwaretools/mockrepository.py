@@ -69,19 +69,19 @@ def iterPackages_DEBUG(self, cb=(nullFunc, None)):
     yield package.MockRepositoryPackage(
         displayname="PixelPusher 2000 Video Adapter",
         name="debug_pci_firmware_ven_draws_dev_polygons",
-        version="2.1")
-    yield package.MockRepositoryPackage(
-        displayname="PixelPusher 2000 Video Adapter",
-        name="debug_pci_firmware_ven_draws_dev_polygons",
-        version="3.0")
-    yield package.MockRepositoryPackage(
-        displayname="PixelPusher 2000 Video Adapter",
-        name="debug_pci_firmware_ven_draws_dev_polygons",
-        version="3.9")
-    yield package.MockRepositoryPackage(
-        displayname="PixelPusher 2000 Video Adapter",
-        name="debug_pci_firmware_ven_draws_dev_polygons",
         version="4.0")
+    yield package.MockRepositoryPackage(
+        displayname="PixelPusher 2000 Video Adapter",
+        name="debug_pci_firmware_ven_draws_dev_polygons",
+        version="4.1")
+    yield package.MockRepositoryPackage(
+        displayname="PixelPusher 2000 Video Adapter",
+        name="debug_pci_firmware_ven_draws_dev_polygons",
+        version="4.1.1")
+    yield package.MockRepositoryPackage(
+        displayname="PixelPusher 2000 Video Adapter",
+        name="debug_pci_firmware_ven_draws_dev_polygons",
+        version="4.1.2")
 
 if os.environ.get("DEBUG_REPOSITORY", None) == "1":
     repository.Repository.iterPackages = iterPackages_DEBUG
