@@ -30,6 +30,7 @@ import firmwaretools.trace_decorator as trace_decorator
 class CmdlineError(Exception):pass
 
 def main():
+    global firmwaretools # so we can import more submodules below...
     ini = ConfigParser.ConfigParser()
     altConfig = 0
     overrides = []
@@ -37,7 +38,7 @@ def main():
     verbose=0
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hc:o:ubv", ["help", "config=", "overrides=", "up2date_mode", "bootstrap", "verbose"])
+        opts, args = getopt.getopt(sys.argv[1:], "bc:fho:uv", ["help", "config=", "overrides=", "up2date_mode", "bootstrap", "verbose", "fake-mode"])
         for option, argument in opts:
             if option in ("-h", "--help"):
                 print __doc__
@@ -54,6 +55,12 @@ def main():
             if option in ("-v", "--verbose",):
                 verbose = verbose + 1
                 trace_decorator.debug["__main__"] = verbose
+            if option in ("-f", "--fake-mode"):
+                os.environ['DEBUG_REPOSITORY'] = "1"
+                os.environ['DEBUG_INVENTORY'] = "1"
+                os.environ['DEBUG_BOOTSTRAP'] = "1"
+                import firmwaretools.mockrepository
+                import firmwaretools.mockpackage
 
         # load standard configuration
         if not altConfig:

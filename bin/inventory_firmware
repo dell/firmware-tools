@@ -30,6 +30,7 @@ import firmwaretools.trace_decorator as trace_decorator
 class CmdlineError(Exception):pass
 
 def main():
+    global firmwaretools # so we can import more submodules below...
     mode = "inventory"
 
     ini = ConfigParser.ConfigParser()
