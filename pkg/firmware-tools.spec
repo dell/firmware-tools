@@ -100,6 +100,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Fri Aug 17 2007 Michael E Brown <michael_e_brown at dell.com> - 1.5.5-1
+- rebase to upstream release
+
 * Fri Aug 17 2007 Michael E Brown <michael_e_brown at dell.com> - 1.4.2-1
 - rebase to upstream release
 
