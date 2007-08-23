@@ -69,7 +69,7 @@ def makePackage(configFile):
             dprint("wrap\n")
             type(p)
     except (ConfigParser.NoOptionError, ConfigParser.NoSectionError, ImportError, AttributeError):
-        dprint(traceback.format_exc())
+        dprint(traceback.format_exception(sys.exc_type, sys.exc_value, sys.exc_traceback))
         pass
 
     return p
@@ -309,7 +309,7 @@ class Repository(object):
                             cb[0]( who="iterPackages", what="made_package", package=p, cb=cb)
                             yield p
                         except:
-                            dprint(traceback.format_exc())
+                            dprint(traceback.format_exception(sys.exc_type, sys.exc_value, sys.exc_traceback))
                             pass
             except OSError:   # directory doesnt exist, so no repo packages. :-)
                 pass
