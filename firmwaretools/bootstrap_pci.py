@@ -73,7 +73,7 @@ def makePciDevice(oneDevData):
     kargs["pciBDF_Domain"], kargs["pciBDF_Bus"], devfun = oneDevData["device0"].split(":")
     kargs["pciBDF_Domain"] = int(kargs["pciBDF_Domain"],16)
     kargs["pciBDF_Bus"] = int(kargs["pciBDF_Bus"],16)
-    kargs["pciBDF_Device"], kargs["pciBDF_Function"] = (int(i,16) for i in devfun.split("."))
+    kargs["pciBDF_Device"], kargs["pciBDF_Function"] = [int(i,16) for i in devfun.split(".")]
     kargs["pciClass"] = splitTextFromNumeric(oneDevData["class"])[1]
     kargs["pciDbdf"] = (kargs["pciBDF_Domain"], kargs["pciBDF_Bus"], kargs["pciBDF_Device"], kargs["pciBDF_Function"])
 
