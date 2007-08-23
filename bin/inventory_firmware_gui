@@ -739,15 +739,15 @@ class BackgroundWorker(threading.Thread):
         try:
             self.returnCode = self.function(*self.args, **self.kargs)
         except (Exception,), e:
-            print "unknown exception during background task:"
-            print
-            print e
+            #print "unknown exception during background task:"
+            #print
+            #print e
             self.exception = e
         except object, e:
-            print "something really funky happened. got an exception that wasnt a subclass of 'Exception'"
-            print "during background task:"
-            print
-            print str(e)
+            #print "something really funky happened. got an exception that wasnt a subclass of 'Exception'"
+            #print "during background task:"
+            #print
+            #print str(e)
             self.exception = e
 
         self.running=0
