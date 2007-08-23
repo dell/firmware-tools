@@ -25,7 +25,8 @@ class MockPackageWrapper(object):
         package.type = self
 
     def installFunction(self, package):
-        #print "MOCK INSTALL OF: %s = %s" % (package, package.version)
+        self.status = "in_progress"
+        self.status = "success"
         return "SUCCESS"
 
 
@@ -35,7 +36,8 @@ class MockPackage2(package.RepositoryPackage):
         super(MockPackage2, self).__init__(*args, **kargs)
 
     def install(self):
-        #print "MOCK INSTALL OF: %s = %s" % (self.name, self.version)
+        self.status = "in_progress"
+        self.status = "success"
         return "SUCCESS"
 
 
