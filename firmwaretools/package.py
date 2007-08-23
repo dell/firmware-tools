@@ -92,7 +92,7 @@ class RepositoryPackage(Package):
     def setCurrentInstallDevice(self, device):
         self.currentInstallDevice = device
 
-    def getCurrentInstallDevice(self, device):
+    def getCurrentInstallDevice(self):
         return self.currentInstallDevice
 
 
