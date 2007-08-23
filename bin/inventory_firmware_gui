@@ -171,10 +171,11 @@ class InventoryFirmware:
     def _setupUpdateStatusTreeView(self):
         # create model for update status treeview
         self.updateStatusTreeView = self.wTree.get_widget("status_treeview")
-        self.updateStatusTreeModel= gtk.TreeStore( object, int )
+        self.updateStatusTreeModel= gtk.TreeStore( object, object, int )
         self.updateStatusTreeView.set_model(self.updateStatusTreeModel)
-        self.STATUS_COLUMN_PACKAGE = 0
-        self.STATUS_COLUMN_SERIAL = 1
+        self.STATUS_COLUMN_DEVICE = 0
+        self.STATUS_COLUMN_PACKAGE = 1
+        self.STATUS_COLUMN_SERIAL = 2
 
         # add column headers to the inventory treeview
         self.updateStatusTreeView.set_headers_visible(True)
@@ -310,8 +311,8 @@ class InventoryFirmware:
 
     def _populateUpdateStatusTree(self):
         self.updateStatusTreeModel.clear()
-        for obj in self.updateSet.generateInstallationOrder():
-            self.updateStatusTreeModel.append(None, [obj, 0])
+        for device, package in self.updateSet.generateInstallationOrder(returnDeviceToo=1):
+            self.updateStatusTreeModel.append(None, [device, package, 0])
 
     # refresh the display when something happens behind the scenes. Should be rarely used.
     def _refresh(self):
@@ -656,20 +657,14 @@ class InventoryFirmware:
         cell.set_property("text", firmwaretools.package.packageStatusEnum.get(pkg.status, _("Programming error: status code not found.")))
 
     def cell_data_func_us_component(self, column, cell, model, iter):
-        #TODO: this is sort-of broken. genupdateorder needs to
-        # return a (device, update_package) tuple
-        pkg = model.get_value(iter,self.STATUS_COLUMN_PACKAGE)
-        cell.set_property("text", str(pkg.getDeviceList()[0]))
+        device = model.get_value(iter,self.STATUS_COLUMN_DEVICE)
+        cell.set_property("text", str(device))
 
     def cell_data_func_us_cur_version(self, column, cell, model, iter):
-        #TODO: this is sort-of broken. genupdateorder needs to
-        # return a (device, update_package) tuple
-        pkg = model.get_value(iter,self.STATUS_COLUMN_PACKAGE)
-        cell.set_property("text", pkg.getDeviceList()[0].version)
+        device = model.get_value(iter,self.STATUS_COLUMN_DEVICE)
+        cell.set_property("text", device.version)
 
     def cell_data_func_us_update_version(self, column, cell, model, iter):
-        #TODO: this is sort-of broken. genupdateorder needs to
-        # return a (device, update_package) tuple
         pkg = model.get_value(iter,self.STATUS_COLUMN_PACKAGE)
         cell.set_property("text", pkg.version)
 
