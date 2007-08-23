@@ -70,6 +70,7 @@ class RepositoryPackage(Package):
 
         self.status = "not_installed"
         self.deviceList = []
+        self.currentInstallDevice = None
         
     def install(self):
         self.status = "in_progress"
@@ -87,6 +88,12 @@ class RepositoryPackage(Package):
 
     def getDeviceList(self):
         return self.deviceList
+
+    def setCurrentInstallDevice(self, device):
+        self.currentInstallDevice = device
+
+    def getCurrentInstallDevice(self, device):
+        return self.currentInstallDevice
 
 
 # Base class for all devices on a system
