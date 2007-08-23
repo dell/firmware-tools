@@ -29,6 +29,16 @@ def BootstrapGenerator():
     for i in lspciGeneratorFactory():
         yield(makePciDevice(i))
 
+def InventoryGenerator():
+    # this module cannot really inventory anything
+    # but this function is overridden in fake mode, so leave it here
+    # so that we dont get 
+    #   "AttributeError: 'module' object has no attribute 'InventoryGenerator'"
+    # errors when running in regular mode.
+
+    # return [] so that we dont get an error up the stack (NoneType not iterable)
+    return []
+
 # ======
 # private stuff from here down
 # ======
