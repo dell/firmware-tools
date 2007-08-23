@@ -255,7 +255,7 @@ class UpdateSet(object):
                         # need another run-through in case this fixes deps for another package
                         workToDo = 1
 
-    def generateInstallationOrder(self, cb=(nullFunc, None)):
+    def generateInstallationOrder(self, returnDeviceToo=0, cb=(nullFunc, None)):
         unionInventory = {}
         for deviceName, details in self.deviceList.items():
             unionInventory[deviceName] = details["device"]
@@ -267,17 +267,21 @@ class UpdateSet(object):
         for pkgName, details in self.deviceList.items():
             update = self.getUpdatePackageForDevice(details["device"])
             if update:
-                updateDeviceList.append(update)
+                updateDeviceList.append( (details["device"], update) )
     
         workToDo = 1
         while workToDo:
             workToDo = 0
-            for candidate in updateDeviceList:
+            for device, candidate in updateDeviceList:
                 if self.checkRules(candidate, unionInventory, cb=cb):
-                    yield candidate
+                    candidate.setCurrentInstallDevice(device)
+                    if returnDeviceToo:
+                        yield (device, candidate)
+                    else:
+                        yield candidate
     
                     # move pkg from to-install list to inventory list
-                    updateDeviceList.remove(candidate)
+                    updateDeviceList.remove((device,candidate))
                     unionInventory[candidate.name] = candidate
     
                     # need another run-through in case this fixes deps for another package
