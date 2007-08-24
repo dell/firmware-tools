@@ -139,7 +139,7 @@ def main():
             return 1
         else:
             print
-            print "Found out of date packages."
+            print "Found firmware which needs to be updated."
             print
 
         # if we get to this point, that means update is necessary.
