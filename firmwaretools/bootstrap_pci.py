@@ -116,7 +116,7 @@ def lspciGenerator():
     
     if err:
         # if LSPCI doesnt support -D (print PCI Domain) option.
-        fd = mockReadLspciWithoutDomain("%s -nn -m -v -D 2>/dev/null" % lspciPath, "r")
+        fd = mockReadLspciWithoutDomain("%s -nn -m -v 2>/dev/null" % lspciPath, "r")
         for line in fd:
             if not line.strip():
                 yield oneDevData
