@@ -19,14 +19,15 @@ import re
 import sys
 
 # my stuff
-import package
-from trace_decorator import dprint, decorateAllFunctions
+import firmwaretools.package as package
+import firmwaretools.trace_decorator
+from firmwaretools.trace_decorator import dprint, decorateAllFunctions
 
 # ======
 # public API
 # ======
 def BootstrapGenerator():
-    for i in lspciGeneratorFactory():
+    for i in lspciGenerator():
         yield(makePciDevice(i))
 
 def InventoryGenerator():
@@ -88,12 +89,13 @@ def makePciDevice(oneDevData):
 mockReadLspciWithDomain = os.popen
 mockReadLspciWithoutDomain = os.popen
 
-def lspciGenerator():
-    for i in ("/sbin/lspci", "/usr/bin/lspci"):
-        if os.path.exists(i):
-            lspciPath=i
-            break
+lspciPath=None
+for i in ("/sbin/lspci", "/usr/bin/lspci"):
+    if os.path.exists(i):
+        lspciPath=i
+        break
 
+def lspciGenerator():
     oneDevData = {}
 
     fd = mockReadLspciWithDomain("%s -nn -m -v -D 2>/dev/null" % lspciPath, "r")
@@ -115,30 +117,73 @@ def lspciGenerator():
     err = fd.close()
     
     if err:
-        # if LSPCI doesnt support -D (print PCI Domain) option.
+        # Do it the hard way
+
         fd = mockReadLspciWithoutDomain("%s -nn -m -v 2>/dev/null" % lspciPath, "r")
+        deviceNum=0
         for line in fd:
             if not line.strip():
-                yield oneDevData
+                deviceNum=0
+                yield supplementOldLspciFormat(oneDevData)
                 oneDevData = {}
+                continue
     
-            name,value = line.split(":")
-            if name.strip().lower() == ("device"):
+            name,value = line.split(":", 1)
+            name = name.strip().lower()
+            value = value.strip()
+            if name == ("device"):
+                name = "device%s" % deviceNum
+                deviceNum = deviceNum + 1
                 # fake domain if not present
-                if len(value.strip().split(":")) > 2:
+            if name == ("device0"):
+                if len(value.split(":")) < 3:
                     value = "0000:" + value.strip() 
-            oneDevData[name.strip().lower()] = value.strip()
+            oneDevData[name] = value
         fd.close()
     
+def supplementOldLspciFormat(oneDevData):
+    #oneDevData["device0"]
+    #oneDevData["vendor"] = "old-lspci-format-fixme [%s]" % oneDevData["vendor"]
+    #oneDevData["device1"] = "old-lspci-format-fixme [%s]" % oneDevData["device1"]
+    #if oneDevData.has_key("svendor"): oneDevData["svendor"] = "old-lspci-format-fixme [%s]" % oneDevData["svendor"]
+    #if oneDevData.has_key("sdevice"): oneDevData["sdevice"] = "old-lspci-format-fixme [%s]" % oneDevData["sdevice"]
 
+    fd = os.popen("%s -m -v -s %s 2>/dev/null" % (lspciPath, oneDevData["device0"]), "r")
+    deviceNum=0
+    for line in fd:
+        if not line.strip(): continue
+        name,value = line.split(":", 1)
+        name = name.strip().lower()
+        value = value.strip()
+        if name == ("device"):
+            name = "device%s" % deviceNum
+            deviceNum = deviceNum + 1
 
-# returns a generator function
-def lspciGeneratorFactory():
-    return lspciGenerator()
+        if name == ("device0"):
+            # fake domain if not present
+            if len(value.split(":")) < 3:
+                value = "0000:" + value.strip() 
+
+        if name == "class":
+            oneDevData["class"] = "%s [%s]" % (value, oneDevData["class"].split()[-1])
+
+        if name == "vendor":
+            oneDevData["vendor"] = "%s [%s]" % (value, oneDevData["vendor"])
+        if name == "svendor":
+            oneDevData["svendor"] = "%s [%s]" % (value, oneDevData["svendor"])
+        if name == "device1":
+            oneDevData["device1"] = "%s [%s]" % (value, oneDevData["device1"])
+        if name == "sdevice":
+            oneDevData["sdevice"] = "%s [%s]" % (value, oneDevData["sdevice"])
+
+    fd.close()
+    
+    return oneDevData
 
 decorateAllFunctions(sys.modules[__name__])
 
 if __name__ == "__main__":
+    #firmwaretools.trace_decorator.debug["__main__"] = 9
     for pkg in BootstrapGenerator():
         print "%s: %s" % (pkg.name, str(pkg))
 
