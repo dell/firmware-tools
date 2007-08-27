@@ -75,12 +75,12 @@ def runSomething(ini, prefix, pluginName, function):
 
         except ImportError, e:
             dprint("module is missing.\n\tModule: %s\n\tFunction: %s\n" % (module, function))
-            dprint(traceback.format_exception(sys.exc_type, sys.exc_value, sys.exc_traceback))
+            dprint(''.join(traceback.format_exception(sys.exc_type, sys.exc_value, sys.exc_traceback)))
         except AttributeError, e:
             dprint("AttributeError usually means the module is missing the specified function.\n\tModule: %s\n\tFunction: %s\n" % (module, function))
-            dprint(traceback.format_exception(sys.exc_type, sys.exc_value, sys.exc_traceback))
+            dprint(''.join(traceback.format_exception(sys.exc_type, sys.exc_value, sys.exc_traceback)))
         except:   # don't let module messups propogate up
-            dprint(traceback.format_exception(sys.exc_type, sys.exc_value, sys.exc_traceback))
+            dprint(''.join(traceback.format_exception(sys.exc_type, sys.exc_value, sys.exc_traceback)))
 
 
 decorateAllFunctions(sys.modules[__name__])
