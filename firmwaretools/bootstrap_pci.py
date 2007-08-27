@@ -37,7 +37,7 @@ def InventoryGenerator():
     #   "AttributeError: 'module' object has no attribute 'InventoryGenerator'"
     # errors when running in regular mode.
 
-    # return [] so that we dont get an error up the stack (NoneType not iterable)
+    # This needs to return something that is iterable, so return an empty array
     return []
 
 # ======
