@@ -6,7 +6,7 @@ Yum plugin to automatically bootstrap packages.
 from yum.plugins import TYPE_CORE
 import yum.Errors
 
-version="1.4.8"
+version="1.5.6"
 requires_api_version = '2.1'
 plugin_type = TYPE_CORE
 
