@@ -53,6 +53,8 @@ MANIFEST.write("include pkg/debian/copyright\n" )
 MANIFEST.write("include pkg/debian/rules\n" )
 MANIFEST.write("include doc/firmware.conf\n" )
 MANIFEST.write("include glade/inventory_firmware_gui.glade\n" )
+MANIFEST.write("include yum-plugin/firmwaretools_bootstrap.conf\n" )
+MANIFEST.write("include yum-plugin/firmwaretools_bootstrap.py\n" )
 MANIFEST.write("include version.mk\n" )
 MANIFEST.write("include pkg/firmware-tools.spec\n" )
 MANIFEST.write("include Makefile\n" )
@@ -60,9 +62,11 @@ MANIFEST.write( "#END AUTOGEN\n" )
 MANIFEST.close()
 
 dataFileList = []
-dataFileList.append(  ("/usr/bin/", gen_scripts ) )
-dataFileList.append(  ("/etc/firmware/", ["doc/firmware.conf",] ) )
-dataFileList.append(  ("/usr/share/firmware-tools/glade/", ["glade/inventory_firmware_gui.glade",] ) )
+dataFileList.append(("/usr/bin/", gen_scripts))
+dataFileList.append(("/etc/firmware/", ["doc/firmware.conf",]))
+dataFileList.append(("/usr/share/firmware-tools/glade/", ["glade/inventory_firmware_gui.glade",] ))
+dataFileList.append(("/usr/lib/yum-plugins/", ["yum-plugin/firmwaretools_bootstrap.py",]))
+dataFileList.append(("/etc/yum/pluginconf.d/", ["yum-plugin/firmwaretools_bootstrap.conf",]))
 
 distutils.core.setup (
         name = 'firmware-tools',

@@ -97,6 +97,8 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{_sysconfdir}/firmware/firmware.d
 %config(noreplace) %{_sysconfdir}/firmware/firmware.conf
 %{_datadir}/firmware/
+%config(noreplace) %{_sysconfdir}/yum/pluginconf.d/*
+%{_exec_prefix}/lib/yum-plugins/*
 
 
 %changelog
