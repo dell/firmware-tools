@@ -29,7 +29,7 @@ packages installed on their system.
 from yum.plugins import TYPE_CORE
 import yum.Errors
 
-version="1.5.6"
+version="1.5.7"
 requires_api_version = '2.1'
 plugin_type = TYPE_CORE
 
