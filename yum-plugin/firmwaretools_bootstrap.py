@@ -1,6 +1,29 @@
 # vim:tw=0:expandtab:autoindent:tabstop=4:shiftwidth=4:filetype=python:
 """
 Yum plugin to automatically bootstrap packages.
+
+The purpose of this plugin is to automatically always add firmware-tools
+bootstrap to the yum transaction. Before this was done by an explicit added
+step. The instructions used to say:
+
+# yum install $(bootstrap_firmware)
+
+Normal bootstrap_firmware output looks like this:
+
+# bootstrap_firmware 
+pci_firmware(ven_0x10de_dev_0x00e1)
+pci_firmware(ven_0x10de_dev_0x00e0_subven_0x10de_subdev_0x0c11)
+pci_firmware(ven_0x10de_dev_0x00e4_subven_0x10de_subdev_0x0c11)
+pci_firmware(ven_0x10de_dev_0x00e7_subven_0x10de_subdev_0x0c11)
+... cut ...
+
+The yum install command would effectively look up each pci_firmware(...) line
+and look for RPM packages that had "Provides:" tags for the corresponding
+firmware.
+
+The purpose of this plugin is to remove that additional step. Now anytime the
+user says "yum upgrade", they will automatically get the latest bootstrap
+packages installed on their system.
 """
 
 from yum.plugins import TYPE_CORE
@@ -37,11 +60,8 @@ def exclude_hook(conduit):
 
         # isnt a straight name, need to see if it is a dep
         try:
-            mypkgs = conduit._base.returnPackagesByDep(pkg.name)
-            mybestpkgs = conduit._base.bestPackagesFromList(mypkgs)
-            for mypkg in mybestpkgs:
-                if conduit._base._installable(mypkg, True):
-                    conduit._base.install(mypkg)
+            mypkg = conduit._base.returnPackageByDep(pkg.name)
+            conduit._base.install(mypkg)
         except yum.Errors.YumBaseError, e:
             pass
 
