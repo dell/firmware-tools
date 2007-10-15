@@ -61,7 +61,7 @@
   distclean_list:
 	rm -rf $(DISTCLEAN_LIST)
 
-  CLEAN_LIST += dist rpm build MANIFEST*
+  CLEAN_LIST += dist rpm build MANIFEST* DEBIAN
   CLEAN_LIST += $(RELEASE_NAME)*.rpm $(RELEASE_NAME)*.tar.gz  $(RELEASE_NAME)*.zip
   CLEAN_LIST += $(shell find . -name .\#\* )
   CLEAN_LIST += $(shell find . -name core )
