@@ -1,16 +1,16 @@
 Source: firmware-tools
 Section: admin
-Priority: extra
-Maintainer: Sadhana B <sadhana_b@dell.com>
+Priority: optional
+Maintainer: Ubuntu MOTU Developers <ubuntu-motu@lists.ubuntu.com>
 Build-Depends: debhelper (>= 5), python-all-dev (>= 2.3.5-11), cdbs (>= 0.4.43), python-support (>= 0.5.3)
-XS-Python-Version: current
 Standards-Version: 3.7.2
 
 Package: firmware-tools
 Architecture: all
-Depends: ${python:Depends}
+# Depends: python-rpm is a hack until we add debian package
+# recognition.  package.py imports rpm
+Depends: ${python:Depends}, python-rpm, 
 Provides: ${python:Provides}
-XB-Python-Version: ${python:Versions}
 Description: Scripts and tools to manage firmware and BIOS updates
  The firmware-tools project provides tools to inventory hardware and a plugin
  architecture so that different OEM vendors can provide different inventory
