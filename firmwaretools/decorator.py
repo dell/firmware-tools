@@ -6,6 +6,9 @@
 __all__ = ["decorator", "update_wrapper", "getinfo"]
 
 import inspect, sys
+import types
+
+def dict(*args, **kargs): return kargs
 
 def getinfo(func):
     """
@@ -42,9 +45,14 @@ def getinfo(func):
         argnames.append(varkwargs)
     signature = inspect.formatargspec(regargs, varargs, varkwargs, defaults,
                                       formatvalue=lambda value: "")[1:-1]
+    try:
+        tempMod = None
+        tempMod = func.__module__
+    except: # python < 2.3
+        pass
     return dict(name=func.__name__, argnames=argnames, signature=signature,
                 defaults = func.func_defaults, doc=func.__doc__,
-                module=func.__module__, dict=func.__dict__,
+                module=tempMod, dict=func.__dict__,
                 globals=func.func_globals, closure=func.func_closure)
 
 def update_wrapper(wrapper, wrapped, create=False):
@@ -55,7 +63,7 @@ def update_wrapper(wrapper, wrapped, create=False):
     Moreovoer, 'wrapped' can be a dictionary with keys 'name', 'doc', 'module',
     'dict', 'defaults'.
     """
-    if isinstance(wrapped, dict):
+    if isinstance(wrapped, types.DictType):
         infodict = wrapped
     else: # assume wrapped is a function
         infodict = getinfo(wrapped)
@@ -70,7 +78,10 @@ def update_wrapper(wrapper, wrapped, create=False):
     except: # Python version < 2.4
         pass
     wrapper.__doc__ = infodict['doc']
-    wrapper.__module__ = infodict['module']
+    try:
+        wrapper.__module__ = infodict['module']
+    except: # Python version < 2.3
+        pass
     wrapper.__dict__.update(infodict['dict'])
     wrapper.func_defaults = infodict['defaults']
     return wrapper
