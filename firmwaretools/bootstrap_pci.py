@@ -134,10 +134,6 @@ def lspciGenerator():
             if name == ("device"):
                 name = "device%s" % deviceNum
                 deviceNum = deviceNum + 1
-                # fake domain if not present
-            if name == ("device0"):
-                if len(value.split(":")) < 3:
-                    value = "0000:" + value.strip() 
             oneDevData[name] = value
         fd.close()
     
@@ -149,20 +145,20 @@ def supplementOldLspciFormat(oneDevData):
     #if oneDevData.has_key("sdevice"): oneDevData["sdevice"] = "old-lspci-format-fixme [%s]" % oneDevData["sdevice"]
 
     fd = os.popen("%s -m -v -s %s 2>/dev/null" % (lspciPath, oneDevData["device0"]), "r")
+    if len(oneDevData["device0"].split(":")) < 3:
+        oneDevData["device0"] = "0000:" + oneDevData["device0"].strip() 
+
     deviceNum=0
     for line in fd:
         if not line.strip(): continue
+        dprint("line: %s" % line)
         name,value = line.split(":", 1)
         name = name.strip().lower()
         value = value.strip()
+        dprint("  name: %s\n  value: %s"% (name,value))
         if name == ("device"):
             name = "device%s" % deviceNum
             deviceNum = deviceNum + 1
-
-        if name == ("device0"):
-            # fake domain if not present
-            if len(value.split(":")) < 3:
-                value = "0000:" + value.strip() 
 
         if name == "class":
             oneDevData["class"] = "%s [%s]" % (value, oneDevData["class"].split()[-1])
