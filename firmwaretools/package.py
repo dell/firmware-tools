@@ -64,8 +64,24 @@ class RepositoryPackage(Package):
         super(RepositoryPackage, self).__init__(*args, **kargs)
 
         self.capabilities = {
+            # if package is capable of downgrading
             'can_downgrade': False,
+
+            # if package is capable of reflashing same version
             'can_reflash': False,
+
+            # if package has/updates .percent_done member var
+            # GUI can use progress bar if this is set.
+            # otherwise, GUI should just use a spinner or something
+            'accurate_update_percentage': False,
+
+            # if update has .update_status_text member var
+            # GUI should use for 'view log' function
+            'update_log_string': False,
+
+            # if update has .update_status_logfile member var
+            # GUI should use for 'view log' function
+            'update_log_filename': False,
             }
 
         self.status = "not_installed"
