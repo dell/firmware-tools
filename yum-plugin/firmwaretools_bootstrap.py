@@ -49,9 +49,12 @@ import firmwaretools.clifuncs
 import firmwaretools.trace_decorator as trace_decorator
 
 if os.environ.get('DEBUG_BOOTSTRAP') == "1":
+    # provide a made-up set of bootstrap packages rather than real one.
+    # useful for testing.
     import firmwaretools.mockpackage
 
 if os.environ.get('DEBUG'):
+    # activate function tracing
     trace_decorator.debug["__main__"] = 9
 
 def exclude_hook(conduit):
@@ -99,4 +102,5 @@ for hook in (
     hookname = "%s_hook" % hook
     setattr(sys.modules[__name__], hookname, functools.partial(debug_hook_calls, hookname))
 
+# this decorates all functions in this module to provide tracing if it is enabled.
 trace_decorator.decorateAllFunctions(sys.modules[__name__])
