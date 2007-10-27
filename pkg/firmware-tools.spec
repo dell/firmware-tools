@@ -81,6 +81,10 @@ rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/firmware/firmware.d/
 mkdir -p $RPM_BUILD_ROOT/%{_datadir}/firmware
 %{__python} setup.py install -O1 --skip-build --root $RPM_BUILD_ROOT %{suse_prefix}
+%if "%{enable_yum_plugins}" != "1"
+rm -rf $RPM_BUILD_ROOT/usr/lib/yum-plugins
+rm -rf $RPM_BUILD_ROOT/etc/yum/pluginconf.d
+%endif
 
  
 %clean
@@ -98,7 +102,7 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/firmware/firmware.conf
 %{_datadir}/firmware/
 
-%if %{enable_yum_plugins}
+%if "%{enable_yum_plugins}" == "1"
 %config(noreplace) %{_sysconfdir}/yum/pluginconf.d/*
 %{_exec_prefix}/lib/yum-plugins/*
 %endif
