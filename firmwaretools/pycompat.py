@@ -30,14 +30,18 @@ import threading
 
 from trace_decorator import dprint, decorateAllFunctions
 
+def clearLine():
+    return "\033[2K\033[0G"
+
 def spinner(cycle=['/', '-', '\\', '|']):
     step = cycle[0]
     del cycle[0]
     cycle.append(step)
     # ESC codes for clear line and position cursor at horizontal pos 0
-    return "\033[2K\033[0G" + step
+    return step
 
 def spinPrint( strn ):
+    print clearLine(),
     print "%s\t%s" % (spinner(), strn),
     sys.stdout.flush()
 
@@ -150,6 +154,11 @@ def runLongProcess(function, args=None, kargs=None, waitLoopFunction=None):
     while thread.running:
         if waitLoopFunction is not None:
             waitLoopFunction()
+
+    # run waitLoopFunction one last time before exit.
+    # gives status opportunity to update to 100% 
+    if waitLoopFunction is not None:
+        waitLoopFunction()
 
     if thread.exception:
         raise thread.exception
