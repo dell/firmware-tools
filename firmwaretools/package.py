@@ -27,6 +27,7 @@ packageStatusEnum = {
     "failed":        _("Device update failed."),
     "success":       _("Device update was successful."),
     "disabled":       _("Device update is disabled for this device."),
+    "warm_reboot_needed":       _("Update complete. You must perform a warm reboot for the update to take effect."),
     }
 
 # Package public API:
