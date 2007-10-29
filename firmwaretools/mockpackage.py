@@ -14,6 +14,7 @@ some docs here eventually.
 from __future__ import generators
 
 import os
+import time
 
 # import arranged alphabetically
 import package
@@ -30,7 +31,7 @@ class MockPackageWrapper(object):
         return "SUCCESS"
 
 
-#new style
+#new style -- used by unit tests.
 class MockPackage2(package.RepositoryPackage):
     def __init__(self, *args, **kargs):
         super(MockPackage2, self).__init__(*args, **kargs)
@@ -40,6 +41,22 @@ class MockPackage2(package.RepositoryPackage):
         self.status = "success"
         return "SUCCESS"
 
+# used when we switch to 'fake' data
+class MockRepositoryPackage(package.RepositoryPackage):
+    def __init__(self, *args, **kargs):
+        super(MockRepositoryPackage, self).__init__(*args, **kargs)
+        self.capabilities['can_downgrade'] = True
+        self.capabilities['can_reflash'] = True
+        self.capabilities['accurate_update_percentage'] = True
+
+    def install(self):
+        self.status = "in_progress"
+        for i in xrange(100):
+            self.progressPct = i/100.0
+            time.sleep(0.01)
+        #print "MockRepositoryPackage -> Install pkg(%s)  version(%s)" % (str(self), self.version)
+        self.progressPct = 1
+        self.status = "success"
 
 # standard entry point -- Bootstrap
 def BootstrapGenerator(): 
