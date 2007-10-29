@@ -26,6 +26,7 @@ import re
 import shutil
 import signal
 import time
+import threading
 
 from trace_decorator import dprint, decorateAllFunctions
 
@@ -141,5 +142,41 @@ def walkPath(topdir, direction=0):
     if direction == 1:
         yield (topdir, dirs, files)
 
+
+def runLongProcess(function, args=None, kargs=None, waitLoopFunction=None):
+    # runs a function in a separate thread. Runs waitLoopFunction() while it
+    # waits for the function to finish. Good for updating GUI, or other stuff
+    thread = BackgroundWorker(function, args, kargs)
+    while thread.running:
+        if waitLoopFunction is not None:
+            waitLoopFunction()
+
+    if thread.exception:
+        raise thread.exception
+    return thread.returnCode
+
+class BackgroundWorker(threading.Thread):
+    def __init__ (self, function, args=None, kargs=None):
+        threading.Thread.__init__(self)
+        self.function = function
+        self.args = args
+        self.kargs = kargs
+
+        self.exception = None
+        self.returnCode = None
+        self.running=1
+
+        if self.args is None: self.args = []
+        if self.kargs is None: self.kargs = {}
+
+        self.start()
+
+    def run(self):
+        try:
+            self.returnCode = self.function(*self.args, **self.kargs)
+        except (Exception,), e:
+            self.exception = e
+
+        self.running=0
 
 decorateAllFunctions(sys.modules[__name__])
