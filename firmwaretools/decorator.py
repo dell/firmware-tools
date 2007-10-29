@@ -46,13 +46,13 @@ def getinfo(func):
     signature = inspect.formatargspec(regargs, varargs, varkwargs, defaults,
                                       formatvalue=lambda value: "")[1:-1]
     try:
-        tempMod = None
-        tempMod = func.__module__
-    except: # python < 2.3
+        tempModule = None
+        tempModule = func.__module__
+    except:
         pass
     return dict(name=func.__name__, argnames=argnames, signature=signature,
                 defaults = func.func_defaults, doc=func.__doc__,
-                module=tempMod, dict=func.__dict__,
+                module=tempModule, dict=func.__dict__,
                 globals=func.func_globals, closure=func.func_closure)
 
 def update_wrapper(wrapper, wrapped, create=False):

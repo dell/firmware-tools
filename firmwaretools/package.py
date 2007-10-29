@@ -27,6 +27,7 @@ packageStatusEnum = {
     "failed":        _("Device update failed."),
     "success":       _("Device update was successful."),
     "disabled":       _("Device update is disabled for this device."),
+    "warm_reboot_needed":       _("Update complete. You must perform a warm reboot for the update to take effect."),
     }
 
 # Package public API:
@@ -64,13 +65,37 @@ class RepositoryPackage(Package):
         super(RepositoryPackage, self).__init__(*args, **kargs)
 
         self.capabilities = {
+            # if package is capable of downgrading
             'can_downgrade': False,
+
+            # if package is capable of reflashing same version
             'can_reflash': False,
+
+            # if package has/updates .percent_done member var
+            # GUI can use progress bar if this is set.
+            # otherwise, GUI should just use a spinner or something
+            'accurate_update_percentage': False,
+
+            # if update has .update_status_text member var
+            # GUI should use for 'view log' function
+            'update_log_string': False,
+
+            # if update has .update_status_logfile member var
+            # GUI should use for 'view log' function
+            'update_log_filename': False,
             }
 
+        self.progressPct = 0
         self.status = "not_installed"
         self.deviceList = []
         self.currentInstallDevice = None
+
+    def getProgress(self):
+        # returns real number between 0-1, or -1 for "not supported"
+        if self.capabilities['accurate_update_percentage']:
+            return self.progressPct
+        else:
+            return -1
         
     def install(self):
         self.status = "in_progress"
@@ -94,6 +119,9 @@ class RepositoryPackage(Package):
 
     def getCurrentInstallDevice(self):
         return self.currentInstallDevice
+
+    def getStatusStr(self):
+        return packageStatusEnum.get(self.status, _("Programming error: status code not found."))
 
 
 # Base class for all devices on a system
@@ -138,17 +166,3 @@ class PciDevice(Device):
         self.uniqueInstance = "%s_%s" % (self.name, self.pciDbdf)
 
 
-#
-# TESTING/DEBUG stuff below here
-#
-
-class MockRepositoryPackage(RepositoryPackage):
-    def __init__(self, *args, **kargs):
-        super(MockRepositoryPackage, self).__init__(*args, **kargs)
-        self.capabilities['can_downgrade'] = True
-        self.capabilities['can_reflash'] = True
-
-    def install(self):
-        self.status = "in_progress"
-        print "MockRepositoryPackage -> Install pkg(%s)  version(%s)" % (str(self), self.version)
-        self.status = "success"
