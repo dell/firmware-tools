@@ -650,11 +650,17 @@ class InventoryFirmware:
 
     def cell_data_func_us_status(self, column, cell, model, iter):
         pkg = model.get_value(iter,self.STATUS_COLUMN_PACKAGE)
-        cell.set_property("text", pkg.status)
+        if pkg.getCapability('accurate_update_percentage'):
+            cell.set_property("text", "%s%%" % (pkg.getProgress()*100))
+        else:
+            if pkg.status == "installing":
+                cell.set_property("text", firmwaretools.pycompat.spinner())
+            else:
+                cell.set_property("text", "")
 
     def cell_data_func_us_status_description(self, column, cell, model, iter):
         pkg = model.get_value(iter,self.STATUS_COLUMN_PACKAGE)
-        cell.set_property("text", firmwaretools.package.packageStatusEnum.get(pkg.status, _("Programming error: status code not found.")))
+        cell.set_property("text", pkg.getStatusStr())
 
     def cell_data_func_us_component(self, column, cell, model, iter):
         device = model.get_value(iter,self.STATUS_COLUMN_DEVICE)
