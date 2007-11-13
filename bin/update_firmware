@@ -24,6 +24,7 @@ import os
 import sys
 import ConfigParser
 import traceback
+import time
 
 import firmwaretools.repository
 import firmwaretools.package
@@ -158,12 +159,23 @@ def main():
             print
             return 0
 
-
         print "Running updates..."
         for pkg in updateSet.generateInstallationOrder():
-            print "Installing %s - %s" % (pkg.name, pkg.version)
             try:
-                ret = pkg.install()
+
+                def statusFunc():
+                    if pkg.getCapability('accurate_update_percentage'):
+                        firmwaretools.pycompat.spinPrint("%s%% Installing %s - %s" % (pkg.getProgress() * 100, pkg.name, pkg.version))
+                    else:
+                        firmwaretools.pycompat.spinPrint("Installing %s - %s" % (pkg.name, pkg.version))
+                    time.sleep(0.2)
+
+                ret = firmwaretools.pycompat.runLongProcess(pkg.install, waitLoopFunction=statusFunc)
+                print firmwaretools.pycompat.clearLine(),
+                print "100%% Installing %s - %s" % (pkg.name, pkg.version)
+                print "Done: %s" % pkg.getStatusStr()
+                print
+
             except (firmwaretools.package.NoInstaller,), e:
                 print "package %s - %s does not have an installer available." % (pkg.name, pkg.version)
                 print "skipping this package for now."

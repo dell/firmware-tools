@@ -21,7 +21,7 @@ import os
 # START = Do not edit manually
 RELEASE_MAJOR="1"
 RELEASE_MINOR="5"
-RELEASE_SUBLEVEL="7"
+RELEASE_SUBLEVEL="8"
 RELEASE_EXTRALEVEL=""
 #
 # END = Do not edit manually
@@ -34,7 +34,7 @@ for i in ("RELEASE_MAJOR", "RELEASE_MINOR", "RELEASE_SUBLEVEL", "RELEASE_EXTRALE
         globals()[i] = os.environ.get(i)
 
 gen_scripts = [
-    "bin/inventory_firmware", "bin/bootstrap_firmware", "bin/update_firmware", "bin/apply_updates",
+    "bin/inventory_firmware", "bin/bootstrap_firmware", "bin/update_firmware",
     "bin/inventory_firmware_gui",
     ]
 

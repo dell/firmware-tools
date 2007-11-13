@@ -26,17 +26,22 @@ import re
 import shutil
 import signal
 import time
+import threading
 
 from trace_decorator import dprint, decorateAllFunctions
+
+def clearLine():
+    return "\033[2K\033[0G"
 
 def spinner(cycle=['/', '-', '\\', '|']):
     step = cycle[0]
     del cycle[0]
     cycle.append(step)
     # ESC codes for clear line and position cursor at horizontal pos 0
-    return "\033[2K\033[0G" + step
+    return step
 
 def spinPrint( strn ):
+    print clearLine(),
     print "%s\t%s" % (spinner(), strn),
     sys.stdout.flush()
 
@@ -141,5 +146,46 @@ def walkPath(topdir, direction=0):
     if direction == 1:
         yield (topdir, dirs, files)
 
+
+def runLongProcess(function, args=None, kargs=None, waitLoopFunction=None):
+    # runs a function in a separate thread. Runs waitLoopFunction() while it
+    # waits for the function to finish. Good for updating GUI, or other stuff
+    thread = BackgroundWorker(function, args, kargs)
+    while thread.running:
+        if waitLoopFunction is not None:
+            waitLoopFunction()
+
+    # run waitLoopFunction one last time before exit.
+    # gives status opportunity to update to 100% 
+    if waitLoopFunction is not None:
+        waitLoopFunction()
+
+    if thread.exception:
+        raise thread.exception
+    return thread.returnCode
+
+class BackgroundWorker(threading.Thread):
+    def __init__ (self, function, args=None, kargs=None):
+        threading.Thread.__init__(self)
+        self.function = function
+        self.args = args
+        self.kargs = kargs
+
+        self.exception = None
+        self.returnCode = None
+        self.running=1
+
+        if self.args is None: self.args = []
+        if self.kargs is None: self.kargs = {}
+
+        self.start()
+
+    def run(self):
+        try:
+            self.returnCode = self.function(*self.args, **self.kargs)
+        except (Exception,), e:
+            self.exception = e
+
+        self.running=0
 
 decorateAllFunctions(sys.modules[__name__])
