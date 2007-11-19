@@ -29,6 +29,13 @@ import firmwaretools.trace_decorator as trace_decorator
 
 class CmdlineError(Exception):pass
 
+def debianCleanName(s):
+    s = s.replace('_', '-')
+    s = s.replace('(', '-')
+    s = s.replace(')', '')
+    s = s.lower()
+    return s
+
 def main():
     global firmwaretools # so we can import more submodules below...
     ini = ConfigParser.ConfigParser()
@@ -36,9 +43,10 @@ def main():
     overrides = []
     commaSeparated=0
     verbose=0
+    aptMode = 0
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "bc:fho:uv", ["help", "config=", "overrides=", "up2date_mode", "bootstrap", "verbose", "fake-mode"])
+        opts, args = getopt.getopt(sys.argv[1:], "bc:fho:uav", ["help", "config=", "overrides=", "up2date_mode", "apt_mode", "bootstrap", "verbose", "fake-mode"])
         for option, argument in opts:
             if option in ("-h", "--help"):
                 print __doc__
@@ -48,6 +56,8 @@ def main():
                 altConfig = 1
             if option in ("-u", "--up2date_mode"):
                 commaSeparated=1
+            if option in ("-a", "--apt_mode"):
+                aptMode = 1
             if option in ("-o", "--override"):
                 overrides.append(argument)
             if option in ("-b", "--bootstrap"):
@@ -73,7 +83,9 @@ def main():
             ini.set(section, key, value)
 
         for pkg in firmwaretools.clifuncs.runBootstrapInventory(ini):
-            if commaSeparated:
+            if aptMode:
+                sys.stdout.write( "%s " % debianCleanName(pkg.name) )
+            elif commaSeparated:
                 sys.stdout.write( "%s," % pkg.name )
             else:
                 print "%s" % pkg.name
