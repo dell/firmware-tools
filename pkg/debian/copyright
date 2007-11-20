@@ -1,4 +1,4 @@
-This package was debianized by Sadhana B on
+This package was debianized by the firmware-tools team <firmware-tools-devel@lists.us.dell.com> on
 Mon,  9 Apr 2007 19:15:12 +0530.
 
 It was downloaded from: http://linux.dell.com/libsmbios/download/firmware-tools/
@@ -10,7 +10,8 @@ and is licensed under the GPL, see `/usr/share/common-licenses/GPL'.
 
 The upstream sources are licensed thusly:
 
- * Copyright (C) 2005 Dell Inc.
+ * Copyright (C) 2001-2005, David M. Beazley (LGPL 2.1+) 
+ * Copyright (C) 2003-2007 Dell Inc.
  *  by Michael Brown <Michael_E_Brown@dell.com>
  * Licensed under the Open Software License version 3.0 or later.
  *

@@ -1,7 +1,5 @@
-firmware-tools (1.5.8-0ubuntu1) hardy; urgency=low
+firmware-tools (1.5.8-0ubuntu2) hardy; urgency=low
 
   * Initial release.
-    - debian packaging changes per review from Martin Pitt <martin.pitt@ubuntu.com>
-    - use pbuilder
 
- -- Matt Domsch <Matt_Domsch@dell.com>  Fri, 15 Nov 2007 22:00:03 -0600
+ -- Matt Domsch <Matt_Domsch@dell.com>  Thu, 20 Nov 2007 13:24:00 -0600
