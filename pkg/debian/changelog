@@ -1,4 +1,4 @@
-firmware-tools (1.5.8-0ubuntu2) hardy; urgency=low
+firmware-tools (1.5.9-0ubuntu1) hardy; urgency=low
 
   * Initial release. (LP: #163120)
 
