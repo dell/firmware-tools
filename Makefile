@@ -150,25 +150,33 @@ $(TARBALL): $(SPEC) setup.py $(PY_VER_UPDATES)
 
 # use debopts to do things like override maintainer email, etc.
 deb_destdir=$(BUILDDIR)/dist
-deb: $(TARBALL)
+
+dist_set:
+ ifndef DIST
+   $(error "Must set DIST={gutsy,hardy,sid,...} for deb and sdeb targets")
+ endif		
+
+deb: $(TARBALL) dist_set
 	mkdir -p $(deb_destdir) ; \
 	tmp_dir=`mktemp -d /tmp/firmware-tools.XXXXXXXX` ; \
 	cp $(TARBALL) $${tmp_dir}/$(RELEASE_NAME)_$(RELEASE_VERSION).orig.tar.gz ;\
 	tar -C $${tmp_dir} -xzf $(TARBALL) ; \
 	mv $${tmp_dir}/$(RELEASE_STRING)/pkg/debian $${tmp_dir}/$(RELEASE_STRING)/debian ; \
 	chmod +x $${tmp_dir}/$(RELEASE_STRING)/debian/rules ; \
+	sed -e "s/#DIST#/$(DIST)/g" $${tmp_dir}/$(RELEASE_STRING)/debian/changelog.in > $${tmp_dir}/$(RELEASE_STRING)/debian/changelog ; \
 	cd $${tmp_dir}/$(RELEASE_STRING) ; \
 	pdebuild --use-pdebuild-internal --auto-debsign --buildresult $(deb_destdir) ; \
 	cd - ;\
 	rm -rf $${tmp_dir}
 
-sdeb: $(TARBALL)
+sdeb: $(TARBALL) dist_set
 	mkdir -p $(deb_destdir) ; \
 	tmp_dir=`mktemp -d /tmp/firmware-tools.XXXXXXXX` ; \
 	cp $(TARBALL) $${tmp_dir}/$(RELEASE_NAME)_$(RELEASE_VERSION).orig.tar.gz ;\
 	tar -C $${tmp_dir} -xzf $(TARBALL) ; \
 	mv $${tmp_dir}/$(RELEASE_STRING)/pkg/debian $${tmp_dir}/$(RELEASE_STRING)/debian ; \
 	chmod +x $${tmp_dir}/$(RELEASE_STRING)/debian/rules ; \
+	sed -e "s/#DIST#/$(DIST)/g" $${tmp_dir}/$(RELEASE_STRING)/debian/changelog.in > $${tmp_dir}/$(RELEASE_STRING)/debian/changelog ; \
 	cd $${tmp_dir}/$(RELEASE_STRING) ; \
 	dpkg-buildpackage -D -S -sa -rfakeroot ; \
 	mv ../$(RELEASE_NAME)_* $(deb_destdir) ; \

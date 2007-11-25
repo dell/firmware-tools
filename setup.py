@@ -48,7 +48,7 @@ for i in gen_scripts:
 for i in doc_files:
     MANIFEST.write("include " + i + "\n" )
 
-MANIFEST.write("include pkg/debian/changelog\n" )
+MANIFEST.write("include pkg/debian/changelog.in\n" )
 MANIFEST.write("include pkg/debian/control\n" )
 MANIFEST.write("include pkg/debian/copyright\n" )
 MANIFEST.write("include pkg/debian/rules\n" )
