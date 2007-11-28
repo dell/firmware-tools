@@ -6,7 +6,7 @@
 # START = Do not edit manually
 %define major 1
 %define minor 5
-%define sub 9
+%define sub 10
 %define extralevel %{nil}
 %define rpm_release 1
 %define release_name firmware-tools
