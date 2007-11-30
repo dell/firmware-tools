@@ -188,10 +188,10 @@ RELEASE_STRING = $(RELEASE_NAME)-$(RELEASE_VERSION)
 CLEANFILES = $(RELEASE_NAME)-*.tar.gz $(RELEASE_NAME)-*.tar.bz2 \
 	$(RELEASE_NAME)-*.rpm _buildtemp version $(EXTRA_PROGRAMS)
 DISTCLEANFILES = *~
-EXTRA_DIST = doc glade pkg/debian test yum-plugin COPYING-GPL \
+EXTRA_DIST = etc doc glade pkg/debian test yum-plugin COPYING-GPL \
 	COPYING-OSL COPYING.LIB
 pkgetcdir = $(sysconfdir)/firmware/
-nodist_pkgetc_DATA = doc/firmware.conf
+nodist_pkgetc_DATA = etc/firmware/firmware.conf
 dist_sbin_SCRIPTS = \
 	bin/bootstrap_firmware  \
 	bin/inventory_firmware  \

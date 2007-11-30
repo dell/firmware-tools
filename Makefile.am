@@ -25,9 +25,9 @@ EXTRA_PROGRAMS=
 CLEANFILES += $(EXTRA_PROGRAMS)
 
 pkgetcdir = $(sysconfdir)/firmware/
-nodist_pkgetc_DATA = doc/firmware.conf
+nodist_pkgetc_DATA = etc/firmware/firmware.conf
 
-EXTRA_DIST += doc glade pkg/debian test yum-plugin COPYING-GPL COPYING-OSL COPYING.LIB
+EXTRA_DIST += etc doc glade pkg/debian test yum-plugin COPYING-GPL COPYING-OSL COPYING.LIB
 
 dist_sbin_SCRIPTS = \
 	bin/bootstrap_firmware  \
