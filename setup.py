@@ -21,7 +21,7 @@ import os
 # START = Do not edit manually
 RELEASE_MAJOR="1"
 RELEASE_MINOR="5"
-RELEASE_SUBLEVEL="8"
+RELEASE_SUBLEVEL="10"
 RELEASE_EXTRALEVEL=""
 #
 # END = Do not edit manually
@@ -38,7 +38,7 @@ gen_scripts = [
     "bin/inventory_firmware_gui",
     ]
 
-doc_files = [ "COPYING-GPL", "COPYING-OSL", "README", ]
+doc_files = [ "COPYING-GPL", "COPYING.LIB", "COPYING-OSL", "README", "doc/bootstrap.txt"]
 
 MANIFEST = open( "MANIFEST.in", "w+" )
 MANIFEST.write( "#BEGIN AUTOGEN\n" )
@@ -48,12 +48,13 @@ for i in gen_scripts:
 for i in doc_files:
     MANIFEST.write("include " + i + "\n" )
 
-MANIFEST.write("include pkg/debian/changelog\n" )
+MANIFEST.write("include pkg/debian/changelog.in\n" )
 MANIFEST.write("include pkg/debian/control\n" )
 MANIFEST.write("include pkg/debian/copyright\n" )
 MANIFEST.write("include pkg/debian/rules\n" )
 MANIFEST.write("include pkg/debian/postinst\n" )
 MANIFEST.write("include pkg/debian/prerm\n" )
+MANIFEST.write("include pkg/debian/triggers\n" )
 MANIFEST.write("include doc/firmware.conf\n" )
 MANIFEST.write("include glade/inventory_firmware_gui.glade\n" )
 MANIFEST.write("include yum-plugin/firmwaretools_bootstrap.conf\n" )

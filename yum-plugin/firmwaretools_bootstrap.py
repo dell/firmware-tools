@@ -35,7 +35,7 @@ packages installed on their system.
 from yum.plugins import TYPE_CORE
 import yum.Errors
 
-version="1.5.8"
+version="1.5.10"
 requires_api_version = '2.1'
 plugin_type = (TYPE_CORE,)
 

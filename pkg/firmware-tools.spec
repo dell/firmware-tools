@@ -6,7 +6,7 @@
 # START = Do not edit manually
 %define major 1
 %define minor 5
-%define sub 8
+%define sub 10
 %define extralevel %{nil}
 %define rpm_release 1
 %define release_name firmware-tools
@@ -93,7 +93,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
-%doc COPYING-GPL COPYING-OSL README
+%doc COPYING-GPL COPYING-OSL COPYING.LIB README
 %{python_sitelib}/*
 %attr(0755,root,root) %{_bindir}/*
 %{_datadir}/firmware-tools/

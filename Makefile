@@ -61,7 +61,7 @@
   distclean_list:
 	rm -rf $(DISTCLEAN_LIST)
 
-  CLEAN_LIST += dist rpm build MANIFEST*
+  CLEAN_LIST += dist rpm build MANIFEST* DEBIAN
   CLEAN_LIST += $(RELEASE_NAME)*.rpm $(RELEASE_NAME)*.tar.gz  $(RELEASE_NAME)*.zip
   CLEAN_LIST += $(shell find . -name .\#\* )
   CLEAN_LIST += $(shell find . -name core )
@@ -150,6 +150,26 @@ $(TARBALL): $(SPEC) setup.py $(PY_VER_UPDATES)
 
 # use debopts to do things like override maintainer email, etc.
 deb_destdir=$(BUILDDIR)/dist
+
+# This is required to ensure DIST is set when necessary
+NEEDS_DIST = 0
+ifeq ($(MAKECMDGOALS),deb)
+  NEEDS_DIST = 1
+endif
+ifeq ($(MAKECMDGOALS),sdeb)
+  NEEDS_DIST = 1
+endif
+
+ifeq ($(NEEDS_DIST), 1)
+  ifndef DIST
+  $(error "Must set DIST={gutsy,hardy,sid,...} for deb and sdeb targets")
+  endif
+  ifndef DISTTAG
+  $(info Remember to set DISTTAG='~gutsy1' for deb and sdeb targets for backports)
+  DISTTAG =
+  endif
+endif
+
 deb: $(TARBALL)
 	mkdir -p $(deb_destdir) ; \
 	tmp_dir=`mktemp -d /tmp/firmware-tools.XXXXXXXX` ; \
@@ -157,6 +177,8 @@ deb: $(TARBALL)
 	tar -C $${tmp_dir} -xzf $(TARBALL) ; \
 	mv $${tmp_dir}/$(RELEASE_STRING)/pkg/debian $${tmp_dir}/$(RELEASE_STRING)/debian ; \
 	chmod +x $${tmp_dir}/$(RELEASE_STRING)/debian/rules ; \
+	sed -e "s/#DISTTAG#/$(DISTTAG)/g" -e "s/#DIST#/$(DIST)/g" $${tmp_dir}/$(RELEASE_STRING)/debian/changelog.in > $${tmp_dir}/$(RELEASE_STRING)/debian/changelog ; \
+	rm $${tmp_dir}/$(RELEASE_STRING)/debian/changelog.in ; \
 	cd $${tmp_dir}/$(RELEASE_STRING) ; \
 	pdebuild --use-pdebuild-internal --auto-debsign --buildresult $(deb_destdir) ; \
 	cd - ;\
@@ -169,6 +191,8 @@ sdeb: $(TARBALL)
 	tar -C $${tmp_dir} -xzf $(TARBALL) ; \
 	mv $${tmp_dir}/$(RELEASE_STRING)/pkg/debian $${tmp_dir}/$(RELEASE_STRING)/debian ; \
 	chmod +x $${tmp_dir}/$(RELEASE_STRING)/debian/rules ; \
+	sed -e "s/#DISTTAG#/$(DISTTAG)/g" -e "s/#DIST#/$(DIST)/g" $${tmp_dir}/$(RELEASE_STRING)/debian/changelog.in > $${tmp_dir}/$(RELEASE_STRING)/debian/changelog ; \
+	rm $${tmp_dir}/$(RELEASE_STRING)/debian/changelog.in ; \
 	cd $${tmp_dir}/$(RELEASE_STRING) ; \
 	dpkg-buildpackage -D -S -sa -rfakeroot ; \
 	mv ../$(RELEASE_NAME)_* $(deb_destdir) ; \
