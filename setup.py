@@ -38,7 +38,7 @@ gen_scripts = [
     "bin/inventory_firmware_gui",
     ]
 
-doc_files = [ "COPYING-GPL", "COPYING-OSL", "README", "doc/bootstrap.txt"]
+doc_files = [ "COPYING-GPL", "COPYING.LIB", "COPYING-OSL", "README", "doc/bootstrap.txt"]
 
 MANIFEST = open( "MANIFEST.in", "w+" )
 MANIFEST.write( "#BEGIN AUTOGEN\n" )
