@@ -27,9 +27,9 @@ CLEANFILES += $(EXTRA_PROGRAMS)
 pkgetcdir = $(sysconfdir)/firmware/
 nodist_pkgetc_DATA = doc/firmware.conf
 
-EXTRA_DIST += doc glade pkg/debian test yum-plugin
+EXTRA_DIST += doc glade pkg/debian test yum-plugin COPYING-GPL COPYING-OSL COPYING.LIB
 
-sbin_SCRIPTS = \
+dist_sbin_SCRIPTS = \
 	bin/bootstrap_firmware  \
 	bin/inventory_firmware  \
 	bin/inventory_firmware_gui  \

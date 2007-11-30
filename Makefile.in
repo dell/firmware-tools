@@ -37,9 +37,9 @@ POST_UNINSTALL = :
 bin_PROGRAMS =
 EXTRA_PROGRAMS =
 subdir = .
-DIST_COMMON = README $(am__configure_deps) $(pkgpython_PYTHON) \
-	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(top_srcdir)/configure \
+DIST_COMMON = README $(am__configure_deps) $(dist_sbin_SCRIPTS) \
+	$(pkgpython_PYTHON) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in $(top_srcdir)/configure \
 	$(top_srcdir)/pkg/${PACKAGE_NAME}.spec.in AUTHORS COPYING.LIB \
 	ChangeLog INSTALL NEWS pkg/install-sh pkg/missing \
 	pkg/py-compile
@@ -56,8 +56,8 @@ am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(sbindir)" \
 	"$(DESTDIR)$(pkgetcdir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-sbinSCRIPT_INSTALL = $(INSTALL_SCRIPT)
-SCRIPTS = $(sbin_SCRIPTS)
+dist_sbinSCRIPT_INSTALL = $(INSTALL_SCRIPT)
+SCRIPTS = $(dist_sbin_SCRIPTS)
 SOURCES =
 DIST_SOURCES =
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
@@ -188,10 +188,11 @@ RELEASE_STRING = $(RELEASE_NAME)-$(RELEASE_VERSION)
 CLEANFILES = $(RELEASE_NAME)-*.tar.gz $(RELEASE_NAME)-*.tar.bz2 \
 	$(RELEASE_NAME)-*.rpm _buildtemp version $(EXTRA_PROGRAMS)
 DISTCLEANFILES = *~
-EXTRA_DIST = doc glade pkg/debian test yum-plugin
+EXTRA_DIST = doc glade pkg/debian test yum-plugin COPYING-GPL \
+	COPYING-OSL COPYING.LIB
 pkgetcdir = $(sysconfdir)/firmware/
 nodist_pkgetc_DATA = doc/firmware.conf
-sbin_SCRIPTS = \
+dist_sbin_SCRIPTS = \
 	bin/bootstrap_firmware  \
 	bin/inventory_firmware  \
 	bin/inventory_firmware_gui  \
@@ -276,21 +277,21 @@ uninstall-binPROGRAMS:
 
 clean-binPROGRAMS:
 	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
-install-sbinSCRIPTS: $(sbin_SCRIPTS)
+install-dist_sbinSCRIPTS: $(dist_sbin_SCRIPTS)
 	@$(NORMAL_INSTALL)
 	test -z "$(sbindir)" || $(MKDIR_P) "$(DESTDIR)$(sbindir)"
-	@list='$(sbin_SCRIPTS)'; for p in $$list; do \
+	@list='$(dist_sbin_SCRIPTS)'; for p in $$list; do \
 	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
 	  if test -f $$d$$p; then \
 	    f=`echo "$$p" | sed 's|^.*/||;$(transform)'`; \
-	    echo " $(sbinSCRIPT_INSTALL) '$$d$$p' '$(DESTDIR)$(sbindir)/$$f'"; \
-	    $(sbinSCRIPT_INSTALL) "$$d$$p" "$(DESTDIR)$(sbindir)/$$f"; \
+	    echo " $(dist_sbinSCRIPT_INSTALL) '$$d$$p' '$(DESTDIR)$(sbindir)/$$f'"; \
+	    $(dist_sbinSCRIPT_INSTALL) "$$d$$p" "$(DESTDIR)$(sbindir)/$$f"; \
 	  else :; fi; \
 	done
 
-uninstall-sbinSCRIPTS:
+uninstall-dist_sbinSCRIPTS:
 	@$(NORMAL_UNINSTALL)
-	@list='$(sbin_SCRIPTS)'; for p in $$list; do \
+	@list='$(dist_sbin_SCRIPTS)'; for p in $$list; do \
 	  f=`echo "$$p" | sed 's|^.*/||;$(transform)'`; \
 	  echo " rm -f '$(DESTDIR)$(sbindir)/$$f'"; \
 	  rm -f "$(DESTDIR)$(sbindir)/$$f"; \
@@ -689,7 +690,7 @@ install-data-am: install-nodist_pkgdataDATA install-nodist_pkgetcDATA \
 
 install-dvi: install-dvi-recursive
 
-install-exec-am: install-binPROGRAMS install-sbinSCRIPTS
+install-exec-am: install-binPROGRAMS install-dist_sbinSCRIPTS
 	@$(NORMAL_INSTALL)
 	$(MAKE) $(AM_MAKEFLAGS) install-exec-hook
 
@@ -723,9 +724,9 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-binPROGRAMS uninstall-nodist_pkgdataDATA \
-	uninstall-nodist_pkgetcDATA uninstall-pkgpythonPYTHON \
-	uninstall-sbinSCRIPTS
+uninstall-am: uninstall-binPROGRAMS uninstall-dist_sbinSCRIPTS \
+	uninstall-nodist_pkgdataDATA uninstall-nodist_pkgetcDATA \
+	uninstall-pkgpythonPYTHON
 
 .MAKE: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) install-am \
 	install-exec-am install-strip
@@ -737,18 +738,18 @@ uninstall-am: uninstall-binPROGRAMS uninstall-nodist_pkgdataDATA \
 	distclean-generic distclean-tags distcleancheck distdir \
 	distuninstallcheck dvi dvi-am html html-am info info-am \
 	install install-am install-binPROGRAMS install-data \
-	install-data-am install-dvi install-dvi-am install-exec \
-	install-exec-am install-exec-hook install-html install-html-am \
-	install-info install-info-am install-man \
-	install-nodist_pkgdataDATA install-nodist_pkgetcDATA \
-	install-pdf install-pdf-am install-pkgpythonPYTHON install-ps \
-	install-ps-am install-sbinSCRIPTS install-strip installcheck \
-	installcheck-am installdirs installdirs-am maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-generic pdf \
-	pdf-am ps ps-am tags tags-recursive uninstall uninstall-am \
-	uninstall-binPROGRAMS uninstall-nodist_pkgdataDATA \
-	uninstall-nodist_pkgetcDATA uninstall-pkgpythonPYTHON \
-	uninstall-sbinSCRIPTS
+	install-data-am install-dist_sbinSCRIPTS install-dvi \
+	install-dvi-am install-exec install-exec-am install-exec-hook \
+	install-html install-html-am install-info install-info-am \
+	install-man install-nodist_pkgdataDATA \
+	install-nodist_pkgetcDATA install-pdf install-pdf-am \
+	install-pkgpythonPYTHON install-ps install-ps-am install-strip \
+	installcheck installcheck-am installdirs installdirs-am \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-generic pdf pdf-am ps ps-am tags tags-recursive \
+	uninstall uninstall-am uninstall-binPROGRAMS \
+	uninstall-dist_sbinSCRIPTS uninstall-nodist_pkgdataDATA \
+	uninstall-nodist_pkgetcDATA uninstall-pkgpythonPYTHON
 
 install-exec-hook:
 	for i in $(REPLACE_VARS_ON_INSTALL); do      \
