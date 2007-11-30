@@ -17,7 +17,7 @@ import os
 import repository
 import mockpackage
 import sys
-from trace_decorator import trace, dprint, decorateAllFunctions
+from trace_decorator import decorateAllFunctions
 
 #
 # DEBUG ONLY

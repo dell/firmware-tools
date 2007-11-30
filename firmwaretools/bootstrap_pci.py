@@ -14,6 +14,7 @@ some docs here eventually.
 from __future__ import generators
 
 # import arranged alphabetically
+import logging
 import os
 import re
 import sys
@@ -21,7 +22,10 @@ import sys
 # my stuff
 import firmwaretools.package as package
 import firmwaretools.trace_decorator
-from firmwaretools.trace_decorator import dprint, decorateAllFunctions
+from firmwaretools.trace_decorator import decorateAllFunctions
+
+# set up logging
+moduleLog = logging.getLogger("firmwaretools.addon")
 
 # ======
 # public API
@@ -180,10 +184,9 @@ def supplementOldLspciFormat(oneDevData):
     
     return oneDevData
 
-decorateAllFunctions(sys.modules[__name__])
+decorateAllFunctions(sys.modules[__name__], moduleLog)
 
 if __name__ == "__main__":
-    #firmwaretools.trace_decorator.debug["__main__"] = 9
     for pkg in BootstrapGenerator():
         print "%s: %s" % (pkg.name, str(pkg))
 

@@ -9,20 +9,24 @@
 
 from __future__ import generators
 
+import ConfigParser
 import getopt
 import glob
+import logging
 import os
 import sys
-import ConfigParser
 import traceback
-from trace_decorator import dprint,  decorateAllFunctions
+
+from trace_decorator import  decorateAllFunctions
+
+# set up logging
+moduleLog = logging.getLogger("firmwaretools")
 
 configLocations = [
     "/etc/firmware/firmware.conf",
     "/etc/firmware/firmware.d/*.conf",
     "~/.firmware.conf",
     ]
-
 
 def getConfig(ini, fileList):
     for i in fileList:
@@ -74,13 +78,13 @@ def runSomething(ini, prefix, pluginName, function):
                 yield thing
 
         except ImportError, e:
-            dprint("module is missing.\n\tModule: %s\n\tFunction: %s\n" % (module, function))
-            dprint(''.join(traceback.format_exception(sys.exc_type, sys.exc_value, sys.exc_traceback)))
+            moduleLog.error("module is missing.\n\tModule: %s\n\tFunction: %s\n" % (module, function))
+            moduleLog.error(''.join(traceback.format_exception(sys.exc_type, sys.exc_value, sys.exc_traceback)))
         except AttributeError, e:
-            dprint("AttributeError usually means the module is missing the specified function.\n\tModule: %s\n\tFunction: %s\n" % (module, function))
-            dprint(''.join(traceback.format_exception(sys.exc_type, sys.exc_value, sys.exc_traceback)))
+            moduleLog.error("AttributeError usually means the module is missing the specified function.\n\tModule: %s\n\tFunction: %s\n" % (module, function))
+            moduleLog.error(''.join(traceback.format_exception(sys.exc_type, sys.exc_value, sys.exc_traceback)))
         except:   # don't let module messups propogate up
-            dprint(''.join(traceback.format_exception(sys.exc_type, sys.exc_value, sys.exc_traceback)))
+            moduleLog.error(''.join(traceback.format_exception(sys.exc_type, sys.exc_value, sys.exc_traceback)))
 
 
-decorateAllFunctions(sys.modules[__name__])
+decorateAllFunctions(sys.modules[__name__], moduleLog)

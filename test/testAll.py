@@ -5,10 +5,12 @@
 #alphabetical
 import sys
 import glob
+import logging
 
 import test.TestLib
 
 # runs all modules TestCase() classes in files that match test*.py
+logging.basicConfig()
 
 if __name__ == "__main__":
     tests = []

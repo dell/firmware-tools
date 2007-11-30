@@ -28,7 +28,7 @@ import signal
 import time
 import threading
 
-from trace_decorator import dprint, decorateAllFunctions
+from trace_decorator import decorateAllFunctions
 
 def clearLine():
     return "\033[2K\033[0G"

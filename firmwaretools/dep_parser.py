@@ -15,7 +15,7 @@ from __future__ import generators
 import sys
 
 import package
-from trace_decorator import dprint, decorateAllFunctions
+from trace_decorator import decorateAllFunctions
 
 class DepParser(object):
     tokens = ( 'ID', 'LT', 'LE', 'EQ', 'GE', 'GT', 'COMMA' )

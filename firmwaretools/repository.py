@@ -20,7 +20,10 @@ import pycompat
 import dep_parser
 import sys
 import traceback
-from trace_decorator import trace, dprint, decorateAllFunctions
+from trace_decorator import traceLog, decorateAllFunctions
+
+import logging
+moduleLog = logging.getLogger("firmwaretools.repository")
 
 class CircularDependencyError(Exception): pass
 
@@ -47,7 +50,7 @@ def makePackage(configFile):
 
     try:
         pymod = conf.get("package","module")
-        dprint("pymod: %s\n" % pymod)
+        moduleLog.debug("pymod: %s" % pymod)
         module = __import__(pymod, globals(),  locals(), [])
         for i in pymod.split(".")[1:]:
             module = getattr(module, i)
@@ -55,7 +58,7 @@ def makePackage(configFile):
         packageTypeClass = conf.get("package", "type")
         type = getattr(module, packageTypeClass)
         if issubclass(type, package.Package):
-            dprint("direct instantiate\n")
+            moduleLog.debug("direct instantiate")
             # direct instantiate class (new style)
             p = type(
                 displayname=displayname,
@@ -66,10 +69,10 @@ def makePackage(configFile):
             )
         else:
             # just wrap it (old style)
-            dprint("wrap\n")
+            moduleLog.debug("wrap")
             type(p)
     except (ConfigParser.NoOptionError, ConfigParser.NoSectionError, ImportError, AttributeError):
-        dprint(''.join(traceback.format_exception(sys.exc_type, sys.exc_value, sys.exc_traceback)))
+        moduleLog.debug(''.join(traceback.format_exception(sys.exc_type, sys.exc_value, sys.exc_traceback)))
         pass
 
     return p
@@ -309,12 +312,12 @@ class Repository(object):
                             cb[0]( who="iterPackages", what="made_package", package=p, cb=cb)
                             yield p
                         except:
-                            dprint(''.join(traceback.format_exception(sys.exc_type, sys.exc_value, sys.exc_traceback)))
+                            moduleLog.debug(''.join(traceback.format_exception(sys.exc_type, sys.exc_value, sys.exc_traceback)))
                             pass
             except OSError:   # directory doesnt exist, so no repo packages. :-)
                 pass
 
-    iterPackages = trace(iterPackages)
+    iterPackages = traceLog()(iterPackages)
 
     def iterLatestPackages(self, cb=(nullFunc, None)):
         latest = {}
@@ -336,6 +339,6 @@ class Repository(object):
             cb[0]( who="iterLatestPackages", what="made_package", package=latest[package], cb=cb)
             yield latest[package]
 
-    iterLatestPackages = trace(iterLatestPackages)
+    iterLatestPackages = traceLog()(iterLatestPackages)
 
 decorateAllFunctions(sys.modules[__name__])
