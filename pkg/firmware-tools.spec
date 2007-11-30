@@ -93,7 +93,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
-%doc COPYING-GPL COPYING-OSL README
+%doc COPYING-GPL COPYING-OSL COPYING.LIB README
 %{python_sitelib}/*
 %attr(0755,root,root) %{_bindir}/*
 %{_datadir}/firmware-tools/
