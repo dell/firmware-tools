@@ -4,13 +4,13 @@
 #
 # These are all automatically replaced by the release script.
 # START = Do not edit manually
-%define major 1
-%define minor 5
-%define sub 10
-%define extralevel %{nil}
-%define rpm_release 1
+%define major @RELEASE_MAJOR@
+%define minor @RELEASE_MINOR@
+%define sub @RELEASE_SUBLEVEL@
+%define extralevel @RELEASE_RPM_EXTRALEVEL@
 %define release_name firmware-tools
 %define release_version %{major}.%{minor}.%{sub}%{extralevel}
+%define rpm_release 1
 #
 # END = Do not edit manually
 #
@@ -18,24 +18,6 @@
 
 # per fedora python packaging guidelines
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
-
-#disable empty debuginfo package
-%define debug_package %{nil}
-
-# SUSE 10 has a crazy distutils.cfg that specifies prefix=/usr/local
-# have to override that.
-%define suse_prefix %{nil}
-%if %(test -e /etc/SuSE-release && echo 1 || echo 0)
-%define suse_prefix --prefix=/usr
-%endif
-
-# Compat for RHEL3 build
-%if %(test "%{dist}" == ".el3" && echo 1 || echo 0)
-# needed for RHEL3 build, python-devel doesnt seem to Require: python in RHEL3
-BuildRequires:  python
-# override sitelib because this messes up on x86_64
-%define python_sitelib %{_exec_prefix}/lib/python2.2/site-packages/
-%endif
 
 Name:           firmware-tools 
 Version:        %{release_version} 
@@ -49,15 +31,8 @@ URL:            http://linux.dell.com/libsmbios/download/
 Source0:        http://linux.dell.com/libsmbios/download/%{name}/%{name}-%{version}/%{name}-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
-# This package is noarch for everything except RHEL3. Have to build arch
-# specific pkgs for RHEL3
-%if %(test "%{dist}" != ".el3" && echo 1 || echo 0)
-BuildArch:      noarch
-%endif
-
 BuildRequires:  python-devel
 Requires: rpm-python
-
 Provides: firmware_inventory(pci) = 0:%{release_version}
 
 %description
@@ -73,14 +48,19 @@ a framework for BIOS and firmware updates.
 
 
 %build
-%{__python} setup.py build
+%configure
+make -e %{?_smp_mflags} 
 
+%check
+make -e %{?_smp_mflags} check
 
 %install
 rm -rf $RPM_BUILD_ROOT
+make install DESTDIR=%{buildroot} INSTALL="%{__install} -p"
+
 mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/firmware/firmware.d/
 mkdir -p $RPM_BUILD_ROOT/%{_datadir}/firmware
-%{__python} setup.py install -O1 --skip-build --root $RPM_BUILD_ROOT %{suse_prefix}
+
 %if "%{enable_yum_plugins}" != "1"
 rm -rf $RPM_BUILD_ROOT/usr/lib/yum-plugins
 rm -rf $RPM_BUILD_ROOT/etc/yum/pluginconf.d
@@ -95,7 +75,7 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root,-)
 %doc COPYING-GPL COPYING-OSL COPYING.LIB README
 %{python_sitelib}/*
-%attr(0755,root,root) %{_bindir}/*
+%attr(0755,root,root) %{_sbindir}/*
 %{_datadir}/firmware-tools/
 %dir %{_sysconfdir}/firmware
 %dir %{_sysconfdir}/firmware/firmware.d
