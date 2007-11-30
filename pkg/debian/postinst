@@ -1,0 +1,12 @@
+#!/bin/bash
+
+#DEBHELPER#
+
+if [ "$1" == "triggered" ]; then
+    for t in $2; do	
+	if [ "$t" == "firmware-tools-update-firmware" ]; then
+	    /usr/bin/update_firmware --rpm -y
+	fi
+    done
+fi
+
