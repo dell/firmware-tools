@@ -1,33 +1,14 @@
 # vim:noexpandtab:autoindent:tabstop=8:shiftwidth=8:filetype=make:nocindent:tw=0:
 
-AUTOMAKE_OPTIONS = subdir-objects
-SUBDIRS = 
-
-# dont move these 5 lines, as this is how we override the autoconf version and package name
-RELEASE_NAME=@RELEASE_NAME@
-RELEASE_MAJOR=@RELEASE_MAJOR@
-RELEASE_MINOR=@RELEASE_MINOR@
-RELEASE_SUBLEVEL=@RELEASE_SUBLEVEL@
-RELEASE_EXTRALEVEL=@RELEASE_EXTRALEVEL@
-
-RELEASE_VERSION = $(RELEASE_MAJOR).$(RELEASE_MINOR).$(RELEASE_SUBLEVEL)$(RELEASE_EXTRALEVEL)
-RELEASE_STRING = $(RELEASE_NAME)-$(RELEASE_VERSION)
-VERSION = $(RELEASE_VERSION)
-PACKAGE = $(RELEASE_NAME)
-
-CLEANFILES=$(RELEASE_NAME)-*.tar.gz $(RELEASE_NAME)-*.tar.bz2 $(RELEASE_NAME)-*.rpm _buildtemp version
-DISTCLEANFILES=*~
-
-EXTRA_DIST =
-bin_PROGRAMS=
-EXTRA_PROGRAMS=
-
-CLEANFILES += $(EXTRA_PROGRAMS)
+include Makefile-std
 
 pkgetcdir = $(sysconfdir)/firmware/
 nodist_pkgetc_DATA = etc/firmware/firmware.conf
 
 EXTRA_DIST += etc doc glade pkg/debian test yum-plugin COPYING-GPL COPYING-OSL COPYING.LIB
+
+TESTS = test/testAll.py
+nodist_check_SCRIPTS = test/testAll.py
 
 dist_sbin_SCRIPTS = \
 	bin/bootstrap_firmware  \
@@ -59,32 +40,5 @@ REPLACE_VARS_ON_INSTALL= 		   \
 	$(sbindir)/inventory_firmware  	   \
 	$(sbindir)/inventory_firmware_gui  \
 	$(sbindir)/update_firmware
-install-exec-hook:
-	for i in $(REPLACE_VARS_ON_INSTALL); do      \
-                file=$(DESTDIR)/$$i                     ;\
-                perl -p -i -e 's|^__VERSION__=.*|__VERSION__="$(RELEASE_VERSION)"|' $$file ;\
-                perl -p -i -e 's|^SYSCONFDIR=.*|SYSCONFDIR="$(sysconfdir)"|' $$file        ;\
-                perl -p -i -e 's|^PYTHONDIR=.*|PYTHONDIR="$(pythondir)"|' $$file           ;\
-                perl -p -i -e 's|^PKGPYTHONDIR=.*|PKGPYTHONDIR="$(pkgpythondir)"|' $$file  ;\
-                perl -p -i -e 's|^PKGDATADIR=.*|PKGDATADIR="$(pkgdatadir)"|' $$file        ;\
-        done
-
-rpm: dist
-	rm -rf _build
-	mkdir -p _build/{SOURCES,BUILD,RPMS,SRPMS,SPECS}
-	cp pkg/$(PACKAGE_NAME).spec _build/SPECS
-	cp $(PACKAGE_NAME)*.tar.gz  _build/SOURCES
-	rpmbuild --define "_topdir $$PWD/_build" -ba --nodeps _build/SPECS/$(PACKAGE_NAME).spec
-	find _build/{RPMS,SRPMS} -name \*.rpm -exec mv {} . \;
-	rm -rf _build
-
-srpm: dist
-	rm -rf _build
-	mkdir -p _build/{SOURCES,BUILD,RPMS,SRPMS,SPECS}
-	cp pkg/$(PACKAGE_NAME).spec _build/SPECS
-	cp $(PACKAGE_NAME)*.tar.gz  _build/SOURCES
-	rpmbuild --define "_topdir $$PWD/_build" -bs --nodeps _build/SPECS/$(PACKAGE_NAME).spec
-	find _build/{RPMS,SRPMS} -name \*.rpm -exec mv {} . \;
-	rm -rf _build
 
 

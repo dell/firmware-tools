@@ -16,6 +16,10 @@
 
 # vim:noexpandtab:autoindent:tabstop=8:shiftwidth=8:filetype=make:nocindent:tw=0:
 
+# vim:noexpandtab:autoindent:tabstop=8:shiftwidth=8:filetype=make:nocindent:tw=0:
+#  This is a template of all of the 'Standard' stuff that we use in all our
+#  projects.
+
 
 
 VPATH = @srcdir@
@@ -34,15 +38,16 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-bin_PROGRAMS =
-EXTRA_PROGRAMS =
-subdir = .
 DIST_COMMON = README $(am__configure_deps) $(dist_sbin_SCRIPTS) \
-	$(pkgpython_PYTHON) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in $(top_srcdir)/configure \
+	$(pkgpython_PYTHON) $(srcdir)/Makefile-std \
+	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
+	$(top_srcdir)/configure \
 	$(top_srcdir)/pkg/${PACKAGE_NAME}.spec.in AUTHORS COPYING.LIB \
 	ChangeLog INSTALL NEWS pkg/install-sh pkg/missing \
 	pkg/py-compile
+bin_PROGRAMS =
+EXTRA_PROGRAMS =
+subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -186,12 +191,15 @@ RELEASE_EXTRALEVEL = @RELEASE_EXTRALEVEL@
 RELEASE_VERSION = $(RELEASE_MAJOR).$(RELEASE_MINOR).$(RELEASE_SUBLEVEL)$(RELEASE_EXTRALEVEL)
 RELEASE_STRING = $(RELEASE_NAME)-$(RELEASE_VERSION)
 CLEANFILES = $(RELEASE_NAME)-*.tar.gz $(RELEASE_NAME)-*.tar.bz2 \
-	$(RELEASE_NAME)-*.rpm _buildtemp version $(EXTRA_PROGRAMS)
-DISTCLEANFILES = *~
+	$(RELEASE_NAME)-*.rpm _buildtemp version $(EXTRA_PROGRAMS) \
+	*.pyc */*.pyc */*/*.pyc */*/*/*.pyc pkg/$(PACKAGE).spec
+DISTCLEANFILES = *~ 
 EXTRA_DIST = etc doc glade pkg/debian test yum-plugin COPYING-GPL \
 	COPYING-OSL COPYING.LIB
 pkgetcdir = $(sysconfdir)/firmware/
 nodist_pkgetc_DATA = etc/firmware/firmware.conf
+TESTS = test/testAll.py
+nodist_check_SCRIPTS = test/testAll.py
 dist_sbin_SCRIPTS = \
 	bin/bootstrap_firmware  \
 	bin/inventory_firmware  \
@@ -226,7 +234,7 @@ all: all-recursive
 .SUFFIXES:
 am--refresh:
 	@:
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(srcdir)/Makefile-std $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -495,6 +503,79 @@ GTAGS:
 distclean-tags:
 	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
 
+check-TESTS: $(TESTS)
+	@failed=0; all=0; xfail=0; xpass=0; skip=0; ws='[	 ]'; \
+	srcdir=$(srcdir); export srcdir; \
+	list=' $(TESTS) '; \
+	if test -n "$$list"; then \
+	  for tst in $$list; do \
+	    if test -f ./$$tst; then dir=./; \
+	    elif test -f $$tst; then dir=; \
+	    else dir="$(srcdir)/"; fi; \
+	    if $(TESTS_ENVIRONMENT) $${dir}$$tst; then \
+	      all=`expr $$all + 1`; \
+	      case " $(XFAIL_TESTS) " in \
+	      *$$ws$$tst$$ws*) \
+		xpass=`expr $$xpass + 1`; \
+		failed=`expr $$failed + 1`; \
+		echo "XPASS: $$tst"; \
+	      ;; \
+	      *) \
+		echo "PASS: $$tst"; \
+	      ;; \
+	      esac; \
+	    elif test $$? -ne 77; then \
+	      all=`expr $$all + 1`; \
+	      case " $(XFAIL_TESTS) " in \
+	      *$$ws$$tst$$ws*) \
+		xfail=`expr $$xfail + 1`; \
+		echo "XFAIL: $$tst"; \
+	      ;; \
+	      *) \
+		failed=`expr $$failed + 1`; \
+		echo "FAIL: $$tst"; \
+	      ;; \
+	      esac; \
+	    else \
+	      skip=`expr $$skip + 1`; \
+	      echo "SKIP: $$tst"; \
+	    fi; \
+	  done; \
+	  if test "$$failed" -eq 0; then \
+	    if test "$$xfail" -eq 0; then \
+	      banner="All $$all tests passed"; \
+	    else \
+	      banner="All $$all tests behaved as expected ($$xfail expected failures)"; \
+	    fi; \
+	  else \
+	    if test "$$xpass" -eq 0; then \
+	      banner="$$failed of $$all tests failed"; \
+	    else \
+	      banner="$$failed of $$all tests did not behave as expected ($$xpass unexpected passes)"; \
+	    fi; \
+	  fi; \
+	  dashes="$$banner"; \
+	  skipped=""; \
+	  if test "$$skip" -ne 0; then \
+	    skipped="($$skip tests were not run)"; \
+	    test `echo "$$skipped" | wc -c` -le `echo "$$banner" | wc -c` || \
+	      dashes="$$skipped"; \
+	  fi; \
+	  report=""; \
+	  if test "$$failed" -ne 0 && test -n "$(PACKAGE_BUGREPORT)"; then \
+	    report="Please report to $(PACKAGE_BUGREPORT)"; \
+	    test `echo "$$report" | wc -c` -le `echo "$$banner" | wc -c` || \
+	      dashes="$$report"; \
+	  fi; \
+	  dashes=`echo "$$dashes" | sed s/./=/g`; \
+	  echo "$$dashes"; \
+	  echo "$$banner"; \
+	  test -z "$$skipped" || echo "$$skipped"; \
+	  test -z "$$report" || echo "$$report"; \
+	  echo "$$dashes"; \
+	  test "$$failed" -eq 0; \
+	else :; fi
+
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	test -d $(distdir) || mkdir $(distdir)
@@ -638,6 +719,8 @@ distcleancheck: distclean
 	       $(distcleancheck_listfiles) ; \
 	       exit 1; } >&2
 check-am: all-am
+	$(MAKE) $(AM_MAKEFLAGS) $(nodist_check_SCRIPTS)
+	$(MAKE) $(AM_MAKEFLAGS) check-TESTS
 check: check-recursive
 all-am: Makefile $(PROGRAMS) $(SCRIPTS) $(DATA)
 installdirs: installdirs-recursive
@@ -737,16 +820,16 @@ uninstall-am: uninstall-binPROGRAMS uninstall-dist_sbinSCRIPTS \
 	install-exec-am install-strip
 
 .PHONY: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) CTAGS GTAGS \
-	all all-am am--refresh check check-am clean clean-binPROGRAMS \
-	clean-generic ctags ctags-recursive dist dist-all dist-bzip2 \
-	dist-gzip dist-shar dist-tarZ dist-zip distcheck distclean \
-	distclean-generic distclean-tags distcleancheck distdir \
-	distuninstallcheck dvi dvi-am html html-am info info-am \
-	install install-am install-binPROGRAMS install-data \
-	install-data-am install-dist_sbinSCRIPTS install-dvi \
-	install-dvi-am install-exec install-exec-am install-exec-hook \
-	install-html install-html-am install-info install-info-am \
-	install-man install-nodist_pkgdataDATA \
+	all all-am am--refresh check check-TESTS check-am clean \
+	clean-binPROGRAMS clean-generic ctags ctags-recursive dist \
+	dist-all dist-bzip2 dist-gzip dist-shar dist-tarZ dist-zip \
+	distcheck distclean distclean-generic distclean-tags \
+	distcleancheck distdir distuninstallcheck dvi dvi-am html \
+	html-am info info-am install install-am install-binPROGRAMS \
+	install-data install-data-am install-dist_sbinSCRIPTS \
+	install-dvi install-dvi-am install-exec install-exec-am \
+	install-exec-hook install-html install-html-am install-info \
+	install-info-am install-man install-nodist_pkgdataDATA \
 	install-nodist_pkgetcDATA install-pdf install-pdf-am \
 	install-pkgpythonPYTHON install-ps install-ps-am install-strip \
 	installcheck installcheck-am installdirs installdirs-am \
@@ -755,6 +838,7 @@ uninstall-am: uninstall-binPROGRAMS uninstall-dist_sbinSCRIPTS \
 	uninstall uninstall-am uninstall-binPROGRAMS \
 	uninstall-dist_sbinSCRIPTS uninstall-nodist_pkgdataDATA \
 	uninstall-nodist_pkgetcDATA uninstall-pkgpythonPYTHON
+
 
 install-exec-hook:
 	for i in $(REPLACE_VARS_ON_INSTALL); do      \
