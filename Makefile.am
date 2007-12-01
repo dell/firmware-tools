@@ -54,7 +54,11 @@ pkgpython_PYTHON = \
 	firmwaretools/trace_decorator.py
 
 
-REPLACE_VARS_ON_INSTALL=
+REPLACE_VARS_ON_INSTALL= 		   \
+	$(sbindir)/bootstrap_firmware  	   \
+	$(sbindir)/inventory_firmware  	   \
+	$(sbindir)/inventory_firmware_gui  \
+	$(sbindir)/update_firmware
 install-exec-hook:
 	for i in $(REPLACE_VARS_ON_INSTALL); do      \
                 file=$(DESTDIR)/$$i                     ;\

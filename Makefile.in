@@ -215,7 +215,12 @@ pkgpython_PYTHON = \
 	firmwaretools/repository.py	\
 	firmwaretools/trace_decorator.py
 
-REPLACE_VARS_ON_INSTALL = 
+REPLACE_VARS_ON_INSTALL = \
+	$(sbindir)/bootstrap_firmware  	   \
+	$(sbindir)/inventory_firmware  	   \
+	$(sbindir)/inventory_firmware_gui  \
+	$(sbindir)/update_firmware
+
 all: all-recursive
 
 .SUFFIXES:
