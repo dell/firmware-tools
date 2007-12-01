@@ -26,6 +26,18 @@ import ConfigParser
 import traceback
 import time
 
+# these are replaced by autotools when installed.
+__VERSION__="unreleased_version"
+SYSCONFDIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","etc")
+PYTHONDIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..")
+PKGPYTHONDIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","firmwaretools")
+PKGDATADIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..")
+CONFDIR=os.path.join(SYSCONFDIR,"firmware")
+# end build system subs
+
+# import all local modules after this. This allows us to run from build tree
+sys.path.insert(0,PYTHONDIR)
+
 import firmwaretools.repository
 import firmwaretools.package
 import firmwaretools.pycompat

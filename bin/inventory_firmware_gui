@@ -21,6 +21,19 @@ import gtk, gtk.glade, pango
 import gobject
 import gnome.ui
 
+# these are replaced by autotools when installed.
+__VERSION__="unreleased_version"
+SYSCONFDIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","etc")
+PYTHONDIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..")
+PKGPYTHONDIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","firmwaretools")
+PKGDATADIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..")
+CONFDIR=os.path.join(SYSCONFDIR,"firmware")
+GLADEDIR=PKGDATADIR + "/glade"
+# end build system subs
+
+# import all local modules after this. This allows us to run from build tree
+sys.path.insert(0,PYTHONDIR)
+
 import firmwaretools.trace_decorator as trace_decorator
 import firmwaretools.guihelpers as guihelpers
 import firmwaretools.repository as repository
@@ -28,7 +41,6 @@ import firmwaretools.clifuncs
 import firmwaretools.package
 
 PROGRAM_NAME="Firmware Inventory and Update GUI"
-version="1.5.10"
 
 class CommandAlreadyExecuted(Exception): pass
 class CommandAlreadyUndone(Exception): pass
@@ -70,7 +82,7 @@ class UpdateSetPinCommand(Command):
 class InventoryFirmware:
     GLADE_FILE = '/glade/inventory_firmware_gui.glade'
     def __init__(self, ini):
-        self.wTree = gtk.glade.XML(TOPDIR + self.GLADE_FILE)
+        self.wTree = gtk.glade.XML(GLADEDIR + self.GLADE_FILE)
         self.wTree.signal_autoconnect(self)
         self.main_window = self.wTree.get_widget("MainWindow")
         self.wTree.get_widget("about_dialog").destroy()
@@ -512,9 +524,9 @@ class InventoryFirmware:
                 self._fixupChildren(self.inventoryTreeModel, self.inventoryTreeModel.get_iter(device_path))
 
     def on_help_about(self, *args):
-        wTree = gtk.glade.XML(TOPDIR + self.GLADE_FILE, "about_dialog")
+        wTree = gtk.glade.XML(GLADEDIR + self.GLADE_FILE, "about_dialog")
         wTree.get_widget("about_dialog").set_property('name',PROGRAM_NAME)
-        wTree.get_widget("about_dialog").set_property('version',version)
+        wTree.get_widget("about_dialog").set_property('version',__VERSION__)
         wTree.get_widget("about_dialog").run() # modal until 'close'
         wTree.get_widget("about_dialog").destroy()
 
@@ -718,15 +730,13 @@ def main():
     pretty = 0
 
     global firmwaretools
-    global TOPDIR
-    TOPDIR = "/usr/share/firmware-tools/"
     ini = ConfigParser.ConfigParser()
     verbose = 0
     warnings = 0
     altConfig = 0
     overrides = []
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "c:fho:t:vw", ["help", "verbose", "warnings", "topdir=", "config=", "overrides=", "fake-mode"])
+        opts, args = getopt.getopt(sys.argv[1:], "c:fho:t:vw", ["help", "verbose", "warnings", "config=", "overrides=", "fake-mode"])
         for option, argument in opts:
             if option in ("-h", "--help"):
                 print __doc__
@@ -741,8 +751,6 @@ def main():
                 trace_decorator.debug["__main__"] = verbose
             if option in ("-w", "--warnings"):
                 warnings = warnings + 1
-            if option in ("-t", "--topdir"):
-                TOPDIR = argument
             if option in ("-f", "--fake-mode"):
                 os.environ['DEBUG_REPOSITORY'] = "1"
                 os.environ['DEBUG_INVENTORY'] = "1"
