@@ -22,7 +22,6 @@ pkgpython_PYTHON = \
 	firmwaretools/__init__.py       \
 	firmwaretools/bootstrap_pci.py  \
 	firmwaretools/clifuncs.py       \
-	firmwaretools/decorator.py      \
 	firmwaretools/dep_parser.py     \
 	firmwaretools/guihelpers.py     \
 	firmwaretools/mockpackage.py    \

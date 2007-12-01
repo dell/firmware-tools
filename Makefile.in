@@ -196,6 +196,18 @@ CLEANFILES = $(RELEASE_NAME)-*.tar.gz $(RELEASE_NAME)-*.tar.bz2 \
 DISTCLEANFILES = *~ 
 EXTRA_DIST = etc doc glade pkg/debian test yum-plugin COPYING-GPL \
 	COPYING-OSL COPYING.LIB
+
+# This updates the debian version information, similar to how specfile for RPM
+# is updated. It has to be manually invoked becuase it wont work for rpm builds.
+CHANGELOG = pkg/debian/changelog
+CHANGELOG_TEXT = "Placeholder changelog entry. Please update this for release."
+
+# to specify key if package is to be signed: make -e deb debsign=-k<keyname>
+debsign = -uc -us
+
+# use debopts to do things like override maintainer email, etc.
+deb_destdir = $(PWD)/dist
+TARBALL = $(RELEASE_STRING).tar.gz
 pkgetcdir = $(sysconfdir)/firmware/
 nodist_pkgetc_DATA = etc/firmware/firmware.conf
 TESTS = test/testAll.py
@@ -211,7 +223,6 @@ pkgpython_PYTHON = \
 	firmwaretools/__init__.py       \
 	firmwaretools/bootstrap_pci.py  \
 	firmwaretools/clifuncs.py       \
-	firmwaretools/decorator.py      \
 	firmwaretools/dep_parser.py     \
 	firmwaretools/guihelpers.py     \
 	firmwaretools/mockpackage.py    \
@@ -866,6 +877,38 @@ srpm: dist
 	cp $(PACKAGE_NAME)*.tar.gz  _build/SOURCES
 	rpmbuild --define "_topdir $$PWD/_build" -bs --nodeps _build/SPECS/$(PACKAGE_NAME).spec
 	find _build/{RPMS,SRPMS} -name \*.rpm -exec mv {} . \;
+	rm -rf _build
+changelog: $(CHANGELOG)
+.PHONY: $(CHANGELOG)
+$(CHANGELOG): version.mk
+	cd pkg/ && fakeroot debchange -v $(RELEASE_VERSION)-$(DEB_RELEASE) $(CHANGELOG_TEXT)
+deb: dist
+	[ -n "$$DIST" ] || (echo "Must set DIST={gutsy,hardy,sid,...} for deb and sdeb targets"; exit 1)
+	[ -n "$$DIST" ] || echo "Remember to set DISTTAG='~gutsy1' for deb and sdeb targets for backports"
+	rm -rf _build
+	mkdir -p dist  _build
+	cp $(TARBALL) _build/$(RELEASE_NAME)_$(RELEASE_VERSION).orig.tar.gz
+	tar -C _build -xzf $(TARBALL)
+	mv _build/$(RELEASE_STRING)/pkg/debian _build/$(RELEASE_STRING)/debian
+	chmod +x _build/$(RELEASE_STRING)/debian/rules
+	sed -e "s/#DISTTAG#/$(DISTTAG)/g" -e "s/#DIST#/$(DIST)/g" _build/$(RELEASE_STRING)/debian/changelog.in > _build/$(RELEASE_STRING)/debian/changelog 
+	rm _build/$(RELEASE_STRING)/debian/changelog.in 
+	cd _build/$(RELEASE_STRING); pdebuild --use-pdebuild-internal --auto-debsign --buildresult $(PWD)/dist
+	rm -rf _build
+
+sdeb: dist
+	[ -n "$$DIST" ] || (echo "Must set DIST={gutsy,hardy,sid,...} for deb and sdeb targets"; exit 1)
+	[ -n "$$DIST" ] || echo "Remember to set DISTTAG='~gutsy1' for deb and sdeb targets for backports"
+	rm -rf _build
+	mkdir -p dist _build
+	cp $(TARBALL) _build/$(RELEASE_NAME)_$(RELEASE_VERSION).orig.tar.gz
+	tar -C _build -xzf $(TARBALL)
+	mv _build/$(RELEASE_STRING)/pkg/debian _build/$(RELEASE_STRING)/debian
+	chmod +x _build/$(RELEASE_STRING)/debian/rules
+	sed -e "s/#DISTTAG#/$(DISTTAG)/g" -e "s/#DIST#/$(DIST)/g" _build/$(RELEASE_STRING)/debian/changelog.in > _build/$(RELEASE_STRING)/debian/changelog
+	rm _build/$(RELEASE_STRING)/debian/changelog.in
+	cd _build/$(RELEASE_STRING) ;dpkg-buildpackage -D -S -sa -rfakeroot
+	mv _build/$(RELEASE_NAME)_* $(PWD)/dist
 	rm -rf _build
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
