@@ -7,9 +7,7 @@ import logging
 import os
 import sys
 import types
-from peak.util.decorators import rewrap
-
-moduleLog = logging.getLogger("mock.trace_decorator")
+from peak.util.decorators import rewrap, decorate
 
 # emulates logic in logging module to ensure we only log
 # messages that logger is enabled to produce.
@@ -19,7 +17,7 @@ def doLog(logger, level, *args, **kargs):
     if logger.isEnabledFor(level):
         logger.handle(logger.makeRecord(logger.name, level, *args, **kargs))
 
-def traceLog(log = moduleLog):
+def traceLog(log = "ft.trace.decorator"):
     def decorator(func):
         def trace(*args, **kw):
             # default to logger that was passed by module, but
@@ -32,6 +30,9 @@ def traceLog(log = moduleLog):
             lineno = func.func_code.co_firstlineno
     
             l2 = kw.get('logger', log)
+            if isinstance(l2, basestring):
+                l2 = logging.getLogger(l2)
+
             message = "ENTER %s(" % func_name
             for arg in args:
                 message = message + repr(arg) + ", "
@@ -59,7 +60,7 @@ def traceLog(log = moduleLog):
 # helper function so we can use back-compat format but not be ugly
 def decorateAllFunctions(module, logger=None):
     if logger is None:
-        logger = moduleLog
+        logger = "ft.trace." + module.__name__
     methods = [ method for method in dir(module)
             if isinstance(getattr(module, method), types.FunctionType)
             ]
