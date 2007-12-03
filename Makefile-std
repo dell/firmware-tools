@@ -36,6 +36,7 @@ install-exec-hook:
                 perl -p -i -e 's|^PYTHONDIR=.*|PYTHONDIR="$(pythondir)"|' $$file           ;\
                 perl -p -i -e 's|^PKGPYTHONDIR=.*|PKGPYTHONDIR="$(pkgpythondir)"|' $$file  ;\
                 perl -p -i -e 's|^PKGDATADIR=.*|PKGDATADIR="$(pkgdatadir)"|' $$file        ;\
+                perl -p -i -e 's|^PKGETCDIR=.*|PKGETCDIR="$(pkgetcdir)"|' $$file        ;\
         done
 
 rpm: dist
