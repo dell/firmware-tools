@@ -24,6 +24,8 @@ import firmwaretools.package as package
 import firmwaretools.trace_decorator
 from firmwaretools.trace_decorator import decorateAllFunctions
 
+requires_api_version = "1.0"
+
 # set up logging
 moduleLog = logging.getLogger("firmwaretools.addon")
 
