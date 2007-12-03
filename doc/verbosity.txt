@@ -1,0 +1,17 @@
+
+                                default
+                                handler   def
+Logger List             level   lvl       propagate
+===================================================
+root                    NOTSET  INFO      1
+ft                      NOTSET  INFO      1
+ft.verbose              NOTSET  INFO      0
+ft.trace                NOTSET  INFO      0
+
+
+cmdline:
+    verbose == 0:  ft.propagate=0
+    verbose >= 1:  ft.propagate=1 
+    verbose >= 2:  ft.verbose.propagate=1
+    verbose >= 3:  handler lvl == DEBUG for root
+    tracing == 1: ft.trace.propagate = 1
