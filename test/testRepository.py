@@ -19,10 +19,16 @@ datafiles = os.path.join( test_path, "datafiles" )
 
 class TestCase(unittest.TestCase):
     def setUp(self):
-        pass
+        if globals().get('firmwaretools'): del(firmwaretools)
+        for k in sys.modules.keys():
+            if k.startswith("firmwaretools"):
+                del(sys.modules[k])
     
     def tearDown(self):
-        pass
+        if globals().get('firmwaretools'): del(firmwaretools)
+        for k in sys.modules.keys():
+            if k.startswith("firmwaretools"):
+                del(sys.modules[k])
         
     def testRepositoryInventory(self):
         import firmwaretools.repository as repository

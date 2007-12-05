@@ -11,6 +11,11 @@ import unittest
 
 class TestCase(unittest.TestCase):
     def setUp(self):
+        if globals().get('firmwaretools'): del(firmwaretools)
+        for k in sys.modules.keys():
+            if k.startswith("firmwaretools"):
+                del(sys.modules[k])
+
         import firmwaretools.package as package
         pkgA = package.Package(name="pkgA", version="a01", displayname="test pkgA")
         pkgB = package.Package(name="pkgC", version="a02", displayname="test pkgC")
@@ -22,8 +27,11 @@ class TestCase(unittest.TestCase):
         self.inventory['pkgC'] = pkgC
     
     def tearDown(self):
-        pass
-        
+        if globals().get('firmwaretools'): del(firmwaretools)
+        for k in sys.modules.keys():
+            if k.startswith("firmwaretools"):
+                del(sys.modules[k])
+
     def testExist(self):
         import firmwaretools.dep_parser as dep_parser
         s = "pkgA"
