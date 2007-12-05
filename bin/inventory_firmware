@@ -32,8 +32,6 @@ sys.path.insert(0,PYTHONDIR)
 # our modules
 import firmwaretools.config
 import firmwaretools.clifuncs
-import firmwaretools.trace_decorator as trace_decorator
-
 
 def main(args):
     try:
@@ -46,13 +44,12 @@ def main(args):
 
     try:
         cfg = firmwaretools.config.FTConfig(usage=__doc__, version=__VERSION__)
-
-        args = cfg.parse()
+        args = cfg.parse(sys.argv[1:])
 
         for pkg in firmwaretools.clifuncs.runInventory(cfg):
-            print "%s = %s" % (str(pkg), pkg.version)
+            sys.stdout.write( "%s = %s\n" % (str(pkg), pkg.version) )
 
-    except exception, e:
+    except Exception, e:
         print
         print e
         print
