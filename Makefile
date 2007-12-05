@@ -180,7 +180,7 @@ deb: $(TARBALL)
 	sed -e "s/#DISTTAG#/$(DISTTAG)/g" -e "s/#DIST#/$(DIST)/g" $${tmp_dir}/$(RELEASE_STRING)/debian/changelog.in > $${tmp_dir}/$(RELEASE_STRING)/debian/changelog ; \
 	rm $${tmp_dir}/$(RELEASE_STRING)/debian/changelog.in ; \
 	cd $${tmp_dir}/$(RELEASE_STRING) ; \
-	pdebuild --use-pdebuild-internal --auto-debsign --buildresult $(deb_destdir) ; \
+	pdebuild --use-pdebuild-internal --buildresult $(deb_destdir) ; \
 	cd - ;\
 	rm -rf $${tmp_dir}
 
