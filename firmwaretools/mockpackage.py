@@ -15,16 +15,25 @@ from __future__ import generators
 
 import os
 import time
+import logging
 
 # import arranged alphabetically
 import package
+from firmwaretools.trace_decorator import decorate, traceLog, getLog
+
+requires_api_version = "1.0"
+
+moduleLog = getLog()
+moduleVerboseLog = getLog(prefix="verbose.")
 
 # old style
 class MockPackageWrapper(object):
+    decorate(traceLog())
     def __init__(self, package):
         package.installFunction = self.installFunction
         package.type = self
 
+    decorate(traceLog())
     def installFunction(self, package):
         self.status = "in_progress"
         self.status = "success"
@@ -33,9 +42,11 @@ class MockPackageWrapper(object):
 
 #new style -- used by unit tests.
 class MockPackage2(package.RepositoryPackage):
+    decorate(traceLog())
     def __init__(self, *args, **kargs):
         super(MockPackage2, self).__init__(*args, **kargs)
 
+    decorate(traceLog())
     def install(self):
         self.status = "in_progress"
         self.status = "success"
@@ -43,12 +54,14 @@ class MockPackage2(package.RepositoryPackage):
 
 # used when we switch to 'fake' data
 class MockRepositoryPackage(package.RepositoryPackage):
+    decorate(traceLog())
     def __init__(self, *args, **kargs):
         super(MockRepositoryPackage, self).__init__(*args, **kargs)
         self.capabilities['can_downgrade'] = True
         self.capabilities['can_reflash'] = True
         self.capabilities['accurate_update_percentage'] = True
 
+    decorate(traceLog())
     def install(self):
         self.status = "in_progress"
         for i in xrange(100):
@@ -59,18 +72,12 @@ class MockRepositoryPackage(package.RepositoryPackage):
         self.status = "success"
 
 # standard entry point -- Bootstrap
+decorate(traceLog())
 def BootstrapGenerator(): 
-    for i in [ "mock_package(ven_0x1028_dev_0x1234)", "testpack_different" ]:
-        yield package.Device( name=i )
-
-# standard entry point -- Inventory
-#  -- this is a generator function, but system can only have one system bios,
-#     so, only one yield, no loop
-def InventoryGenerator(): 
-    p = package.Device( name="mock_package(ven_0x1028_dev_0x1234)", version="a05")
-    yield p
-    p = package.Device( name="testpack_different", version="a04")
-    yield p
+    import bootstrap_pci
+    bootstrap_pci.mockReadLspciWithDomain = mockReadLspciWithDomain
+    for i in bootstrap_pci.lspciGenerator():
+        yield(bootstrap_pci.makePciDevice(i))
 
 #==============================================================
 # mock classes for unit tests
@@ -95,7 +102,8 @@ mockExpectedOutput_bootstrap = """mock_package(ven_0x1028_dev_0x1234)"""
 
 # this is a TEST generator. It only is active if you set the environment
 # variable DEBUG_INVENTORY=1
-def mockBootstrapPci_InventoryGenerator():
+decorate(traceLog())
+def InventoryGenerator():
     yield package.Device( 
             name = "debug_system_bios",
             displayname = "System BIOS for Imaginary Server 1234",
@@ -125,10 +133,7 @@ def mockBootstrapPci_InventoryGenerator():
             displayname = "PixelPusher 2000 Video Adapter",
             version = "4.0")
 
-import bootstrap_pci
-if os.environ.get("DEBUG_INVENTORY", None) == "1":
-    bootstrap_pci.InventoryGenerator = mockBootstrapPci_InventoryGenerator
-
+decorate(traceLog())
 def mockReadLspciWithDomain(*args, **kargs):
     mockInput = """Device:	0000:00:00.0
 Class:	Host bridge [0600]
@@ -274,9 +279,6 @@ Rev:	10
     for line in mockInput.split("\n"):
         yield(line)
 
-if os.environ.get("DEBUG_BOOTSTRAP", None) == "1":
-    bootstrap_pci.mockReadLspciWithDomain = mockReadLspciWithDomain
-
 mockExpectedOutput = """pci_firmware(ven_0x10de_dev_0x00e1)
 pci_firmware(ven_0x10de_dev_0x00e0_subven_0x10de_subdev_0x0c11)
 pci_firmware(ven_0x10de_dev_0x00e4_subven_0x10de_subdev_0x0c11)
@@ -297,5 +299,7 @@ pci_firmware(ven_0x1002_dev_0x4e67_subven_0x1002_subdev_0x0173)
 pci_firmware(ven_0x1106_dev_0x3044_subven_0x1106_subdev_0x3044)
 pci_firmware(ven_0x13f6_dev_0x0111_subven_0x13f6_subdev_0x0111)"""
 
-if os.environ.get("DEBUG_BOOTSTRAP", None) == "1":
-    bootstrap_pci.mockExpectedOutput = mockExpectedOutput
+
+
+
+

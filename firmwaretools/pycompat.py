@@ -28,7 +28,7 @@ import signal
 import time
 import threading
 
-from trace_decorator import decorateAllFunctions
+from firmwaretools.trace_decorator import decorate, traceLog, getLog
 
 def clearLine():
     return "\033[2K\033[0G"
@@ -59,6 +59,7 @@ class commandTimeoutExpired(Exception): pass
 # keyboard input and/or signals. This means that <CTRL>-C interrupts the 
 # sub-program instead of the python program. This helper function fixes that.
 # It also allows us to set up a maximum timeout before all children are killed
+decorate(traceLog())
 def executeCommand(cmd, timeout=0):
     class alarmExc(Exception): pass
     def alarmhandler(signum,stackframe):
@@ -113,6 +114,7 @@ def executeCommand(cmd, timeout=0):
         ret = os.system(cmd)
         os._exit( (ret & 0xFF00) >> 8 )
 
+decorate(traceLog())
 def copyFile( source, dest, ignoreException=0 ):
     try:
         shutil.copyfile(source, dest)
@@ -121,6 +123,7 @@ def copyFile( source, dest, ignoreException=0 ):
             raise
 
 # python 2.3 has a better version, but we have to run on python 2.2. :-(
+decorate(traceLog())
 def mktempdir( prefix="/tmp" ):
     status, output = commands.getstatusoutput("mktemp -d %s/tempdir-$$-$RANDOM-XXXXXX" % prefix)
     if status != 0:
@@ -129,6 +132,7 @@ def mktempdir( prefix="/tmp" ):
 
 # generator function -- emulates the os.walk() generator in python 2.3 (mostly)
 # ret = (path, dirs, files) foreach dir
+decorate(traceLog())
 def walkPath(topdir, direction=0):
     rawFiles = os.listdir(topdir)
     
@@ -147,6 +151,7 @@ def walkPath(topdir, direction=0):
         yield (topdir, dirs, files)
 
 
+decorate(traceLog())
 def runLongProcess(function, args=None, kargs=None, waitLoopFunction=None):
     # runs a function in a separate thread. Runs waitLoopFunction() while it
     # waits for the function to finish. Good for updating GUI, or other stuff
@@ -165,6 +170,7 @@ def runLongProcess(function, args=None, kargs=None, waitLoopFunction=None):
     return thread.returnCode
 
 class BackgroundWorker(threading.Thread):
+    decorate(traceLog())
     def __init__ (self, function, args=None, kargs=None):
         threading.Thread.__init__(self)
         self.function = function
@@ -180,6 +186,7 @@ class BackgroundWorker(threading.Thread):
 
         self.start()
 
+    decorate(traceLog())
     def run(self):
         try:
             self.returnCode = self.function(*self.args, **self.kargs)
@@ -188,4 +195,3 @@ class BackgroundWorker(threading.Thread):
 
         self.running=0
 
-decorateAllFunctions(sys.modules[__name__])

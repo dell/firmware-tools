@@ -20,16 +20,18 @@ import pycompat
 import dep_parser
 import sys
 import traceback
-from trace_decorator import traceLog, decorateAllFunctions
+from firmwaretools.trace_decorator import decorate, traceLog, getLog
 
 import logging
-moduleLog = logging.getLogger("firmwaretools.repository")
+moduleLog = getLog()
+moduleVerboseLog = getLog(prefix="verbose.")
 
 class CircularDependencyError(Exception): pass
 
 # TODO:
 #  -- conf item should NEVER be used outside of constructor (makePackage)
 
+decorate(traceLog())
 def makePackage(configFile):
     conf = ConfigParser.ConfigParser()
     conf.read(configFile)
@@ -80,6 +82,7 @@ def makePackage(configFile):
 # a null function that just eats args. Default callback
 def nullFunc(*args, **kargs): pass
 
+decorate(traceLog())
 def generateUpdateSet(repo, systemInventory, cb=(nullFunc, None)):
     set = UpdateSet()
     for device in systemInventory:
@@ -95,14 +98,17 @@ def generateUpdateSet(repo, systemInventory, cb=(nullFunc, None)):
 
 
 class UpdateSet(object): 
+    decorate(traceLog())
     def __init__(self, *args, **kargs):
         self.deviceList = {}
         self.allowDowngrade=False
         self.allowReflash=False
 
+    decorate(traceLog())
     def addDevice(self, device):
         self.deviceList[device.name] = { "device": device, "update": None, "available_updates": []}
 
+    decorate(traceLog())
     def addAvailablePackage(self, package):
         if self.deviceList.has_key(package.name):
             available_updates = self.deviceList[package.name]["available_updates"]
@@ -110,23 +116,28 @@ class UpdateSet(object):
             self.deviceList[package.name]["available_updates"] = available_updates
             package.attachToDevice(self.deviceList[package.name]['device'])
 
+    decorate(traceLog())
     def hasDevice(self, device):
         return self.deviceList.has_key(device.name)
 
+    decorate(traceLog())
     def iterDevices(self):
         for device, details in self.deviceList.items():
             yield details["device"]
 
+    decorate(traceLog())
     def iterAvailableUpdates(self, device):
         for pkg in self.deviceList[device.name]["available_updates"]:
             yield pkg
 
+    decorate(traceLog())
     def getSuggestedUpdatePackageForDevice(self, device):
         ret = None
         if self.deviceList.has_key(device.name):
             ret = self.deviceList[device.name]["update"]
         return ret
 
+    decorate(traceLog())
     def getUpdatePackageForDevice(self, device):
         ret = None
         if self.deviceList.has_key(device.name):
@@ -136,6 +147,7 @@ class UpdateSet(object):
                 ret = self.deviceList[device.name]["update"]
         return ret
 
+    decorate(traceLog())
     def pinUpdatePackage(self, device, pkg):
         #TODO: ensure that pkg is in 'available_pkgs'
         hasOldPin = False
@@ -157,14 +169,17 @@ class UpdateSet(object):
             raise
             
 
+    decorate(traceLog())
     def unPinDevice(self, device):
         if self.deviceList[device.name].has_key("pinned_update"):
             del(self.deviceList[device.name]["pinned_update"])
 
+    decorate(traceLog())
     def reset(self):
         for device in self.iterDevices():
             self.unPinDevice(device)
 
+    decorate(traceLog())
     def getMemento(self, deviceHint=None):
         memento = {}
         memento['savePin'] = {}
@@ -181,6 +196,7 @@ class UpdateSet(object):
         memento["internal.allowDowngrade"] = self.allowDowngrade
         return memento
 
+    decorate(traceLog())
     def setMemento(self, memento):
         self.allowReflash = memento["internal.allowReflash"]
         self.allowDowngrade = memento["internal.allowDowngrade"]
@@ -190,18 +206,23 @@ class UpdateSet(object):
             else:
                 self.unPinDevice(details["device"])
 
+    decorate(traceLog())
     def setAllowDowngrade(self, val):
         self.allowDowngrade = val
 
+    decorate(traceLog())
     def getAllowDowngrade(self):
         return self.allowDowngrade
 
+    decorate(traceLog())
     def setAllowReflash(self, val):
         self.allowReflash = val
 
+    decorate(traceLog())
     def getAllowReflash(self):
         return self.allowReflash
 
+    decorate(traceLog())
     def checkRules(self, candidate, unionInventory, cb=(nullFunc, None)):
         # check if candidate update even applies to this system
         if not self.deviceList.get(candidate.name):
@@ -239,6 +260,7 @@ class UpdateSet(object):
         return 1
 
 
+    decorate(traceLog())
     def calculateUpgradeList(self, cb=(nullFunc, None)):
         unionInventory = {}
         for deviceName, details in self.deviceList.items():
@@ -258,6 +280,7 @@ class UpdateSet(object):
                         # need another run-through in case this fixes deps for another package
                         workToDo = 1
 
+    decorate(traceLog())
     def generateInstallationOrder(self, returnDeviceToo=0, cb=(nullFunc, None)):
         unionInventory = {}
         for deviceName, details in self.deviceList.items():
@@ -296,11 +319,13 @@ class UpdateSet(object):
 
 
 class Repository(object):
+    decorate(traceLog())
     def __init__(self, *args):
         self.dirList = []
         for i in args:
             self.dirList.append(i)
 
+    decorate(traceLog())
     def iterPackages(self, cb=(nullFunc, None)):
         for dir in self.dirList:
             try:
@@ -317,8 +342,7 @@ class Repository(object):
             except OSError:   # directory doesnt exist, so no repo packages. :-)
                 pass
 
-    iterPackages = traceLog()(iterPackages)
-
+    decorate(traceLog())
     def iterLatestPackages(self, cb=(nullFunc, None)):
         latest = {}
         for candidate in self.iterPackages(cb=cb):
@@ -339,6 +363,4 @@ class Repository(object):
             cb[0]( who="iterLatestPackages", what="made_package", package=latest[package], cb=cb)
             yield latest[package]
 
-    iterLatestPackages = traceLog()(iterLatestPackages)
 
-decorateAllFunctions(sys.modules[__name__])
