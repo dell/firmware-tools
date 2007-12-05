@@ -274,7 +274,6 @@ Device:	CM8738 [0111]
 SVendor:	C-Media Electronics Inc [13f6]
 SDevice:	CMI8738/C3DX PCI Audio Device [0111]
 Rev:	10
-
 """
     for line in mockInput.split("\n"):
         yield(line)
