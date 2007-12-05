@@ -17,7 +17,7 @@ class getLog(object):
     def __init__(self, name=None, prefix="", *args, **kargs):
         if name is None:
             frame = sys._getframe(1)
-            name = prefix + frame.f_globals["__name__"]
+            name = frame.f_globals["__name__"]
     
         self.name = prefix + name
 
