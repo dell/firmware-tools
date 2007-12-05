@@ -175,7 +175,7 @@ deb: $(TARBALL)
 	tmp_dir=`mktemp -d /tmp/firmware-tools.XXXXXXXX` ; \
 	cp $(TARBALL) $${tmp_dir}/$(RELEASE_NAME)_$(RELEASE_VERSION).orig.tar.gz ;\
 	tar -C $${tmp_dir} -xzf $(TARBALL) ; \
-	mv $${tmp_dir}/$(RELEASE_STRING)/pkg/debian $${tmp_dir}/$(RELEASE_STRING)/debian ; \
+	cp -r $(BUILDDIR)/pkg/debian $${tmp_dir}/$(RELEASE_STRING)/debian ; \
 	chmod +x $${tmp_dir}/$(RELEASE_STRING)/debian/rules ; \
 	sed -e "s/#DISTTAG#/$(DISTTAG)/g" -e "s/#DIST#/$(DIST)/g" $${tmp_dir}/$(RELEASE_STRING)/debian/changelog.in > $${tmp_dir}/$(RELEASE_STRING)/debian/changelog ; \
 	rm $${tmp_dir}/$(RELEASE_STRING)/debian/changelog.in ; \
@@ -189,7 +189,7 @@ sdeb: $(TARBALL)
 	tmp_dir=`mktemp -d /tmp/firmware-tools.XXXXXXXX` ; \
 	cp $(TARBALL) $${tmp_dir}/$(RELEASE_NAME)_$(RELEASE_VERSION).orig.tar.gz ;\
 	tar -C $${tmp_dir} -xzf $(TARBALL) ; \
-	mv $${tmp_dir}/$(RELEASE_STRING)/pkg/debian $${tmp_dir}/$(RELEASE_STRING)/debian ; \
+	cp -r $(BUILDDIR)/pkg/debian $${tmp_dir}/$(RELEASE_STRING)/debian ; \
 	chmod +x $${tmp_dir}/$(RELEASE_STRING)/debian/rules ; \
 	sed -e "s/#DISTTAG#/$(DISTTAG)/g" -e "s/#DIST#/$(DIST)/g" $${tmp_dir}/$(RELEASE_STRING)/debian/changelog.in > $${tmp_dir}/$(RELEASE_STRING)/debian/changelog ; \
 	rm $${tmp_dir}/$(RELEASE_STRING)/debian/changelog.in ; \
