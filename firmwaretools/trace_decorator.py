@@ -9,6 +9,22 @@ import sys
 import types
 from peak.util.decorators import rewrap, decorate
 
+# defaults to module verbose log
+# does a late binding on log. Forwards all attributes to logger.
+# works around problem where reconfiguring the logging module means loggers
+# configured before reconfig dont output.
+class getLog(object):
+    def __init__(self, name=None, prefix="", *args, **kargs):
+        if name is None:
+            frame = sys._getframe(1)
+            name = prefix + frame.f_globals["__name__"]
+    
+        self.name = prefix + name
+
+    def __getattr__(self, name):
+        logger = logging.getLogger(self.name)
+        return getattr(logger, name)
+
 # emulates logic in logging module to ensure we only log
 # messages that logger is enabled to produce.
 def doLog(logger, level, *args, **kargs):
@@ -17,7 +33,7 @@ def doLog(logger, level, *args, **kargs):
     if logger.isEnabledFor(level):
         logger.handle(logger.makeRecord(logger.name, level, *args, **kargs))
 
-def traceLog(log = "ft.trace.decorator"):
+def traceLog(log = None):
     def decorator(func):
         def trace(*args, **kw):
             # default to logger that was passed by module, but
@@ -30,6 +46,8 @@ def traceLog(log = "ft.trace.decorator"):
             lineno = func.func_code.co_firstlineno
     
             l2 = kw.get('logger', log)
+            if l2 is None:
+                l2 = logging.getLogger("trace.%s" % func.__module__)
             if isinstance(l2, basestring):
                 l2 = logging.getLogger(l2)
 
@@ -41,17 +59,17 @@ def traceLog(log = "ft.trace.decorator"):
             message = message + ")"
     
             frame = sys._getframe(2)
-            doLog(l2, logging.DEBUG, os.path.normcase(frame.f_code.co_filename), frame.f_lineno, message, args=[], exc_info=None, func=frame.f_code.co_name)
+            doLog(l2, logging.INFO, os.path.normcase(frame.f_code.co_filename), frame.f_lineno, message, args=[], exc_info=None, func=frame.f_code.co_name)
             try:
                 result = "Bad exception raised: Exception was not a derived class of 'Exception'"
                 try:
                     result = func(*args, **kw)
                 except (KeyboardInterrupt, Exception), e:
                     result = "EXCEPTION RAISED"
-                    doLog(l2, logging.DEBUG, filename, lineno, "EXCEPTION: %s\n" % e, args=[], exc_info=sys.exc_info(), func=func_name)
+                    doLog(l2, logging.INFO, filename, lineno, "EXCEPTION: %s\n" % e, args=[], exc_info=sys.exc_info(), func=func_name)
                     raise
             finally:
-                doLog(l2, logging.DEBUG, filename, lineno, "LEAVE %s --> %s\n" % (func_name, result), args=[], exc_info=None, func=func_name)
+                doLog(l2, logging.INFO, filename, lineno, "LEAVE %s --> %s\n" % (func_name, result), args=[], exc_info=None, func=func_name)
 
             return result
         return rewrap(func, trace)
@@ -59,8 +77,6 @@ def traceLog(log = "ft.trace.decorator"):
 
 # helper function so we can use back-compat format but not be ugly
 def decorateAllFunctions(module, logger=None):
-    if logger is None:
-        logger = "ft.trace." + module.__name__
     methods = [ method for method in dir(module)
             if isinstance(getattr(module, method), types.FunctionType)
             ]
@@ -71,15 +87,15 @@ def decorateAllFunctions(module, logger=None):
 if __name__ == "__main__":
     logging.basicConfig(level=logging.WARNING,
                     format='%(name)s %(levelname)s %(filename)s, %(funcName)s, Line: %(lineno)d:  %(message)s',)
-    log = logging.getLogger("foobar.bubble")
-    root = logging.getLogger()
+    log = getLog("foobar.bubble")
+    root = getLog(name="")
     log.setLevel(logging.WARNING)
     root.setLevel(logging.DEBUG)
 
     log.debug(" --> debug")
     log.error(" --> error")
 
-    @traceLog(log)
+    decorate(traceLog(log))
     def testFunc(arg1, arg2="default", *args, **kargs):
         return 42
 
@@ -87,9 +103,24 @@ if __name__ == "__main__":
     testFunc("happy", "joy", name="skippy")
     testFunc("hi")
 
-    @traceLog(root)
+    decorate(traceLog(root))
     def testFunc22():
         return testFunc("archie", "bunker")
 
     testFunc22()
 
+    decorate(traceLog(root))
+    def testGen():
+        yield 1
+        yield 2
+
+    for i in testGen():
+        log.debug("got: %s" % i)
+
+    decorate(traceLog())
+    def anotherFunc(*args):
+        return testFunc(*args)
+
+    anotherFunc("pretty")
+
+    getLog()
