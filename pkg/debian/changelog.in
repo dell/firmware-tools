@@ -1,5 +1,5 @@
-firmware-tools (1.5.10-0ubuntu1#DISTTAG#) #DIST#; urgency=low
+firmware-tools (1.5.10-0ubuntu2#DISTTAG#) #DIST#; urgency=low
 
   * Initial release. (LP: #163120)
 
- -- Matt Domsch <Matt_Domsch@dell.com>  Wed, 28 Nov 2007 10:27:00 -0600
+ -- Matt Domsch <Matt_Domsch@dell.com>  Tue, 04 Dec 2007 20:58:53 -0600
