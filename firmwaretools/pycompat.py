@@ -170,7 +170,6 @@ def runLongProcess(function, args=None, kargs=None, waitLoopFunction=None):
     return thread.returnCode
 
 class BackgroundWorker(threading.Thread):
-    decorate(traceLog())
     def __init__ (self, function, args=None, kargs=None):
         threading.Thread.__init__(self)
         self.function = function
