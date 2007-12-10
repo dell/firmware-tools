@@ -34,7 +34,6 @@ API_VERSION="1.0"
 # set up logging
 logging.basicConfig()
 logging.raiseExceptions = 0
-moduleLog = getLog()
 moduleVerboseLog = getLog(prefix="verbose.")
 
 from optparse import OptionParser
@@ -143,6 +142,8 @@ class FTConfig(OptionParser):
             if self.ini.has_option(sect, "plugin_enabled"):
                 moduleVerboseLog.debug('Checking "%s"', sect)
                 enabled = parseBool(self.ini.get(sect, "plugin_enabled"))
+                if not enabled:
+                    continue
 
                 moduleName = getOption(self.ini, sect, "plugin_module")
                 searchPath = getOption(self.ini, sect, "plugin_path")

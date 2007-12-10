@@ -25,10 +25,6 @@ from firmwaretools.trace_decorator import decorate, traceLog, getLog
 
 requires_api_version = "1.0"
 
-# set up logging
-moduleLog = getLog()
-moduleVerboseLog = getLog(prefix="verbose.")
-
 # ======
 # public API
 # ======
