@@ -1,3 +1,26 @@
+firmware-tools (1.5.10-5ubuntu1#DISTTAG#) #DIST#; urgency=low
+
+  * add linda.overrides for yum-plugins warning
+  * use debian/docs instead of DEB_INSTALL_DOCS_ALL
+  * add pointer to LGPL in debian/copyright
+  * update Standards-Version to 3.7.3
+  * add debian/watch
+  * add manpages for usr/bin/*
+
+ -- Matt Domsch <Matt_Domsch@dell.com>  Sun, 09 Dec 2007 20:40:09 -0600
+
+firmware-tools (1.5.10-4#DISTTAG#) #DIST#; urgency=low
+
+  * forcably install debian/triggers because <= Gutsy debhelper doesn't.
+
+ -- Matt Domsch <Matt_Domsch@dell.com>  Wed, 05 Dec 2007 11:14:00 -0600
+
+firmware-tools (1.5.10-0ubuntu3#DISTTAG#) #DIST#; urgency=low
+
+  * drop unneeded dpkg versioned dependency
+
+ -- Matt Domsch <Matt_Domsch@dell.com>  Tue, 04 Dec 2007 23:49:42 -0600
+
 firmware-tools (1.5.10-0ubuntu2#DISTTAG#) #DIST#; urgency=low
 
   * Initial release. (LP: #163120)
