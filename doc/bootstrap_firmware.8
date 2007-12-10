@@ -1,0 +1,60 @@
+.\" Process this file with
+.\" groff -man -Tascii bootstrap_firmware.8
+.\"
+.TH bootstrap_firmware 8 "DECEMBER 2007" Linux "User Manuals"
+.SH NAME
+bootstrap_firmware \- detect hardware for use with a package manager
+
+.SH SYNOPSIS
+.B bootstrap_firmware [-h | --help] [-c
+.I config-file
+.B ]
+.B [-o | --over
+.I  section,key,value
+.B ]
+.B [ -u | --up2date_mode ]
+.B [ -a | --apt_mode ]
+.B [ -v | --verbose ]
+.SH DESCRIPTION
+.B bootstrap_firmware
+scans hardware, and emits tags suitable for use by package managers to
+download and install packages providing those tags.  This can emit
+tags appropriate for YUM (by default), up2date, and aptitude.
+.SH OPTIONS
+.IP -h
+Print help text
+.IP "-c config-file"
+Use the alternate system wide
+.I config-file
+instead of
+.IR /etc/firmware/firmware.conf
+.IP "-o | --over section,key,value"
+Override values in firmware.conf with new values as section, key, and
+value.
+.IP "-u | --up2date_mode"
+Generate tags suitable for consumption by Red Hat Network's
+.B up2date
+program.
+.IP "-a | --apt_mode"
+Generate tags suitable for consumption by Debian's
+.B aptitude
+program.
+.IP "-v | --verbose"
+Print additional information.
+.SH EXAMPLES
+yum install $(bootstrap_firmware)
+
+up2date -u --solvedeps=$(bootstrap_firmware -u)
+
+aptitude install $(bootstrap_firmware -a)
+
+.SH FILES
+.I /etc/firmware/firmware.conf
+.RS
+The system wide configuration file.
+.SH AUTHOR
+firmware-tools team <firmware-tools-devel at lists.us.dell.com>
+.SH "SEE ALSO"
+.BR update_firmware (8)
+.BR inventory_firmware (8)
+.BR inventory_firmware_gui (8)

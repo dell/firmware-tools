@@ -1,0 +1,39 @@
+.\" Process this file with
+.\" groff -man -Tascii update_firmware.8
+.\"
+.TH update_firmware 8 "DECEMBER 2007" Linux "User Manuals"
+.SH NAME
+update_firmware \- writes firmware into the flash memory of system devices
+.SH SYNOPSIS
+.B update_firmware [-h | --help] [-c
+.I config-file
+.B ]
+.B [-o | --over
+.I  section,key,value
+.B ]
+.B ...
+.SH DESCRIPTION
+.B update_firmware
+scans /usr/share/firmware/* for firmware images newer than those
+present in hardware devices, and writes the newer firmware images into
+the devices.
+.SH OPTIONS
+.IP -h
+Print help text
+.IP "-c config-file"
+Use the alternate system wide
+.I config-file
+instead of
+.IR /etc/firmware/firmware.conf
+.IP "-o | --over section,key,value"
+Override values in firmware.conf with new values as section, key, and value.
+.SH FILES
+.I /etc/firmware/firmware.conf
+.RS
+The system wide configuration file.
+.SH AUTHOR
+firmware-tools team <firmware-tools-devel at lists.us.dell.com>
+.SH "SEE ALSO"
+.BR bootstrap_firmware (8)
+.BR inventory_firmware (8)
+.BR inventory_firmware_gui (8)
