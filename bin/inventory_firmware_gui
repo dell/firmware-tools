@@ -10,6 +10,7 @@ import commands
 import cStringIO
 import getopt
 from gettext import gettext as _
+import locale
 import os
 import pygtk
 import sys
@@ -23,12 +24,12 @@ import gnome.ui
 
 # these are replaced by autotools when installed.
 __VERSION__="unreleased_version"
-SYSCONFDIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","etc")
-PYTHONDIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..")
-PKGPYTHONDIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","firmwaretools")
-PKGDATADIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..")
-CONFDIR=os.path.join(SYSCONFDIR,"firmware")
-GLADEDIR=PKGDATADIR + "/glade"
+SYSCONFDIR=os.path.realpath(os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","etc"))
+PYTHONDIR=os.path.realpath(os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),".."))
+PKGPYTHONDIR=os.path.realpath(os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","firmwaretools"))
+PKGDATADIR=os.path.realpath(os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),".."))
+CONFDIR=os.path.realpath(os.path.join(SYSCONFDIR,"firmware"))
+GLADEDIR=os.path.realpath(PKGDATADIR + "/glade")
 # end build system subs
 
 # import all local modules after this. This allows us to run from build tree
@@ -37,6 +38,7 @@ sys.path.insert(0,PYTHONDIR)
 import firmwaretools.trace_decorator as trace_decorator
 import firmwaretools.guihelpers as guihelpers
 import firmwaretools.repository as repository
+import firmwaretools.config
 import firmwaretools.clifuncs
 import firmwaretools.package
 
@@ -80,8 +82,8 @@ class UpdateSetPinCommand(Command):
         self.method(*self.args, **self.kargs)
 
 class InventoryFirmware:
-    GLADE_FILE = '/glade/inventory_firmware_gui.glade'
-    def __init__(self, ini):
+    GLADE_FILE = '/inventory_firmware_gui.glade'
+    def __init__(self, cfg):
         self.wTree = gtk.glade.XML(GLADEDIR + self.GLADE_FILE)
         self.wTree.signal_autoconnect(self)
         self.main_window = self.wTree.get_widget("MainWindow")
@@ -130,16 +132,16 @@ class InventoryFirmware:
             guihelpers.gtkYield()
 
         # collect inventory
-        r = firmwaretools.repository.Repository( ini.get("main", "storage_topdir") )
-        firmwaretools.package.RepositoryPackage.mainIni = ini
+        r = firmwaretools.repository.Repository( cfg.ini.get("main", "storage_topdir") )
+        firmwaretools.package.RepositoryPackage.mainIni = cfg.ini
 
         # the following two lines are equivalent, but runLongProcess() does the
         # action in a background thread so the GUI will update while it works.
-        #self.updateSet = repository.generateUpdateSet(r, firmwaretools.clifuncs.runInventory(ini), cb=(myYield, None))
-        self.updateSet = guihelpers.runLongProcessGtk(repository.generateUpdateSet, args=(r, firmwaretools.clifuncs.runInventory(ini)), kargs={'cb':(myYield, None)})
+        #self.updateSet = repository.generateUpdateSet(r, firmwaretools.clifuncs.runInventory(cfg), cb=(myYield, None))
+        self.updateSet = guihelpers.runLongProcessGtk(repository.generateUpdateSet, args=(r, firmwaretools.clifuncs.runInventory(cfg)), kargs={'cb':(myYield, None)})
 
         self._populateInventoryTree()
-        self._populateBootstrapTree(ini)
+        self._populateBootstrapTree(cfg)
         self.inventoryTreeView.expand_all()
         self._refresh()
 
@@ -315,9 +317,9 @@ class InventoryFirmware:
 
     # this is a helper function to initially populate the tree model.
     # should only ever be called once.
-    def _populateBootstrapTree(self, ini):
+    def _populateBootstrapTree(self, cfg):
         self.bootstrapTreeModel.clear()
-        for dev in firmwaretools.clifuncs.runBootstrapInventory(ini):
+        for dev in firmwaretools.clifuncs.runBootstrapInventory(cfg):
             guihelpers.gtkYield()
             self.bootstrapTreeModel.append(None, [dev.name, dev.displayname, dev.version])
 
@@ -727,54 +729,22 @@ class InventoryFirmware:
             model[path][self.STATUS_COLUMN_SERIAL] = model[path][self.STATUS_COLUMN_SERIAL] + 1
 
 def main():
-    pretty = 0
-
-    global firmwaretools
-    ini = ConfigParser.ConfigParser()
-    verbose = 0
-    warnings = 0
-    altConfig = 0
-    overrides = []
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "c:fho:t:vw", ["help", "verbose", "warnings", "config=", "overrides=", "fake-mode"])
-        for option, argument in opts:
-            if option in ("-h", "--help"):
-                print __doc__
-                sys.exit(1)
-            if option in ("-c", "--config"):
-                firmwaretools.clifuncs.getConfig(ini, [argument,])
-                altConfig = 1
-            if option in ("-o", "--override"):
-                overrides.append(argument)
-            if option in ("-v", "--verbose"):
-                verbose = verbose + 1
-                trace_decorator.debug["__main__"] = verbose
-            if option in ("-w", "--warnings"):
-                warnings = warnings + 1
-            if option in ("-f", "--fake-mode"):
-                os.environ['DEBUG_REPOSITORY'] = "1"
-                os.environ['DEBUG_INVENTORY'] = "1"
-                os.environ['DEBUG_BOOTSTRAP'] = "1"
-                import firmwaretools.mockrepository
-                import firmwaretools.mockpackage
+        locale.setlocale(locale.LC_ALL, '')
+    except locale.Error, e:
+        # default to C locale if we get a failure.
+        print >> sys.stderr, 'Failed to set locale, defaulting to C'
+        locale.setlocale(locale.LC_ALL, 'C')
 
-        # load standard configuration
-        if not altConfig:
-            firmwaretools.clifuncs.getConfig(ini, firmwaretools.clifuncs.configLocations)
 
-        for over in overrides:
-            section, key, value = over.split(",", 2)
-            if not ini.has_section(section):
-                ini.add_section(section)
-            ini.set(section, key, value)
+
+    try:
+        cfg = firmwaretools.config.FTConfig(usage=__doc__, version=__VERSION__)
+        args = cfg.parse()
 
         #gnome.init(PROGRAM_NAME, version)
-        test = InventoryFirmware(ini)
+        test = InventoryFirmware(cfg)
         gtk.main()
-
-    except (getopt.GetoptError):
-        print __doc__
-        sys.exit(1)
 
     except:
         traceback.print_exc()

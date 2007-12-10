@@ -52,11 +52,8 @@ def main(args):
         for pkg in firmwaretools.clifuncs.runInventory(cfg):
             print "%s = %s" % (str(pkg), pkg.version)
 
-    except exception, e:
-        print
+    except Exception, e:
         print e
-        print
-        print __doc__
         sys.exit(2)
 
     return 0 #shell logic
