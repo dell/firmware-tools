@@ -17,7 +17,10 @@ import os
 import repository
 import mockpackage
 import sys
-from trace_decorator import decorateAllFunctions
+from firmwaretools.trace_decorator import decorate, traceLog, getLog
+
+moduleLog = getLog()
+moduleVerboseLog = getLog(prefix="verbose.")
 
 #
 # DEBUG ONLY
@@ -26,6 +29,7 @@ from trace_decorator import decorateAllFunctions
 # a null function that just eats args. Default callback
 def nullFunc(*args, **kargs): pass
 
+decorate(traceLog())
 def iterPackages_DEBUG(self, cb=(nullFunc, None)):
     # TODO: put this in a separate function
     yield mockpackage.MockRepositoryPackage(
@@ -81,7 +85,4 @@ def iterPackages_DEBUG(self, cb=(nullFunc, None)):
         name="debug_pci_firmware_ven_draws_dev_polygons",
         version="4.1.2")
 
-if os.environ.get("DEBUG_REPOSITORY", None) == "1":
-    repository.Repository.iterPackages = iterPackages_DEBUG
-
-decorateAllFunctions(sys.modules[__name__])
+repository.Repository.iterPackages = iterPackages_DEBUG

@@ -15,7 +15,7 @@ import os
 import sys
 import traceback
 
-from trace_decorator import  traceLog, decorate
+from firmwaretools.trace_decorator import decorate, traceLog, getLog
 
 # these are replaced by autotools when installed.
 __VERSION__="unreleased_version"
@@ -24,27 +24,35 @@ CONFDIR=os.path.join(SYSCONFDIR,"firmware")
 # end build system subs
 
 # set up logging
-moduleLog = logging.getLogger("ft.trace." + __name__)
+moduleLog = getLog()
+moduleVerboseLog = getLog(prefix="verbose.")
 
-decorate(traceLog(moduleLog))
+decorate(traceLog())
 def runInventory(cfg):
     # returns a list of devices on the system
     return runSomething(cfg, "InventoryGenerator")
 
-decorate(traceLog(moduleLog))
+decorate(traceLog())
 def runBootstrapInventory(cfg):
     return runSomething(cfg, "BootstrapGenerator")
 
 # gets a list of modules and runs a generator function from each module
-decorate(traceLog(moduleLog))
-def runSomething(cfg, function):
+decorate(traceLog())
+def runSomething(cfg, functionName):
     for n,det in cfg.plugins.items():
+        moduleVerboseLog.info("Try module: %s" % n)
         try:
-            for thing in getattr(det['module'],function)():
+            try:
+                func = getattr(det['module'], functionName)
+                moduleVerboseLog.info("  Got function: %s" % functionName)
+            except AttributeError:
+                continue
+
+            moduleVerboseLog.info("  Running function.")
+            gen = func()
+            for thing in gen:
                 yield thing
-        except AttributeError, e:
-            moduleLog.error("AttributeError usually means the module is missing the specified function.\n\tModule: %s\n\tFunction: %s\n" % (module, function))
-            moduleLog.error(''.join(traceback.format_exception(sys.exc_type, sys.exc_value, sys.exc_traceback)))
-        except:   # don't let module messups propogate up
+
+        except Exception, e:
             moduleLog.error(''.join(traceback.format_exception(sys.exc_type, sys.exc_value, sys.exc_traceback)))
 

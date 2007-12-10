@@ -13,6 +13,8 @@ package module
 import rpm
 from gettext import gettext as _
 
+from firmwaretools.trace_decorator import decorate, traceLog, getLog
+
 class InternalError(Exception): pass
 class InstallError(Exception): pass
 class NoInstaller(Exception): pass

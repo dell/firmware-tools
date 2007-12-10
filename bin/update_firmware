@@ -13,7 +13,6 @@
 from __future__ import generators
 
 # import arranged alphabetically
-import glob
 import locale
 import os
 import sys
@@ -37,7 +36,7 @@ import firmwaretools.package
 import firmwaretools.pycompat
 import firmwaretools.config
 import firmwaretools.clifuncs
-import firmwaretools.trace_decorator as trace_decorator
+import firmwaretools.config
 
 class CmdlineError(Exception):pass
 
@@ -51,12 +50,10 @@ def main():
 
     try:
         cfg = firmwaretools.config.FTConfig(usage=__doc__, version=__VERSION__)
-
-        cfg.add_option("--rpm", action="store_true", dest="rpm_mode", default=False, help="")
+        cfg.add_option("--rpm", action="store_true", dest="rpm_mode", default=False, help="Used when running as part of an rpm \%post script.")
         cfg.add_option("--yes", "-y", action="store_const", const=0, dest="interactive", default=1, help="Default all answers to 'yes'.")
         cfg.add_option("--test", "-t", action="store_const", const=2, dest="interactive", help="Perform test but do not actually update.")
-
-        args = cfg.parse()
+        args = cfg.parse(sys.argv[1:])
 
         if cfg.opts.rpm_mode:
             v = 'manual'
@@ -169,6 +166,10 @@ def main():
                 break
 
     except (Exception), e:
+        import traceback
+        from firmwaretools.trace_decorator import getLog
+        getLog().debug(''.join(traceback.format_exception(sys.exc_type, sys.exc_value, sys.exc_traceback)))
+
         print e
         sys.exit(2)
 

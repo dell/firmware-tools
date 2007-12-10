@@ -16,7 +16,7 @@ import logging.config
 import os
 import sys
 
-from trace_decorator import decorate, traceLog
+from firmwaretools.trace_decorator import decorate, traceLog, getLog
 import i18n
 import errors
 
@@ -34,7 +34,8 @@ API_VERSION="1.0"
 # set up logging
 logging.basicConfig()
 logging.raiseExceptions = 0
-moduleVerboseLog = logging.getLogger("ft.verbose.config")
+moduleLog = getLog()
+moduleVerboseLog = getLog(prefix="verbose.")
 
 from optparse import OptionParser
 class FTConfig(OptionParser):
@@ -62,9 +63,10 @@ class FTConfig(OptionParser):
             }
         self.ini = ConfigParser.SafeConfigParser(defaults)
 
-    def parse(self):
+    def parse(self, args=None):
+        if args is None: args = []
         # parse enough of the cmdline to know where config is and which plugins to enable
-        self.opts = self.firstParse(sys.argv[1:])
+        self.opts = self.firstParse(args)
         if not self.opts.config:
             self.opts.config = [os.path.join(CONFDIR, "firmware.conf"), ]
         
@@ -79,9 +81,9 @@ class FTConfig(OptionParser):
 
         # set up logging
         self.root_log       = logging.getLogger()
-        self.ft_log         = logging.getLogger("ft")
-        self.ft_verbose_log = logging.getLogger("ft.verbose")
-        self.ft_trace_log   = logging.getLogger("ft.trace")
+        self.ft_log         = logging.getLogger("firmwaretools")
+        self.ft_verbose_log = logging.getLogger("verbose")
+        self.ft_trace_log   = logging.getLogger("trace")
 
         self.ft_log.propagate = 0
         self.ft_trace_log.propagate = 0
@@ -97,23 +99,32 @@ class FTConfig(OptionParser):
         if self.opts.trace:
             self.ft_trace_log.propagate = 1
 
-        logging.getLogger("ft.verbose").info("firmware-tools version: %s" % __VERSION__)
-        logging.getLogger("ft.verbose").info("COMMAND: %s" % ' '.join(sys.argv))
-        logging.getLogger("ft.verbose").info("plugin_config_dir: %s" % os.path.join(self.ini.get("main", "plugin_config_dir"), "*.conf"))
+        moduleVerboseLog.info("firmware-tools version: %s" % __VERSION__)
+        moduleVerboseLog.info("COMMAND: %s" % ' '.join(args))
+        moduleVerboseLog.info("plugin_config_dir: %s" % os.path.join(self.ini.get("main", "plugin_config_dir"), "*.conf"))
 
         # load plugins
         self.plugins = self.loadPlugins()
 
         # parse rest of cmdline
-        self.opts, args = self.parse_args(sys.argv[1:])
+        self.opts, args = self.parse_args(args)
 
         # if fake mode
         if self.opts.fake_mode:
-            os.environ['DEBUG_REPOSITORY'] = "1"
-            os.environ['DEBUG_INVENTORY'] = "1"
-            os.environ['DEBUG_BOOTSTRAP'] = "1"
-            import firmwaretools.mockrepository
-            import firmwaretools.mockpackage
+            moduleVerboseLog.info("Activating fake mode.")
+            import repository
+            import mockrepository
+            # remove all other bootstrap, inventory and repository 
+            for n, v in self.plugins.items():
+                for i in ("InventoryGenerator", "BootstrapGenerator"):
+                    if hasattr(v['module'], i):
+                        delattr(v['module'], i)
+
+            moduleName = "mockpackage"
+            searchPath = ""
+            self.plugins[moduleName] = self._loadModule(moduleName, searchPath)
+            self.plugins[moduleName]["section"] = 'fake'
+            self.plugins[moduleName]["enabled"] = True
 
         return self.opts, args
 
@@ -124,7 +135,7 @@ class FTConfig(OptionParser):
             args)
         return self.parse_args(args=args)[0]
 
-    decorate(traceLog("ft.trace.config"))
+    decorate(traceLog())
     def loadPlugins(self):
         # scan config for plugins and load them.
         plugins={}
@@ -132,18 +143,17 @@ class FTConfig(OptionParser):
             if self.ini.has_option(sect, "plugin_enabled"):
                 moduleVerboseLog.debug('Checking "%s"', sect)
                 enabled = parseBool(self.ini.get(sect, "plugin_enabled"))
-                if not enabled:
-                    continue
 
                 moduleName = getOption(self.ini, sect, "plugin_module")
                 searchPath = getOption(self.ini, sect, "plugin_path")
 
                 plugins[moduleName] = self._loadModule(moduleName, searchPath)
                 plugins[moduleName]["section"] = sect
+                plugins[moduleName]["enabled"] = enabled
 
         return plugins
 
-    decorate(traceLog("ft.trace.config"))
+    decorate(traceLog())
     def _loadModule(self, moduleName, searchPath):
         # load plugin
         module = __import__(moduleName, globals(),  locals(), [])
@@ -168,13 +178,13 @@ class FTConfig(OptionParser):
         return {'module': module, 'name': moduleName}
  
 
-decorate(traceLog("ft.trace.config"))
+decorate(traceLog())
 def parseBool(opt):
     if opt.lower() in ("true", "1", "enabled", "on"):
         return True
     return False
 
-decorate(traceLog("ft.trace.config"))
+decorate(traceLog())
 def getOption(ini, section, option, default=None):
     if ini.has_option(section, option):
         return ini.get(section, option)
@@ -226,12 +236,12 @@ def _filtercmdline(novalopts, valopts, args):
  
     return out 
 
-decorate(traceLog("ft.trace.config"))
+decorate(traceLog())
 def parsever(apiver):
     maj, min = apiver.split('.')
     return int(maj), int(min)
 
-decorate(traceLog("ft.trace.config"))
+decorate(traceLog())
 def apiverok(a, b):
     '''Return true if API version "a" supports API version "b"
     '''

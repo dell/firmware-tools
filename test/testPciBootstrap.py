@@ -11,37 +11,36 @@ import ConfigParser
 
 class TestCase(unittest.TestCase):
     def setUp(self):
-        pass
+        if globals().get('firmwaretools'): del(firmwaretools)
+        for k in sys.modules.keys():
+            if k.startswith("firmwaretools"):
+                del(sys.modules[k])
     
     def tearDown(self):
-        pass
+        if globals().get('firmwaretools'): del(firmwaretools)
+        for k in sys.modules.keys():
+            if k.startswith("firmwaretools"):
+                del(sys.modules[k])
 
     def testBootstrapInventory(self):
-        # set up unit test mode
-        module = __import__("firmwaretools.bootstrap_pci", globals(),  locals(), [])
-        module = getattr(module, "bootstrap_pci")
+        import firmwaretools.clifuncs
+        import firmwaretools.config
+        import firmwaretools.mockpackage
 
         # manually setup fake config file
-        ini = ConfigParser.ConfigParser()
-        ini.add_section("bootstrap_pci")
-        ini.set("bootstrap_pci", "bootstrap_inventory_plugin", "firmwaretools.bootstrap_pci")
-
-        # set lowlevel code to return fake data
-        import firmwaretools.mockpackage
-        module.mockReadLspciWithDomain = firmwaretools.mockpackage.mockReadLspciWithDomain
-        module.mockExpectedOutput = firmwaretools.mockpackage.mockExpectedOutput
+        cfg = firmwaretools.config.FTConfig(usage="", version="unit test")
+        args = cfg.parse(["--fake-mode",])
 
         # import functions for bootstrap/compare
-        import firmwaretools.clifuncs as clifuncs
 
         # run bootstrap and compare.
         index = 0
-        for pkg in clifuncs.runBootstrapInventory(ini):
-            self.assertEqual( module.mockExpectedOutput.split("\n")[index], pkg.name )
+        for pkg in firmwaretools.clifuncs.runBootstrapInventory(cfg):
+            self.assertEqual( firmwaretools.mockpackage.mockExpectedOutput.split("\n")[index], pkg.name )
             index = index + 1
 
         # ensure it actually ran.
-        self.assertEqual(index, len(module.mockExpectedOutput.split("\n")))
+        self.assertEqual(index, len(firmwaretools.mockpackage.mockExpectedOutput.split("\n")))
         
 
 if __name__ == "__main__":
