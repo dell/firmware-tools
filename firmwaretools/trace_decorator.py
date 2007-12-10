@@ -31,7 +31,11 @@ def doLog(logger, level, *args, **kargs):
     if logger.manager.disable >= level:
         return
     if logger.isEnabledFor(level):
-        logger.handle(logger.makeRecord(logger.name, level, *args, **kargs))
+        try:
+            logger.handle(logger.makeRecord(logger.name, level, *args, **kargs))
+        except TypeError:
+            del(kargs["func"])
+            logger.handle(logger.makeRecord(logger.name, level, *args, **kargs))
 
 def traceLog(log = None):
     def decorator(func):
