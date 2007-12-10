@@ -1,0 +1,53 @@
+--- /dev/null	2007-10-11 11:16:14.000000000 -0500
++++ firmware-tools/doc/inventory_firmware_gui.8	2007-12-09 21:42:00.000000000 -0600
+@@ -0,0 +1,50 @@
++.\" Process this file with
++.\" groff -man -Tascii inventory_firmware.8
++.\"
++.TH inventory_firmware_gui 8 "DECEMBER 2007" Linux "User Manuals"
++.SH NAME
++inventory_firmware_gui \- graphically inventory and update firmware installed in hardware
++
++.SH SYNOPSIS
++.B inventory_firmware_gui [-h | --help] [-c
++.I config-file
++.B ]
++.B [-o | --over
++.I  section,key,value
++.B ]
++.B [ -v | --verbose ]
++.B [ -w | --warnings ]
++.I directory
++.B ]
++.SH DESCRIPTION
++.B inventory_firmware_gui
++scans hardware and directories of available firmware, graphically
++shows the inventory, and upgrades the firmwares in that hardware.
++.SH OPTIONS
++.IP -h
++Print help text
++.IP "-c config-file"
++Use the alternate system wide
++.I config-file
++instead of
++.IR /etc/firmware/firmware.conf
++.IP "-o | --over section,key,value"
++Override values in firmware.conf with new values as section, key, and
++value.
++.IP "-v | --verbose"
++Print additional information.
++.IP "-w | --warnings"
++Print additional warnings.
++.SH FILES
++.I /etc/firmware/firmware.conf
++.RS
++The system wide configuration file.
++.I /usr/share/firmware-tools
++.RS
++The location of the glade description files.
++.SH AUTHOR
++firmware-tools team <firmware-tools-devel at lists.us.dell.com>
++.SH "SEE ALSO"
++.BR update_firmware (8)
++.BR bootstrap_firmware (8)
++.BR inventory_firmware (8)
