@@ -50,10 +50,7 @@ def main(args):
             sys.stdout.write( "%s = %s\n" % (str(pkg), pkg.version) )
 
     except Exception, e:
-        print
         print e
-        print
-        print __doc__
         sys.exit(2)
 
     return 0 #shell logic

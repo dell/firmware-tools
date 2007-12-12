@@ -8,11 +8,6 @@
   #
   #############################################################################
 """update_firmware:
-
-usage:
-    -h | --help         print this message
-    -c | --config       Location of an additional config file to import
-    -o | --over         Override config file option
 """
 
 from __future__ import generators
@@ -21,6 +16,7 @@ from __future__ import generators
 import locale
 import os
 import sys
+import traceback
 import time
 
 # these are replaced by autotools when installed.
@@ -38,6 +34,7 @@ sys.path.insert(0,PYTHONDIR)
 import firmwaretools.repository
 import firmwaretools.package
 import firmwaretools.pycompat
+import firmwaretools.config
 import firmwaretools.clifuncs
 import firmwaretools.config
 
@@ -54,12 +51,11 @@ def main():
     try:
         cfg = firmwaretools.config.FTConfig(usage=__doc__, version=__VERSION__)
         cfg.add_option("--rpm", action="store_true", dest="rpm_mode", default=False, help="Used when running as part of an rpm \%post script.")
-        cfg.add_option("-y", "--yes", action="store_const", const=0, dest="interactive", default=1, help="")
-        cfg.add_option("-t", "--test", action="store_const", const=2, dest="interactive", default=1, help="")
+        cfg.add_option("--yes", "-y", action="store_const", const=0, dest="interactive", default=1, help="Default all answers to 'yes'.")
+        cfg.add_option("--test", "-t", action="store_const", const=2, dest="interactive", help="Perform test but do not actually update.")
+        args = cfg.parse(sys.argv[1:])
 
-        opts, args = cfg.parse(sys.argv[1:])
-
-        if opts.rpm_mode:
+        if cfg.opts.rpm_mode:
             v = 'manual'
             if cfg.ini.has_option("main", "rpm_mode"):
                 v = cfg.ini.get("main", "rpm_mode")
@@ -126,13 +122,13 @@ def main():
         # if we get to this point, that means update is necessary.
         # any exit before this point means that there was an error, or no update
         # was necessary and should return non-zero
-        if opts.interactive == 2:
+        if cfg.opts.interactive == 2:
             print
             print "Test mode complete."
             print
             return 0
 
-        if opts.interactive == 1:
+        if cfg.opts.interactive == 1:
             print
             print "Please run the program with the '--yes' switch to enable BIOS update."
             print "   UPDATE NOT COMPLETED!"
@@ -169,15 +165,12 @@ def main():
                 print e
                 break
 
-    except Exception, e:
+    except (Exception), e:
         import traceback
         from firmwaretools.trace_decorator import getLog
         getLog().debug(''.join(traceback.format_exception(sys.exc_type, sys.exc_value, sys.exc_traceback)))
 
-        print
         print e
-        print
-        print __doc__
         sys.exit(2)
 
     return 0 #shell logic
