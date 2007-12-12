@@ -192,10 +192,24 @@ RELEASE_VERSION = $(RELEASE_MAJOR).$(RELEASE_MINOR).$(RELEASE_SUBLEVEL)$(RELEASE
 RELEASE_STRING = $(RELEASE_NAME)-$(RELEASE_VERSION)
 CLEANFILES = $(RELEASE_NAME)-*.tar.gz $(RELEASE_NAME)-*.tar.bz2 \
 	$(RELEASE_NAME)-*.rpm _buildtemp version $(EXTRA_PROGRAMS) \
-	*.pyc */*.pyc */*/*.pyc */*/*/*.pyc pkg/$(PACKAGE).spec
+	*.pyc */*.pyc */*/*.pyc */*/*/*.pyc CLEANFILES += \
+	pkg/$(PACKAGE).spec
 DISTCLEANFILES = *~ 
 EXTRA_DIST = etc doc glade pkg/debian test yum-plugin COPYING-GPL \
 	COPYING-OSL COPYING.LIB
+TOPDIR := $(shell cd $(top_builddir);pwd)
+BUILDDIR = $(TOPDIR)/_rpmbuild
+RPMDIR = $(TOPDIR)
+SOURCEDIR = $(TOPDIR)
+SPECDIR = $(TOPDIR)/pkg
+SRCRPMDIR = $(TOPDIR)
+RPM_DEFINES = --define "_topdir $(TOPDIR)" \
+		--define "_builddir $(BUILDDIR)" \
+		--define "_rpmdir $(RPMDIR)" \
+		--define "_sourcedir $(SOURCEDIR)" \
+		--define "_specdir $(SPECDIR)" \
+		--define "_srcrpmdir $(SRCRPMDIR)"
+
 
 # This updates the debian version information, similar to how specfile for RPM
 # is updated. It has to be manually invoked becuase it wont work for rpm builds.
@@ -222,9 +236,12 @@ nodist_pkgdata_DATA = glade/inventory_firmware_gui.glade
 pkgpython_PYTHON = \
 	firmwaretools/__init__.py       \
 	firmwaretools/bootstrap_pci.py  \
+	firmwaretools/config.py       \
 	firmwaretools/clifuncs.py       \
 	firmwaretools/dep_parser.py     \
+	firmwaretools/errors.py     \
 	firmwaretools/guihelpers.py     \
+	firmwaretools/i18n.py     \
 	firmwaretools/mockpackage.py    \
 	firmwaretools/mockrepository.py \
 	firmwaretools/package.py   	\
@@ -238,7 +255,9 @@ REPLACE_VARS_ON_INSTALL = \
 	$(sbindir)/bootstrap_firmware  	   \
 	$(sbindir)/inventory_firmware  	   \
 	$(sbindir)/inventory_firmware_gui  \
-	$(sbindir)/update_firmware
+	$(sbindir)/update_firmware	   \
+	$(pkgpythondir)/clifuncs.py	   \
+	$(pkgpythondir)/config.py
 
 all: all-recursive
 
@@ -786,6 +805,8 @@ info-am:
 
 install-data-am: install-nodist_pkgdataDATA install-nodist_pkgetcDATA \
 	install-pkgpythonPYTHON
+	@$(NORMAL_INSTALL)
+	$(MAKE) $(AM_MAKEFLAGS) install-data-hook
 
 install-dvi: install-dvi-recursive
 
@@ -828,7 +849,7 @@ uninstall-am: uninstall-binPROGRAMS uninstall-dist_sbinSCRIPTS \
 	uninstall-pkgpythonPYTHON
 
 .MAKE: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) install-am \
-	install-exec-am install-strip
+	install-data-am install-exec-am install-strip
 
 .PHONY: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) CTAGS GTAGS \
 	all all-am am--refresh check check-TESTS check-am clean \
@@ -837,47 +858,55 @@ uninstall-am: uninstall-binPROGRAMS uninstall-dist_sbinSCRIPTS \
 	distcheck distclean distclean-generic distclean-tags \
 	distcleancheck distdir distuninstallcheck dvi dvi-am html \
 	html-am info info-am install install-am install-binPROGRAMS \
-	install-data install-data-am install-dist_sbinSCRIPTS \
-	install-dvi install-dvi-am install-exec install-exec-am \
-	install-exec-hook install-html install-html-am install-info \
-	install-info-am install-man install-nodist_pkgdataDATA \
-	install-nodist_pkgetcDATA install-pdf install-pdf-am \
-	install-pkgpythonPYTHON install-ps install-ps-am install-strip \
-	installcheck installcheck-am installdirs installdirs-am \
-	maintainer-clean maintainer-clean-generic mostlyclean \
-	mostlyclean-generic pdf pdf-am ps ps-am tags tags-recursive \
-	uninstall uninstall-am uninstall-binPROGRAMS \
-	uninstall-dist_sbinSCRIPTS uninstall-nodist_pkgdataDATA \
-	uninstall-nodist_pkgetcDATA uninstall-pkgpythonPYTHON
+	install-data install-data-am install-data-hook \
+	install-dist_sbinSCRIPTS install-dvi install-dvi-am \
+	install-exec install-exec-am install-exec-hook install-html \
+	install-html-am install-info install-info-am install-man \
+	install-nodist_pkgdataDATA install-nodist_pkgetcDATA \
+	install-pdf install-pdf-am install-pkgpythonPYTHON install-ps \
+	install-ps-am install-strip installcheck installcheck-am \
+	installdirs installdirs-am maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-generic pdf \
+	pdf-am ps ps-am tags tags-recursive uninstall uninstall-am \
+	uninstall-binPROGRAMS uninstall-dist_sbinSCRIPTS \
+	uninstall-nodist_pkgdataDATA uninstall-nodist_pkgetcDATA \
+	uninstall-pkgpythonPYTHON
 
+
+install-data-hook:
+	for i in $(REPLACE_VARS_ON_INSTALL); do      \
+	    file=$(DESTDIR)/$$i                     ;\
+	    perl -p -i -e 's|^__VERSION__\s*=.*|__VERSION__="$(RELEASE_VERSION)"|' $$file ;\
+	    perl -p -i -e 's|^SYSCONFDIR\s*=.*|SYSCONFDIR="$(sysconfdir)"|' $$file        ;\
+	    perl -p -i -e 's|^PYTHONDIR\s*=.*|PYTHONDIR="$(pythondir)"|' $$file           ;\
+	    perl -p -i -e 's|^PKGPYTHONDIR\s*=.*|PKGPYTHONDIR="$(pkgpythondir)"|' $$file  ;\
+	    perl -p -i -e 's|^PKGDATADIR\s*=.*|PKGDATADIR="$(pkgdatadir)"|' $$file        ;\
+	    perl -p -i -e 's|^PKGETCDIR\s*=.*|PKGETCDIR="$(pkgetcdir)"|' $$file        ;\
+	    perl -p -i -e 's|^LIBDIR\s*=.*|PKGDATADIR="$(libdir)"|' $$file        ;\
+	done
 
 install-exec-hook:
 	for i in $(REPLACE_VARS_ON_INSTALL); do      \
-                file=$(DESTDIR)/$$i                     ;\
-                perl -p -i -e 's|^__VERSION__=.*|__VERSION__="$(RELEASE_VERSION)"|' $$file ;\
-                perl -p -i -e 's|^SYSCONFDIR=.*|SYSCONFDIR="$(sysconfdir)"|' $$file        ;\
-                perl -p -i -e 's|^PYTHONDIR=.*|PYTHONDIR="$(pythondir)"|' $$file           ;\
-                perl -p -i -e 's|^PKGPYTHONDIR=.*|PKGPYTHONDIR="$(pkgpythondir)"|' $$file  ;\
-                perl -p -i -e 's|^PKGDATADIR=.*|PKGDATADIR="$(pkgdatadir)"|' $$file        ;\
-        done
+	    file=$(DESTDIR)/$$i                     ;\
+	    perl -p -i -e 's|^__VERSION__\s*=.*|__VERSION__="$(RELEASE_VERSION)"|' $$file ;\
+	    perl -p -i -e 's|^SYSCONFDIR\s*=.*|SYSCONFDIR="$(sysconfdir)"|' $$file        ;\
+	    perl -p -i -e 's|^PYTHONDIR\s*=.*|PYTHONDIR="$(pythondir)"|' $$file           ;\
+	    perl -p -i -e 's|^PKGPYTHONDIR\s*=.*|PKGPYTHONDIR="$(pkgpythondir)"|' $$file  ;\
+	    perl -p -i -e 's|^PKGDATADIR\s*=.*|PKGDATADIR="$(pkgdatadir)"|' $$file        ;\
+	    perl -p -i -e 's|^PKGETCDIR\s*=.*|PKGETCDIR="$(pkgetcdir)"|' $$file        ;\
+	    perl -p -i -e 's|^LIBDIR\s*=.*|PKGDATADIR="$(libdir)"|' $$file        ;\
+	done
 
+.PHONY: rpm srpm
 rpm: dist
-	rm -rf _build
-	mkdir -p _build/{SOURCES,BUILD,RPMS,SRPMS,SPECS}
-	cp pkg/$(PACKAGE_NAME).spec _build/SPECS
-	cp $(PACKAGE_NAME)*.tar.gz  _build/SOURCES
-	rpmbuild --define "_topdir $$PWD/_build" -ba --nodeps _build/SPECS/$(PACKAGE_NAME).spec
-	find _build/{RPMS,SRPMS} -name \*.rpm -exec mv {} . \;
-	rm -rf _build
+	mkdir -p $(BUILDDIR)
+	rpmbuild $(RPM_DEFINES) -ba --nodeps pkg/$(PACKAGE_NAME).spec
+	rm -rf $(BUILDDIR)
 
 srpm: dist
-	rm -rf _build
-	mkdir -p _build/{SOURCES,BUILD,RPMS,SRPMS,SPECS}
-	cp pkg/$(PACKAGE_NAME).spec _build/SPECS
-	cp $(PACKAGE_NAME)*.tar.gz  _build/SOURCES
-	rpmbuild --define "_topdir $$PWD/_build" -bs --nodeps _build/SPECS/$(PACKAGE_NAME).spec
-	find _build/{RPMS,SRPMS} -name \*.rpm -exec mv {} . \;
-	rm -rf _build
+	mkdir -p $(BUILDDIR)
+	rpmbuild $(RPM_DEFINES) -ba --nodeps pkg/$(PACKAGE_NAME).spec
+	rm -rf $(BUILDDIR)
 changelog: $(CHANGELOG)
 .PHONY: $(CHANGELOG)
 $(CHANGELOG): version.mk

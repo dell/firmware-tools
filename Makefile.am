@@ -21,9 +21,12 @@ nodist_pkgdata_DATA = glade/inventory_firmware_gui.glade
 pkgpython_PYTHON = \
 	firmwaretools/__init__.py       \
 	firmwaretools/bootstrap_pci.py  \
+	firmwaretools/config.py       \
 	firmwaretools/clifuncs.py       \
 	firmwaretools/dep_parser.py     \
+	firmwaretools/errors.py     \
 	firmwaretools/guihelpers.py     \
+	firmwaretools/i18n.py     \
 	firmwaretools/mockpackage.py    \
 	firmwaretools/mockrepository.py \
 	firmwaretools/package.py   	\
