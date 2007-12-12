@@ -28,35 +28,54 @@ CLEANFILES += $(EXTRA_PROGRAMS)
 CLEANFILES += *.pyc */*.pyc */*/*.pyc */*/*/*.pyc
 CLEANFILES += pkg/$(PACKAGE).spec
 
+install-data-hook:
+	for i in $(REPLACE_VARS_ON_INSTALL); do      \
+	    file=$(DESTDIR)/$$i                     ;\
+	    perl -p -i -e 's|^__VERSION__\s*=.*|__VERSION__="$(RELEASE_VERSION)"|' $$file ;\
+	    perl -p -i -e 's|^SYSCONFDIR\s*=.*|SYSCONFDIR="$(sysconfdir)"|' $$file        ;\
+	    perl -p -i -e 's|^PYTHONDIR\s*=.*|PYTHONDIR="$(pythondir)"|' $$file           ;\
+	    perl -p -i -e 's|^PKGPYTHONDIR\s*=.*|PKGPYTHONDIR="$(pkgpythondir)"|' $$file  ;\
+	    perl -p -i -e 's|^PKGDATADIR\s*=.*|PKGDATADIR="$(pkgdatadir)"|' $$file        ;\
+	    perl -p -i -e 's|^PKGETCDIR\s*=.*|PKGETCDIR="$(pkgetcdir)"|' $$file        ;\
+	    perl -p -i -e 's|^LIBDIR\s*=.*|PKGDATADIR="$(libdir)"|' $$file        ;\
+	done
+
 install-exec-hook:
 	for i in $(REPLACE_VARS_ON_INSTALL); do      \
-                file=$(DESTDIR)/$$i                     ;\
-                perl -p -i -e 's|^__VERSION__=.*|__VERSION__="$(RELEASE_VERSION)"|' $$file ;\
-                perl -p -i -e 's|^SYSCONFDIR=.*|SYSCONFDIR="$(sysconfdir)"|' $$file        ;\
-                perl -p -i -e 's|^PYTHONDIR=.*|PYTHONDIR="$(pythondir)"|' $$file           ;\
-                perl -p -i -e 's|^PKGPYTHONDIR=.*|PKGPYTHONDIR="$(pkgpythondir)"|' $$file  ;\
-                perl -p -i -e 's|^PKGDATADIR=.*|PKGDATADIR="$(pkgdatadir)"|' $$file        ;\
-                perl -p -i -e 's|^PKGETCDIR=.*|PKGETCDIR="$(pkgetcdir)"|' $$file        ;\
-        done
+	    file=$(DESTDIR)/$$i                     ;\
+	    perl -p -i -e 's|^__VERSION__\s*=.*|__VERSION__="$(RELEASE_VERSION)"|' $$file ;\
+	    perl -p -i -e 's|^SYSCONFDIR\s*=.*|SYSCONFDIR="$(sysconfdir)"|' $$file        ;\
+	    perl -p -i -e 's|^PYTHONDIR\s*=.*|PYTHONDIR="$(pythondir)"|' $$file           ;\
+	    perl -p -i -e 's|^PKGPYTHONDIR\s*=.*|PKGPYTHONDIR="$(pkgpythondir)"|' $$file  ;\
+	    perl -p -i -e 's|^PKGDATADIR\s*=.*|PKGDATADIR="$(pkgdatadir)"|' $$file        ;\
+	    perl -p -i -e 's|^PKGETCDIR\s*=.*|PKGETCDIR="$(pkgetcdir)"|' $$file        ;\
+	    perl -p -i -e 's|^LIBDIR\s*=.*|PKGDATADIR="$(libdir)"|' $$file        ;\
+	done
 
+TOPDIR := $(shell cd $(top_builddir);pwd)
+BUILDDIR = $(TOPDIR)/_rpmbuild
+RPMDIR = $(TOPDIR)
+SOURCEDIR = $(TOPDIR)
+SPECDIR = $(TOPDIR)/pkg
+SRCRPMDIR = $(TOPDIR)
+
+RPM_DEFINES = --define "_topdir $(TOPDIR)" \
+		--define "_builddir $(BUILDDIR)" \
+		--define "_rpmdir $(RPMDIR)" \
+		--define "_sourcedir $(SOURCEDIR)" \
+		--define "_specdir $(SPECDIR)" \
+		--define "_srcrpmdir $(SRCRPMDIR)"
+
+.PHONY: rpm srpm
 rpm: dist
-	rm -rf _build
-	mkdir -p _build/{SOURCES,BUILD,RPMS,SRPMS,SPECS}
-	cp pkg/$(PACKAGE_NAME).spec _build/SPECS
-	cp $(PACKAGE_NAME)*.tar.gz  _build/SOURCES
-	rpmbuild --define "_topdir $$PWD/_build" -ba --nodeps _build/SPECS/$(PACKAGE_NAME).spec
-	find _build/{RPMS,SRPMS} -name \*.rpm -exec mv {} . \;
-	rm -rf _build
+	mkdir -p $(BUILDDIR)
+	rpmbuild $(RPM_DEFINES) -ba --nodeps pkg/$(PACKAGE_NAME).spec
+	rm -rf $(BUILDDIR)
 
 srpm: dist
-	rm -rf _build
-	mkdir -p _build/{SOURCES,BUILD,RPMS,SRPMS,SPECS}
-	cp pkg/$(PACKAGE_NAME).spec _build/SPECS
-	cp $(PACKAGE_NAME)*.tar.gz  _build/SOURCES
-	rpmbuild --define "_topdir $$PWD/_build" -bs --nodeps _build/SPECS/$(PACKAGE_NAME).spec
-	find _build/{RPMS,SRPMS} -name \*.rpm -exec mv {} . \;
-	rm -rf _build
-
+	mkdir -p $(BUILDDIR)
+	rpmbuild $(RPM_DEFINES) -ba --nodeps pkg/$(PACKAGE_NAME).spec
+	rm -rf $(BUILDDIR)
 
 # This updates the debian version information, similar to how specfile for RPM
 # is updated. It has to be manually invoked becuase it wont work for rpm builds.
