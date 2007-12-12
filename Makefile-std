@@ -28,6 +28,13 @@ CLEANFILES += $(EXTRA_PROGRAMS)
 CLEANFILES += *.pyc */*.pyc */*/*.pyc */*/*/*.pyc
 CLEANFILES += pkg/$(PACKAGE).spec
 
+dist: ChangeLog AUTHORS
+ChangeLog:
+	(GIT_DIR=.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+
+AUTHORS:
+	(GIT_DIR=.git git-log | grep ^Author | sort |uniq > .authors.tmp && mv .authors.tmp AUTHORS; rm -f .authors.tmp) || (touch AUTHORS; echo 'git directory not found: installing possibly empty AUTHORS.' >&2)
+
 install-data-hook:
 	for i in $(REPLACE_VARS_ON_INSTALL); do      \
 	    file=$(DESTDIR)/$$i                     ;\
