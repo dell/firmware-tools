@@ -7,93 +7,55 @@
   # Dual Licenced under GNU GPL and OSL
   #
   #############################################################################
-"""inventory_firmware:
-
-usage:
-    -h | --help         print this message
-    -c | --config       Location of an additional config file to import
-    -b | --bootstrap    run inventory in bootstrap mode
+"""inventory_firmware [options]
 """
 
 from __future__ import generators
 
 # import arranged alphabetically
-import getopt
+import locale
 import os
 import sys
-import ConfigParser
+
+# these are replaced by autotools when installed.
+__VERSION__="unreleased_version"
+SYSCONFDIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","etc")
+PYTHONDIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..")
+PKGPYTHONDIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","firmwaretools")
+PKGDATADIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..")
+CONFDIR=os.path.join(SYSCONFDIR,"firmware")
+# end build system subs
+
+# import all local modules after this. This allows us to run from build tree
+sys.path.insert(0,PYTHONDIR)
 
 # our modules
+import firmwaretools.config
 import firmwaretools.clifuncs
-import firmwaretools.trace_decorator as trace_decorator
 
-class CmdlineError(Exception):pass
+def main(args):
+    try:
+        locale.setlocale(locale.LC_ALL, '')
+    except locale.Error, e:
+        # default to C locale if we get a failure.
+        print >> sys.stderr, 'Failed to set locale, defaulting to C'
+        locale.setlocale(locale.LC_ALL, 'C')
 
-def main():
-    global firmwaretools # so we can import more submodules below...
-    mode = "inventory"
-
-    ini = ConfigParser.ConfigParser()
-    altConfig = 0
-    overrides = []
-    commaSeparated=0
-    verbose=0
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "bc:fho:uv", ["help", "config=", "bootstrap", "overrides=", "up2date_mode", "verbose", "fake-mode"])
-        for option, argument in opts:
-            if option in ("-h", "--help"):
-                print __doc__
-                sys.exit(0)
-            if option in ("-c", "--config"):
-                firmwaretools.clifuncs.getConfig(ini, [argument,])
-                altConfig = 1
-            if option in ("-b", "--bootstrap"):
-                mode = "bootstrap"
-            if option in ("-u", "--up2date_mode"):
-                commaSeparated=1
-            if option in ("-o", "--override"):
-                overrides.append(argument)
-            if option in ("-v", "--verbose",):
-                verbose = verbose + 1
-                trace_decorator.debug["__main__"] = verbose
-            if option in ("-f", "--fake-mode"):
-                os.environ['DEBUG_REPOSITORY'] = "1"
-                os.environ['DEBUG_INVENTORY'] = "1"
-                import firmwaretools.mockrepository
-                import firmwaretools.mockpackage
+        cfg = firmwaretools.config.FTConfig(usage=__doc__, version=__VERSION__)
+        args = cfg.parse(sys.argv[1:])
 
-        # load standard configuration
-        if not altConfig:
-            firmwaretools.clifuncs.getConfig(ini, firmwaretools.clifuncs.configLocations)
+        for pkg in firmwaretools.clifuncs.runInventory(cfg):
+            sys.stdout.write( "%s = %s\n" % (str(pkg), pkg.version) )
 
-        for over in overrides:
-            section, key, value = over.split(",", 2)
-            if not ini.has_section(section):
-                ini.add_section(section)
-            ini.set(section, key, value)
-
-        if mode == "bootstrap":
-            os.execvp("bootstrap_firmware", sys.argv)
-        else:
-            for pkg in firmwaretools.clifuncs.runInventory(ini):
-                print "%s = %s" % (str(pkg), pkg.version)
-
-    except CmdlineError, e:
-        print
+    except Exception, e:
         print e
-        print
-        print __doc__
-        sys.exit(2)
-
-    except (getopt.GetoptError):
-        # print help information and exit:
-        print __doc__
         sys.exit(2)
 
     return 0 #shell logic
 
 
 if __name__ == "__main__":
-    sys.exit( main() )
+    sys.exit( main(sys.argv[1:]) )
 

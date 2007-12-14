@@ -14,22 +14,26 @@ some docs here eventually.
 from __future__ import generators
 
 # import arranged alphabetically
+import logging
 import os
 import re
 import sys
 
 # my stuff
 import firmwaretools.package as package
-import firmwaretools.trace_decorator
-from firmwaretools.trace_decorator import dprint, decorateAllFunctions
+from firmwaretools.trace_decorator import decorate, traceLog, getLog
+
+requires_api_version = "1.0"
 
 # ======
 # public API
 # ======
+decorate(traceLog())
 def BootstrapGenerator():
     for i in lspciGenerator():
         yield(makePciDevice(i))
 
+decorate(traceLog())
 def InventoryGenerator():
     # this module cannot really inventory anything
     # but this function is overridden in fake mode, so leave it here
@@ -45,6 +49,8 @@ def InventoryGenerator():
 # ======
 
 vendevRe = re.compile(r'^(.*)\[(\w+)\]')
+
+decorate(traceLog())
 def splitTextFromNumeric(line):
     match = vendevRe.search(line)
     if match:
@@ -53,6 +59,7 @@ def splitTextFromNumeric(line):
         return (text, number)
     return None
 
+decorate(traceLog())
 def makePciDevice(oneDevData):
     kargs = {}
     
@@ -95,6 +102,7 @@ for i in ("/sbin/lspci", "/usr/bin/lspci"):
         lspciPath=i
         break
 
+decorate(traceLog())
 def lspciGenerator():
     oneDevData = {}
 
@@ -137,6 +145,7 @@ def lspciGenerator():
             oneDevData[name] = value
         fd.close()
     
+decorate(traceLog())
 def supplementOldLspciFormat(oneDevData):
     #oneDevData["device0"]
     #oneDevData["vendor"] = "old-lspci-format-fixme [%s]" % oneDevData["vendor"]
@@ -176,10 +185,7 @@ def supplementOldLspciFormat(oneDevData):
     
     return oneDevData
 
-decorateAllFunctions(sys.modules[__name__])
-
 if __name__ == "__main__":
-    #firmwaretools.trace_decorator.debug["__main__"] = 9
     for pkg in BootstrapGenerator():
         print "%s: %s" % (pkg.name, str(pkg))
 

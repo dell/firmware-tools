@@ -3,9 +3,10 @@
 # vim:noet:ts=8:sw=8:filetype=make
 
 DEB_PYTHON_SYSTEM=pysupport
+DEB_INSTALL_DOCS_ALL := doc/bootstrap.txt
 include /usr/share/cdbs/1/rules/debhelper.mk
 include /usr/share/cdbs/1/rules/simple-patchsys.mk
-include /usr/share/cdbs/1/class/python-distutils.mk
+include /usr/share/cdbs/1/class/autotools.mk
 
 # because Gutsy debhelper doesn't install triggers
 binary-predeb/firmware-tools::
@@ -16,8 +17,3 @@ install/firmware-tools::
 	install -d debian/firmware-tools/usr/share/linda/overrides
 	install -m 644 debian/linda.overrides \
 		debian/firmware-tools/usr/share/linda/overrides/firmware-tools
-
-# default distutils clean doesnt clean up a couple of files we
-# autogenerate
-clean::
-	make clean

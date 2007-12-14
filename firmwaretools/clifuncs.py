@@ -9,78 +9,50 @@
 
 from __future__ import generators
 
-import getopt
-import glob
+import logging
+import logging.config
 import os
 import sys
-import ConfigParser
 import traceback
-from trace_decorator import dprint,  decorateAllFunctions
 
-configLocations = [
-    "/etc/firmware/firmware.conf",
-    "/etc/firmware/firmware.d/*.conf",
-    "~/.firmware.conf",
-    ]
+from firmwaretools.trace_decorator import decorate, traceLog, getLog
 
+# these are replaced by autotools when installed.
+__VERSION__="unreleased_version"
+SYSCONFDIR=os.path.join(os.path.dirname(os.path.realpath(sys._getframe(0).f_code.co_filename)),"..","etc")
+CONFDIR=os.path.join(SYSCONFDIR,"firmware")
+# end build system subs
 
-def getConfig(ini, fileList):
-    for i in fileList:
-        for j in glob.glob(i):
-            if os.path.exists(j):
-                ini.read(j)
+# set up logging
+moduleLog = getLog()
+moduleVerboseLog = getLog(prefix="verbose.")
 
-def getBootstrapConfig(ini, prefix):
-    # scan config for 
-    #   -- prefix + inventory_ext_plugin
-    #   -- prefix + inventory_py_plugin
-    pluginConfigNames=( "inventory_plugin", "inventory_plugin_dir" )
-    plugins={}
-    for sect in ini.sections():
-        for opt in pluginConfigNames:
-            if ini.has_option(sect, prefix + opt):
-                # read/modify/write
-                if not ini.get(sect, prefix + opt):
-                    continue
-                i = plugins.get(prefix + opt, [])
-                i.append( ini.get(sect, prefix + opt) )
-                plugins[prefix + opt] = i
-
-    # set up python path for plugins
-    for path in plugins.get("inventory_plugin_dir", []):
-        sys.path.append(path)
-
-    return plugins
-
-
-def runInventory(ini):
+decorate(traceLog())
+def runInventory(cfg):
     # returns a list of devices on the system
-    return runSomething(ini, "", "inventory_plugin", "InventoryGenerator")
+    return runSomething(cfg, "InventoryGenerator")
 
-def runBootstrapInventory(ini):
-    return runSomething(ini, "bootstrap_", "bootstrap_inventory_plugin", "BootstrapGenerator")
+decorate(traceLog())
+def runBootstrapInventory(cfg):
+    return runSomething(cfg, "BootstrapGenerator")
 
 # gets a list of modules and runs a generator function from each module
-def runSomething(ini, prefix, pluginName, function):
-    plugins = getBootstrapConfig(ini, prefix)
-
-    for pymod in plugins.get(pluginName, []):
+decorate(traceLog())
+def runSomething(cfg, functionName):
+    for n,det in cfg.plugins.items():
+        moduleVerboseLog.info("Try module: %s" % n)
         try:
-            module = __import__(pymod, globals(),  locals(), [])
-            for i in pymod.split(".")[1:]:
-                module = getattr(module, i)
+            try:
+                func = getattr(det['module'], functionName)
+                moduleVerboseLog.info("  Got function: %s" % functionName)
+            except AttributeError:
+                continue
 
-            for thing in getattr(module,function)():
+            moduleVerboseLog.info("  Running function.")
+            gen = func()
+            for thing in gen:
                 yield thing
 
-        except ImportError, e:
-            dprint("module is missing.\n\tModule: %s\n\tFunction: %s\n" % (module, function))
-            dprint(''.join(traceback.format_exception(sys.exc_type, sys.exc_value, sys.exc_traceback)))
-        except AttributeError, e:
-            dprint("AttributeError usually means the module is missing the specified function.\n\tModule: %s\n\tFunction: %s\n" % (module, function))
-            dprint(''.join(traceback.format_exception(sys.exc_type, sys.exc_value, sys.exc_traceback)))
-        except:   # don't let module messups propogate up
-            dprint(''.join(traceback.format_exception(sys.exc_type, sys.exc_value, sys.exc_traceback)))
+        except Exception, e:
+            moduleLog.error(''.join(traceback.format_exception(sys.exc_type, sys.exc_value, sys.exc_traceback)))
 
-
-decorateAllFunctions(sys.modules[__name__])

@@ -11,10 +11,16 @@ import unittest
 
 class TestCase(unittest.TestCase):
     def setUp(self):
-        pass
+        if globals().get('firmwaretools'): del(firmwaretools)
+        for k in sys.modules.keys():
+            if k.startswith("firmwaretools"):
+                del(sys.modules[k])
     
     def tearDown(self):
-        pass
+        if globals().get('firmwaretools'): del(firmwaretools)
+        for k in sys.modules.keys():
+            if k.startswith("firmwaretools"):
+                del(sys.modules[k])
         
     def testExcCommandNoTimeout(self):
         import firmwaretools.pycompat as pycompat

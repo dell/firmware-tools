@@ -7,27 +7,31 @@
   # Dual Licenced under GNU GPL and OSL
   #
   #############################################################################
-"""bootstrap_firmware: 
-
-usage:
-    -h | --help         print this message
-    -c | --config       Location of an additional config file to import
-    -b | --bootstrap    run inventory in bootstrap mode
+"""bootstrap_firmware [options]
 """
 
 from __future__ import generators
 
 # import arranged alphabetically
-import getopt
+import locale
 import os
 import sys
-import ConfigParser
+
+# these are replaced by autotools when installed.
+__VERSION__="unreleased_version"
+SYSCONFDIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","etc")
+PYTHONDIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..")
+PKGPYTHONDIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","firmwaretools")
+PKGDATADIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..")
+CONFDIR=os.path.join(SYSCONFDIR,"firmware")
+# end build system subs
+
+# import all local modules after this. This allows us to run from build tree
+sys.path.insert(0,PYTHONDIR)
 
 # our modules
+import firmwaretools.config
 import firmwaretools.clifuncs
-import firmwaretools.trace_decorator as trace_decorator
-
-class CmdlineError(Exception):pass
 
 def debianCleanName(s):
     s = s.replace('_', '-')
@@ -36,70 +40,34 @@ def debianCleanName(s):
     s = s.lower()
     return s
 
-def main():
-    global firmwaretools # so we can import more submodules below...
-    ini = ConfigParser.ConfigParser()
-    altConfig = 0
-    overrides = []
-    commaSeparated=0
-    verbose=0
-    aptMode = 0
+
+def main(args):
+    try:
+        locale.setlocale(locale.LC_ALL, '')
+    except locale.Error, e:
+        # default to C locale if we get a failure.
+        print >> sys.stderr, 'Failed to set locale, defaulting to C'
+        locale.setlocale(locale.LC_ALL, 'C')
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "bc:fho:uav", ["help", "config=", "overrides=", "up2date_mode", "apt_mode", "bootstrap", "verbose", "fake-mode"])
-        for option, argument in opts:
-            if option in ("-h", "--help"):
-                print __doc__
-                sys.exit(0)
-            if option in ("-c", "--config"):
-                firmwaretools.clifuncs.getConfig(ini, [argument,])
-                altConfig = 1
-            if option in ("-u", "--up2date_mode"):
-                commaSeparated=1
-            if option in ("-a", "--apt_mode"):
-                aptMode = 1
-            if option in ("-o", "--override"):
-                overrides.append(argument)
-            if option in ("-b", "--bootstrap"):
-                pass # ignore for backwards compat
-            if option in ("-v", "--verbose",):
-                verbose = verbose + 1
-                trace_decorator.debug["__main__"] = verbose
-            if option in ("-f", "--fake-mode"):
-                os.environ['DEBUG_REPOSITORY'] = "1"
-                os.environ['DEBUG_INVENTORY'] = "1"
-                os.environ['DEBUG_BOOTSTRAP'] = "1"
-                import firmwaretools.mockrepository
-                import firmwaretools.mockpackage
+        cfg = firmwaretools.config.FTConfig(usage=__doc__, version=__VERSION__)
+        cfg.add_option("-u", "--up2date_mode", action="store_true", dest="comma_separated", default=False, help="Comma-separate values for use with up2date.")
+        cfg.add_option("-a", "--apt_mode", action="store_true", dest="apt_mode", default=False, help="fixup names so that they are compatible with apt")
 
-        # load standard configuration
-        if not altConfig:
-            firmwaretools.clifuncs.getConfig(ini, firmwaretools.clifuncs.configLocations)
+        opts, args = cfg.parse(sys.argv[1:])
 
-        for over in overrides:
-            section, key, value = over.split(",", 2)
-            if not ini.has_section(section):
-                ini.add_section(section)
-            ini.set(section, key, value)
-
-        for pkg in firmwaretools.clifuncs.runBootstrapInventory(ini):
-            if aptMode:
+        for pkg in firmwaretools.clifuncs.runBootstrapInventory(cfg):
+            if opts.apt_mode:
                 sys.stdout.write( "%s " % debianCleanName(pkg.name) )
-            elif commaSeparated:
+            elif opts.comma_separated:
                 sys.stdout.write( "%s," % pkg.name )
             else:
                 print "%s" % pkg.name
 
-
-    except CmdlineError, e:
+    except Exception, e:
         print
         print e
         print
-        print __doc__
-        sys.exit(2)
-
-    except (getopt.GetoptError):
-        # print help information and exit:
         print __doc__
         sys.exit(2)
 
@@ -107,5 +75,5 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit( main() )
+    sys.exit( main(sys.argv[1:]) )
 
