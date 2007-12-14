@@ -108,9 +108,9 @@ debmagic:
 	rm $(DEB_DESTDIR)/$(RELEASE_STRING)/debian/changelog.in 
 	cd $(DEB_DESTDIR)/$(RELEASE_STRING) ; \
 	./configure ; \
-	pdebuild --use-pdebuild-internal --buildresult $(PWD)/dist/$(DIST) ; \
+	pdebuild --use-pdebuild-internal --buildresult $(TOPDIR)/dist/$(DIST) ; \
 	dpkg-buildpackage -D -S -sa -rfakeroot ; \
-	mv ../$(RELEASE_NAME)_* $(DEB_DESTDIR)/$(DIST) ; \
+	mv ../$(RELEASE_NAME)_* $(TOPDIR)/dist/$(DIST) ; \
 	cd -
 
 debs:
