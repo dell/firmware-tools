@@ -4,12 +4,12 @@
 
 ####################################
 # change version here.
-AC_INIT([firmware-tools],[1.5.11])
+AC_INIT([firmware-tools],[1.6.0])
 
 temp_RELEASE_NAME=firmware-tools
 temp_RELEASE_MAJOR=1
-temp_RELEASE_MINOR=5
-temp_RELEASE_SUBLEVEL=11
+temp_RELEASE_MINOR=6
+temp_RELEASE_SUBLEVEL=0
 temp_RELEASE_EXTRALEVEL=
 ####################################
 
@@ -70,6 +70,10 @@ AC_SUBST([RELEASE_NAME RELEASE_MAJOR RELEASE_MINOR RELEASE_SUBLEVEL RELEASE_EXTR
 echo "PACKAGE_NAME='$PACKAGE_NAME'" > version
 echo "PACKAGE_VERSION='$PACKAGE_VERSION'" >> version
 echo "PACKAGE_STRING='$PACKAGE_STRING'" >> version
+
+# firmware-tools oddity: package name cannot contain '-', so we have to fix it
+pkgpythondir=\${pythondir}/firmwaretools
+pkgpyexecdir=\${pyexecdir}/firmwaretools
 
 # generate files and exit
 AC_CONFIG_FILES([ Makefile pkg/${PACKAGE_NAME}.spec ])
