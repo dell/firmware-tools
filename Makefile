@@ -43,8 +43,7 @@ DIST_COMMON = README $(am__configure_deps) $(dist_sbin_SCRIPTS) \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/configure \
 	$(top_srcdir)/pkg/${PACKAGE_NAME}.spec.in AUTHORS COPYING.LIB \
-	ChangeLog INSTALL NEWS pkg/install-sh pkg/missing \
-	pkg/py-compile
+	ChangeLog INSTALL pkg/install-sh pkg/missing pkg/py-compile
 bin_PROGRAMS =
 EXTRA_PROGRAMS =
 subdir = .
@@ -192,8 +191,7 @@ RELEASE_VERSION = $(RELEASE_MAJOR).$(RELEASE_MINOR).$(RELEASE_SUBLEVEL)$(RELEASE
 RELEASE_STRING = $(RELEASE_NAME)-$(RELEASE_VERSION)
 CLEANFILES = $(RELEASE_NAME)-*.tar.gz $(RELEASE_NAME)-*.tar.bz2 \
 	$(RELEASE_NAME)-*.rpm _buildtemp version $(EXTRA_PROGRAMS) \
-	*.pyc */*.pyc */*/*.pyc */*/*/*.pyc CLEANFILES += \
-	pkg/$(PACKAGE).spec
+	*.pyc */*.pyc */*/*.pyc */*/*/*.pyc pkg/$(PACKAGE).spec
 DISTCLEANFILES = *~ 
 EXTRA_DIST = etc doc glade pkg/debian test yum-plugin COPYING-GPL \
 	COPYING-OSL COPYING.LIB
@@ -215,12 +213,6 @@ RPM_DEFINES = --define "_topdir $(TOPDIR)" \
 # is updated. It has to be manually invoked becuase it wont work for rpm builds.
 CHANGELOG = pkg/debian/changelog
 CHANGELOG_TEXT = "Placeholder changelog entry. Please update this for release."
-
-# to specify key if package is to be signed: make -e deb debsign=-k<keyname>
-debsign = -uc -us
-
-# use debopts to do things like override maintainer email, etc.
-deb_destdir = $(PWD)/dist
 TARBALL = $(RELEASE_STRING).tar.gz
 pkgetcdir = $(sysconfdir)/firmware/
 nodist_pkgetc_DATA = etc/firmware/firmware.conf
@@ -268,15 +260,15 @@ $(srcdir)/Makefile.in: # $(srcdir)/Makefile.am $(srcdir)/Makefile-std $(am__conf
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
-	      echo ' cd $(srcdir) && $(AUTOMAKE) --gnu '; \
-	      cd $(srcdir) && $(AUTOMAKE) --gnu  \
+	      echo ' cd $(srcdir) && $(AUTOMAKE) --foreign '; \
+	      cd $(srcdir) && $(AUTOMAKE) --foreign  \
 		&& exit 0; \
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  Makefile
+	  $(AUTOMAKE) --foreign  Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -873,6 +865,13 @@ uninstall-am: uninstall-binPROGRAMS uninstall-dist_sbinSCRIPTS \
 	uninstall-pkgpythonPYTHON
 
 
+dist: ChangeLog AUTHORS
+ChangeLog:
+	(GIT_DIR=.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+
+AUTHORS:
+	(GIT_DIR=.git git-log | grep ^Author | sort |uniq > .authors.tmp && mv .authors.tmp AUTHORS; rm -f .authors.tmp) || (touch AUTHORS; echo 'git directory not found: installing possibly empty AUTHORS.' >&2)
+
 install-data-hook:
 	for i in $(REPLACE_VARS_ON_INSTALL); do      \
 	    file=$(DESTDIR)/$$i                     ;\
@@ -911,34 +910,29 @@ changelog: $(CHANGELOG)
 .PHONY: $(CHANGELOG)
 $(CHANGELOG): version.mk
 	cd pkg/ && fakeroot debchange -v $(RELEASE_VERSION)-$(DEB_RELEASE) $(CHANGELOG_TEXT)
-deb: dist
-	[ -n "$$DIST" ] || (echo "Must set DIST={gutsy,hardy,sid,...} for deb and sdeb targets"; exit 1)
-	[ -n "$$DIST" ] || echo "Remember to set DISTTAG='~gutsy1' for deb and sdeb targets for backports"
-	rm -rf _build
-	mkdir -p dist  _build
-	cp $(TARBALL) _build/$(RELEASE_NAME)_$(RELEASE_VERSION).orig.tar.gz
-	tar -C _build -xzf $(TARBALL)
-	mv _build/$(RELEASE_STRING)/pkg/debian _build/$(RELEASE_STRING)/debian
-	chmod +x _build/$(RELEASE_STRING)/debian/rules
-	sed -e "s/#DISTTAG#/$(DISTTAG)/g" -e "s/#DIST#/$(DIST)/g" _build/$(RELEASE_STRING)/debian/changelog.in > _build/$(RELEASE_STRING)/debian/changelog 
-	rm _build/$(RELEASE_STRING)/debian/changelog.in 
-	cd _build/$(RELEASE_STRING); pdebuild --use-pdebuild-internal --auto-debsign --buildresult $(PWD)/dist
-	rm -rf _build
 
-sdeb: dist
+debmagic:
+	[ -n "$$DEB_DESTDIR" ] || (echo "Must set DEB_DESTDIR=/tmp/... for deb and sdeb targets"; exit 1)
 	[ -n "$$DIST" ] || (echo "Must set DIST={gutsy,hardy,sid,...} for deb and sdeb targets"; exit 1)
 	[ -n "$$DIST" ] || echo "Remember to set DISTTAG='~gutsy1' for deb and sdeb targets for backports"
-	rm -rf _build
-	mkdir -p dist _build
-	cp $(TARBALL) _build/$(RELEASE_NAME)_$(RELEASE_VERSION).orig.tar.gz
-	tar -C _build -xzf $(TARBALL)
-	mv _build/$(RELEASE_STRING)/pkg/debian _build/$(RELEASE_STRING)/debian
-	chmod +x _build/$(RELEASE_STRING)/debian/rules
-	sed -e "s/#DISTTAG#/$(DISTTAG)/g" -e "s/#DIST#/$(DIST)/g" _build/$(RELEASE_STRING)/debian/changelog.in > _build/$(RELEASE_STRING)/debian/changelog
-	rm _build/$(RELEASE_STRING)/debian/changelog.in
-	cd _build/$(RELEASE_STRING) ;dpkg-buildpackage -D -S -sa -rfakeroot
-	mv _build/$(RELEASE_NAME)_* $(PWD)/dist
-	rm -rf _build
+	mkdir -p dist/$(DIST)
+	cp $(TARBALL) $(DEB_DESTDIR)/$(RELEASE_NAME)_$(RELEASE_VERSION).orig.tar.gz
+	tar -C $(DEB_DESTDIR) -xzf $(TARBALL)
+	cp -ar pkg/debian $(DEB_DESTDIR)/$(RELEASE_STRING)/debian
+	chmod +x $(DEB_DESTDIR)/$(RELEASE_STRING)/debian/rules
+	sed -e "s/#DISTTAG#/$(DISTTAG)/g" -e "s/#DIST#/$(DIST)/g" $(DEB_DESTDIR)/$(RELEASE_STRING)/debian/changelog.in > $(DEB_DESTDIR)/$(RELEASE_STRING)/debian/changelog 
+	rm $(DEB_DESTDIR)/$(RELEASE_STRING)/debian/changelog.in 
+	cd $(DEB_DESTDIR)/$(RELEASE_STRING) ; \
+	./configure ; \
+	pdebuild --use-pdebuild-internal --buildresult $(TOPDIR)/dist/$(DIST) ; \
+	dpkg-buildpackage -D -S -sa -rfakeroot ; \
+	mv ../$(RELEASE_NAME)_* $(TOPDIR)/dist/$(DIST) ; \
+	cd -
+
+debs:
+	tmp_dir=`mktemp -d /tmp/firmware-tools.XXXXXXXX` ; \
+	make debmagic DEB_DESTDIR=$${tmp_dir} DIST=$(DIST) DISTTAG=$(DISTTAG) ; \
+	rm -rf $${tmp_dir}
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
