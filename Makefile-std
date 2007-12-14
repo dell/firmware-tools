@@ -115,5 +115,5 @@ debmagic:
 
 debs:
 	tmp_dir=`mktemp -d /tmp/firmware-tools.XXXXXXXX` ; \
-	make debmagic DEB_DESTDIR=$${tmp_dir} DIST=$(DIST) DISTTAG=$(DISTTAG) ; \ 
+	make debmagic DEB_DESTDIR=$${tmp_dir} DIST=$(DIST) DISTTAG=$(DISTTAG) ; \
 	rm -rf $${tmp_dir}
