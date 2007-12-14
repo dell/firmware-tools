@@ -11,7 +11,7 @@ Homepage: http://linux.dell.com
 Package: firmware-tools
 Architecture: all
 # Depends: python-rpm provides a useful version comparison function
-Depends: ${python:Depends}, python-rpm
+Depends: ${python:Depends}, python-rpm, python-glade2
 Provides: ${python:Provides}
 Description: Scripts and tools to manage firmware and BIOS updates
  The firmware-tools project provides tools to inventory hardware and a plugin
