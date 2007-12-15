@@ -9,11 +9,6 @@ include /usr/share/cdbs/1/rules/simple-patchsys.mk
 include /usr/share/cdbs/1/class/autotools.mk
 include /usr/share/cdbs/1/rules/utils.mk
 
-# because Gutsy debhelper doesn't install triggers
-binary-predeb/firmware-tools::
-	install -m 644 -o root -g root debian/triggers \
-                debian/firmware-tools/DEBIAN/triggers
-
 binary-install/firmware-tools::
 	dh_pysupport -pfirmware-tools
 
@@ -21,3 +16,9 @@ install/firmware-tools::
 	install -d debian/firmware-tools/usr/share/linda/overrides
 	install -m 644 debian/linda.overrides \
 		debian/firmware-tools/usr/share/linda/overrides/firmware-tools
+
+# because Gutsy debhelper doesn't install triggers
+binary-predeb/firmware-tools::
+	install -m 644 -o root -g root debian/triggers \
+                debian/firmware-tools/DEBIAN/triggers
+
