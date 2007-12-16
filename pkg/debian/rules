@@ -16,6 +16,7 @@ install/firmware-tools::
 	install -d debian/firmware-tools/usr/share/linda/overrides
 	install -m 644 debian/linda.overrides \
 		debian/firmware-tools/usr/share/linda/overrides/firmware-tools
+	mv ChangeLog changelog
 
 # because Gutsy debhelper doesn't install triggers
 binary-predeb/firmware-tools::
