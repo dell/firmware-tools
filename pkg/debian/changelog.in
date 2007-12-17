@@ -1,3 +1,9 @@
+firmware-tools (1.6.0-0ubuntu1#DISTTAG#) #DIST#; urgency=low
+
+  * update to new 1.6.0 upstream, which now uses autotools
+
+ -- Matt Domsch <Matt_Domsch@dell.com>  Sun, 16 Dec 2007 21:06:38 -0600
+
 firmware-tools (1.5.10-0ubuntu5#DISTTAG#) #DIST#; urgency=low
 
   * add linda.overrides for yum-plugins warning
