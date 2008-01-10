@@ -26,9 +26,9 @@ __VERSION__="unreleased_version"
 SYSCONFDIR=os.path.realpath(os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","etc"))
 PYTHONDIR=os.path.realpath(os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),".."))
 PKGPYTHONDIR=os.path.realpath(os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","firmwaretools"))
-PKGDATADIR=os.path.realpath(os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),".."))
+PKGDATADIR=os.path.realpath(os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","glade"))
 CONFDIR=os.path.realpath(os.path.join(SYSCONFDIR,"firmware"))
-GLADEDIR=os.path.realpath(PKGDATADIR + "/glade")
+GLADEDIR=os.path.realpath(PKGDATADIR)
 # end build system subs
 
 # import all local modules after this. This allows us to run from build tree
