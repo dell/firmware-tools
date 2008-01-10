@@ -55,8 +55,8 @@ def timedSpinPrint( strn, start ):
 # User should handle this if they specify a timeout
 class commandTimeoutExpired(Exception): pass
 
-# the problem with os.system() is that the command that is run gets any 
-# keyboard input and/or signals. This means that <CTRL>-C interrupts the 
+# the problem with os.system() is that the command that is run gets any
+# keyboard input and/or signals. This means that <CTRL>-C interrupts the
 # sub-program instead of the python program. This helper function fixes that.
 # It also allows us to set up a maximum timeout before all children are killed
 decorate(traceLog())
@@ -64,7 +64,7 @@ def executeCommand(cmd, timeout=0):
     class alarmExc(Exception): pass
     def alarmhandler(signum,stackframe):
         raise alarmExc("timeout expired")
-    
+
     pid = os.fork()
     if pid:
         #parent
@@ -135,7 +135,7 @@ def mktempdir( prefix="/tmp" ):
 decorate(traceLog())
 def walkPath(topdir, direction=0):
     rawFiles = os.listdir(topdir)
-    
+
     files=[f for f in rawFiles if os.path.isfile(os.path.join(topdir,f))]
     dirs =[f for f in rawFiles if os.path.isdir (os.path.join(topdir,f))]
 
@@ -161,7 +161,7 @@ def runLongProcess(function, args=None, kargs=None, waitLoopFunction=None):
             waitLoopFunction()
 
     # run waitLoopFunction one last time before exit.
-    # gives status opportunity to update to 100% 
+    # gives status opportunity to update to 100%
     if waitLoopFunction is not None:
         waitLoopFunction()
 

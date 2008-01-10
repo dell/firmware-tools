@@ -15,13 +15,13 @@ class TestCase(unittest.TestCase):
         for k in sys.modules.keys():
             if k.startswith("firmwaretools"):
                 del(sys.modules[k])
-    
+
     def tearDown(self):
         if globals().get('firmwaretools'): del(firmwaretools)
         for k in sys.modules.keys():
             if k.startswith("firmwaretools"):
                 del(sys.modules[k])
-        
+
     def testCompareVersions(self):
         import firmwaretools.package as package
         self.assertEqual(-1, package.defaultCompareStrategy( "1.0", "2.0"))

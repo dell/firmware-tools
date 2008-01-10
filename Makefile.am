@@ -43,6 +43,7 @@ REPLACE_VARS_ON_INSTALL= 		   \
 	$(sbindir)/inventory_firmware_gui  \
 	$(sbindir)/update_firmware	   \
 	$(pkgpythondir)/clifuncs.py	   \
-	$(pkgpythondir)/config.py
+	$(pkgpythondir)/config.py	   \
+	$(pkgpythondir)/__init__.py
 
 

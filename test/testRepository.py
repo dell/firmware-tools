@@ -23,19 +23,19 @@ class TestCase(unittest.TestCase):
         for k in sys.modules.keys():
             if k.startswith("firmwaretools"):
                 del(sys.modules[k])
-    
+
     def tearDown(self):
         if globals().get('firmwaretools'): del(firmwaretools)
         for k in sys.modules.keys():
             if k.startswith("firmwaretools"):
                 del(sys.modules[k])
-        
+
     def testRepositoryInventory(self):
         import firmwaretools.repository as repository
         r = repository.Repository(datafiles)
         for pkg in r.iterPackages():
             pass
- 
+
     def testIterLatest(self):
         import firmwaretools.repository as repository
         r = repository.Repository(datafiles)
@@ -130,7 +130,7 @@ class TestCase(unittest.TestCase):
         updateSet = repository.generateUpdateSet(r, systemInventory)
 
         self.assertEqual( updateSet.getUpdatePackageForDevice(p).name, "testpack_newpkgstrat" )
-        self.assertEqual( updateSet.getUpdatePackageForDevice(p).version, "a08") 
+        self.assertEqual( updateSet.getUpdatePackageForDevice(p).version, "a08")
         res = updateSet.getUpdatePackageForDevice(p).install()
         self.assertEqual( res, "SUCCESS" )
 
@@ -195,7 +195,7 @@ class TestCase(unittest.TestCase):
 
 
     def testGenerateUpdateSet_SystemSpecific1(self):
-        # test the case where system specific update available that doesn't 
+        # test the case where system specific update available that doesn't
         # apply to current system
         import firmwaretools.repository as repository
         import firmwaretools.package as package
@@ -262,7 +262,7 @@ class TestCase(unittest.TestCase):
 
 
     def testGenerateUpdateSet_testRequires1(self):
-        # test the case where system specific update available that doesn't 
+        # test the case where system specific update available that doesn't
         # apply to current system
         import firmwaretools.repository as repository
         import firmwaretools.package as package

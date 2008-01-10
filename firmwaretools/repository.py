@@ -42,12 +42,12 @@ def makePackage(configFile):
     else:
         displayname = "unknown"
 
-    p = package.RepositoryPackage( 
+    p = package.RepositoryPackage(
         displayname = displayname,
         name=conf.get("package", "name"),
         version=conf.get("package", "version"),
-        conf=conf, 
-        path=os.path.dirname(configFile), 
+        conf=conf,
+        path=os.path.dirname(configFile),
         )
 
     try:
@@ -97,7 +97,7 @@ def generateUpdateSet(repo, systemInventory, cb=(nullFunc, None)):
     return set
 
 
-class UpdateSet(object): 
+class UpdateSet(object):
     decorate(traceLog())
     def __init__(self, *args, **kargs):
         self.deviceList = {}
@@ -167,7 +167,7 @@ class UpdateSet(object):
             else:
                 del(self.deviceList[device.name]["pinned_update"])
             raise
-            
+
 
     decorate(traceLog())
     def unPinDevice(self, device):
@@ -191,7 +191,7 @@ class UpdateSet(object):
                 memento['savePin'][deviceName] = { 'device': details["device"], 'hasPin': 1, 'oldPin': details["pinned_update"] }
             else:
                 memento['savePin'][deviceName] = { 'device': details["device"], 'hasPin': 0, 'oldPin': None }
-                
+
         memento["internal.allowReflash"] = self.allowReflash
         memento["internal.allowDowngrade"] = self.allowDowngrade
         return memento
@@ -228,27 +228,27 @@ class UpdateSet(object):
         if not self.deviceList.get(candidate.name):
             cb[0]( who="checkRules", what="package_not_present_on_system", package=candidate, cb=cb)
             return 0
-            
+
         # is candidate newer than what is either installed or scheduled for install
         if not self.allowDowngrade and unionInventory[candidate.name].compareVersion(candidate) > 0:
             cb[0]( who="checkRules", what="package_not_newer", package=candidate, systemPackage=unionInventory[candidate.name], cb=cb)
             return 0
-    
+
         # is candidate newer than what is either installed or scheduled for install
         if not self.allowReflash and unionInventory[candidate.name].compareVersion(candidate) == 0:
             cb[0]( who="checkRules", what="package_same_version", package=candidate, systemPackage=unionInventory[candidate.name], cb=cb)
             return 0
-    
+
         #check to see if this package has specific system requirements
         # for now, check if we are on a specific system by checking for
-        # a BIOS package w/ matching id. In future, may have specific 
+        # a BIOS package w/ matching id. In future, may have specific
         # system package.
         if hasattr(candidate,"conf") and candidate.conf.has_option("package", "limit_system_support"):
             systemVenDev = candidate.conf.get("package", "limit_system_support")
             if not unionInventory.get( "system_bios(%s)" % systemVenDev ):
                 cb[0]( who="checkRules", what="fail_limit_system_check", package=candidate, cb=cb )
                 return 0
-    
+
         #check generic dependencies
         if hasattr(candidate,"conf") and candidate.conf.has_option("package", "requires"):
             requires = candidate.conf.get("package", "requires")
@@ -294,7 +294,7 @@ class UpdateSet(object):
             update = self.getUpdatePackageForDevice(details["device"])
             if update:
                 updateDeviceList.append( (details["device"], update) )
-    
+
         workToDo = 1
         while workToDo:
             workToDo = 0
@@ -305,14 +305,14 @@ class UpdateSet(object):
                         yield (device, candidate)
                     else:
                         yield candidate
-    
+
                     # move pkg from to-install list to inventory list
                     updateDeviceList.remove((device,candidate))
                     unionInventory[candidate.name] = candidate
-    
+
                     # need another run-through in case this fixes deps for another package
                     workToDo = 1
-    
+
         if len(updateDeviceList):
             raise CircularDependencyError("packages have circular dependency, or are otherwise uninstallable.")
 

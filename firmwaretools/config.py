@@ -43,6 +43,7 @@ class FTConfig(OptionParser):
         OptionParser.__init__(self, *args, **kargs)
 
         self.add_option("-c", "--config", help="Override default config file with user-specified config file.", action="append", default=[])
+        self.add_option("--extra-plugin-config", help="Add additional plugin config file.", action="append", default=[], dest="extra_plugins")
         self.add_option("-v", "--verbose", action="count", dest="verbosity", default=1, help="Display more verbose output.")
         self.add_option("-q", "--quiet", action="store_const", const=0, dest="verbosity", help="Minimize program output. Only errors and warnings are displayed.")
         self.add_option("--trace", action="store_true", dest="trace", default=False, help="Enable verbose function tracing.")
@@ -51,9 +52,9 @@ class FTConfig(OptionParser):
         self.add_option("--listplugins", action="store_const", const="listplugins", dest="mode", default='default', help="list available plugins.")
 
         self.parseOptionsFirst_novalopts = ['--version','-q', '-v', "--quiet", "--verbose", "--trace"]
-        self.parseOptionsFirst_valopts = ['-c', '--config', '--disableplugin']
+        self.parseOptionsFirst_valopts = ['-c', '--config', '--disableplugin', "--extra-plugin-config"]
 
-        defaults = { 
+        defaults = {
             "sysconfdir": SYSCONFDIR,
             "pythondir": PYTHONDIR,
             "pkgpythondir": PKGPYTHONDIR,
@@ -68,15 +69,11 @@ class FTConfig(OptionParser):
         self.opts = self.firstParse(args)
         if not self.opts.config:
             self.opts.config = [os.path.join(CONFDIR, "firmware.conf"), ]
-        
+
         # read main config file
         logging.config.fileConfig(self.opts.config[0])
         for i in self.opts.config:
             self.ini.read(i)
-
-        # read all addon config files
-        for file in glob.glob(os.path.join(self.ini.get("main", "plugin_config_dir"), "*.conf")):
-            self.ini.read(file)
 
         # set up logging
         self.root_log       = logging.getLogger()
@@ -100,7 +97,13 @@ class FTConfig(OptionParser):
 
         moduleVerboseLog.info("firmware-tools version: %s" % __VERSION__)
         moduleVerboseLog.info("COMMAND: %s" % ' '.join(args))
-        moduleVerboseLog.info("plugin_config_dir: %s" % os.path.join(self.ini.get("main", "plugin_config_dir"), "*.conf"))
+
+        # read all addon config files
+        plugin_config_dir=os.path.join(self.ini.get("main", "plugin_config_dir"), "*.conf")
+        plugin_cfg_files = glob.glob(plugin_config_dir) + self.opts.extra_plugins
+        for file in plugin_cfg_files:
+            moduleVerboseLog.debug("plugin config: %s" % file)
+            self.ini.read(file)
 
         # load plugins
         self.plugins = self.loadPlugins()
@@ -113,7 +116,7 @@ class FTConfig(OptionParser):
             moduleVerboseLog.info("Activating fake mode.")
             import repository
             import mockrepository
-            # remove all other bootstrap, inventory and repository 
+            # remove all other bootstrap, inventory and repository
             for n, v in self.plugins.items():
                 for i in ("InventoryGenerator", "BootstrapGenerator"):
                     if hasattr(v['module'], i):
@@ -135,22 +138,29 @@ class FTConfig(OptionParser):
         return self.parse_args(args=args)[0]
 
     decorate(traceLog())
-    def loadPlugins(self):
+    def loadPlugins(self, types="CORE"):
         # scan config for plugins and load them.
         plugins={}
         for sect in self.ini.sections():
             if self.ini.has_option(sect, "plugin_enabled"):
-                moduleVerboseLog.debug('Checking "%s"', sect)
-                enabled = parseBool(self.ini.get(sect, "plugin_enabled"))
-                if not enabled:
-                    continue
+                try:
+                    moduleVerboseLog.debug('Checking plugin: "%s"', sect)
+                    enabled = parseBool(self.ini.get(sect, "plugin_enabled"))
+                    if not enabled:
+                        continue
+                    if not self.ini.get(sect, "plugin_type") in types:
+                        continue
 
-                moduleName = getOption(self.ini, sect, "plugin_module")
-                searchPath = getOption(self.ini, sect, "plugin_path")
+                    moduleName = getOption(self.ini, sect, "plugin_module")
+                    searchPath = getOption(self.ini, sect, "plugin_path")
 
-                plugins[moduleName] = self._loadModule(moduleName, searchPath)
-                plugins[moduleName]["section"] = sect
-                plugins[moduleName]["enabled"] = enabled
+                    plugins[moduleName] = self._loadModule(moduleName, searchPath)
+                    plugins[moduleName]["section"] = sect
+                    plugins[moduleName]["enabled"] = enabled
+                except (ConfigParser.NoOptionError,), e:
+                    getLog().warning("misconfigured plugin: %s" % str(e) )
+                    pass
+
 
         return plugins
 
@@ -177,7 +187,7 @@ class FTConfig(OptionParser):
 
         moduleVerboseLog.info('Loading "%s" plugin', moduleName)
         return {'module': module, 'name': moduleName}
- 
+
 
 decorate(traceLog())
 def parseBool(opt):
@@ -192,50 +202,50 @@ def getOption(ini, section, option, default=None):
     return default
 
 # filched from yum cli.py
-def _filtercmdline(novalopts, valopts, args): 
-    '''Keep only specific options from the command line argument list 
+def _filtercmdline(novalopts, valopts, args):
+    '''Keep only specific options from the command line argument list
 
-    This function allows us to peek at specific command line options when using 
-    the optparse module. This is useful when some options affect what other 
-    options should be available. 
+    This function allows us to peek at specific command line options when using
+    the optparse module. This is useful when some options affect what other
+    options should be available.
 
-    @param novalopts: A sequence of options to keep that don't take an argument. 
-    @param valopts: A sequence of options to keep that take a single argument. 
-    @param args: The command line arguments to parse (as per sys.argv[:1] 
-    @return: A list of strings containing the filtered version of args. 
+    @param novalopts: A sequence of options to keep that don't take an argument.
+    @param valopts: A sequence of options to keep that take a single argument.
+    @param args: The command line arguments to parse (as per sys.argv[:1]
+    @return: A list of strings containing the filtered version of args.
 
-    Will raise ValueError if there was a problem parsing the command line. 
-    ''' 
-    out = [] 
-    args = list(args)       # Make a copy because this func is destructive 
- 
-    while len(args) > 0: 
-        a = args.pop(0) 
-        if '=' in a: 
-            opt, _ = a.split('=', 1) 
-            if opt in valopts: 
-                out.append(a) 
- 
-        elif a in novalopts: 
-            out.append(a) 
- 
-        elif a in valopts: 
-            if len(args) < 1: 
-                raise ValueError 
-            next = args.pop(0) 
-            if next[0] == '-': 
-                raise ValueError 
- 
-            out.extend([a, next]) 
-        
-        else: 
-            # Check for single letter options that take a value, where the 
-            # value is right up against the option 
-            for opt in valopts: 
-                if len(opt) == 2 and a.startswith(opt): 
-                    out.append(a) 
- 
-    return out 
+    Will raise ValueError if there was a problem parsing the command line.
+    '''
+    out = []
+    args = list(args)       # Make a copy because this func is destructive
+
+    while len(args) > 0:
+        a = args.pop(0)
+        if '=' in a:
+            opt, _ = a.split('=', 1)
+            if opt in valopts:
+                out.append(a)
+
+        elif a in novalopts:
+            out.append(a)
+
+        elif a in valopts:
+            if len(args) < 1:
+                raise ValueError
+            next = args.pop(0)
+            if next[0] == '-':
+                raise ValueError
+
+            out.extend([a, next])
+
+        else:
+            # Check for single letter options that take a value, where the
+            # value is right up against the option
+            for opt in valopts:
+                if len(opt) == 2 and a.startswith(opt):
+                    out.append(a)
+
+    return out
 
 decorate(traceLog())
 def parsever(apiver):

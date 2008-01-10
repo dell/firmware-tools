@@ -37,7 +37,7 @@ decorate(traceLog())
 def InventoryGenerator():
     # this module cannot really inventory anything
     # but this function is overridden in fake mode, so leave it here
-    # so that we dont get 
+    # so that we dont get
     #   "AttributeError: 'module' object has no attribute 'InventoryGenerator'"
     # errors when running in regular mode.
 
@@ -62,7 +62,7 @@ def splitTextFromNumeric(line):
 decorate(traceLog())
 def makePciDevice(oneDevData):
     kargs = {}
-    
+
     kargs["pciVendor_txt"], kargs["pciVendor"] = splitTextFromNumeric(oneDevData["vendor"])
     kargs["pciDevice_txt"], kargs["pciDevice"] = splitTextFromNumeric(oneDevData["device1"])
     name = "pci_firmware(ven_0x%s_dev_0x%s" % (kargs["pciVendor"], kargs["pciDevice"])
@@ -87,7 +87,7 @@ def makePciDevice(oneDevData):
 
     return package.PciDevice(
         name=name,
-        version='unknown', 
+        version='unknown',
         displayname=displayname,
         **kargs
         )
@@ -123,7 +123,7 @@ def lspciGenerator():
             deviceNum = deviceNum + 1
         oneDevData[name] = value
     err = fd.close()
-    
+
     if err:
         # Do it the hard way
 
@@ -135,7 +135,7 @@ def lspciGenerator():
                 yield supplementOldLspciFormat(oneDevData)
                 oneDevData = {}
                 continue
-    
+
             name,value = line.split(":", 1)
             name = name.strip().lower()
             value = value.strip()
@@ -144,7 +144,7 @@ def lspciGenerator():
                 deviceNum = deviceNum + 1
             oneDevData[name] = value
         fd.close()
-    
+
 decorate(traceLog())
 def supplementOldLspciFormat(oneDevData):
     #oneDevData["device0"]
@@ -155,7 +155,7 @@ def supplementOldLspciFormat(oneDevData):
 
     fd = os.popen("%s -m -v -s %s 2>/dev/null" % (lspciPath, oneDevData["device0"]), "r")
     if len(oneDevData["device0"].split(":")) < 3:
-        oneDevData["device0"] = "0000:" + oneDevData["device0"].strip() 
+        oneDevData["device0"] = "0000:" + oneDevData["device0"].strip()
 
     deviceNum=0
     for line in fd:
@@ -182,7 +182,7 @@ def supplementOldLspciFormat(oneDevData):
             oneDevData["sdevice"] = "%s [%s]" % (value, oneDevData["sdevice"])
 
     fd.close()
-    
+
     return oneDevData
 
 if __name__ == "__main__":

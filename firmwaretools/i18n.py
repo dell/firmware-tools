@@ -10,7 +10,7 @@ $Id$
 __version__ = "$Revision$"[11:-2]
 __date__ = "$Date$"[7:-2]
 
-try: 
+try:
     import gettext
     import sys
     if sys.version_info[0] == 2:

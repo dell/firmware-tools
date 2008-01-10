@@ -30,7 +30,7 @@ decorate(traceLog())
 def gtkYield():
     # process gui events during long-running loops
     # so that we are more responsive
-    while gtk.events_pending():                        
+    while gtk.events_pending():
         gtk.main_iteration(False)
 
 

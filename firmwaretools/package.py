@@ -98,7 +98,7 @@ class RepositoryPackage(Package):
             return self.progressPct
         else:
             return -1
-        
+
     def install(self):
         self.status = "in_progress"
         if self.installFunction is not None:
@@ -127,7 +127,7 @@ class RepositoryPackage(Package):
 
 
 # Base class for all devices on a system
-# required: 
+# required:
 #   displayname
 #   name
 #   version

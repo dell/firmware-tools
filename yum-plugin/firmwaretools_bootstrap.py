@@ -10,7 +10,7 @@ step. The instructions used to say:
 
 Normal bootstrap_firmware output looks like this:
 
-# bootstrap_firmware 
+# bootstrap_firmware
 pci_firmware(ven_0x10de_dev_0x00e1)
 pci_firmware(ven_0x10de_dev_0x00e0_subven_0x10de_subdev_0x0c11)
 pci_firmware(ven_0x10de_dev_0x00e4_subven_0x10de_subdev_0x0c11)
@@ -28,7 +28,7 @@ packages installed on their system.
 
 # TODO List:
 #  -- command line option to disable
-#  -- investigate using preresolve_hook w/ command line option to force 
+#  -- investigate using preresolve_hook w/ command line option to force
 #  -- dont add firmware if user specifies pkgs in update cmd
 #  -- way to not break CentOS 4
 

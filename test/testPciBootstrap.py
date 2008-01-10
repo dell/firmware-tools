@@ -15,7 +15,7 @@ class TestCase(unittest.TestCase):
         for k in sys.modules.keys():
             if k.startswith("firmwaretools"):
                 del(sys.modules[k])
-    
+
     def tearDown(self):
         if globals().get('firmwaretools'): del(firmwaretools)
         for k in sys.modules.keys():
@@ -41,7 +41,7 @@ class TestCase(unittest.TestCase):
 
         # ensure it actually ran.
         self.assertEqual(index, len(firmwaretools.mockpackage.mockExpectedOutput.split("\n")))
-        
+
 
 if __name__ == "__main__":
     import test.TestLib

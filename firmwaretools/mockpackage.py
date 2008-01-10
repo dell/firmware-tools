@@ -73,7 +73,7 @@ class MockRepositoryPackage(package.RepositoryPackage):
 
 # standard entry point -- Bootstrap
 decorate(traceLog())
-def BootstrapGenerator(): 
+def BootstrapGenerator():
     import bootstrap_pci
     bootstrap_pci.mockReadLspciWithDomain = mockReadLspciWithDomain
     for i in bootstrap_pci.lspciGenerator():
@@ -104,31 +104,31 @@ mockExpectedOutput_bootstrap = """mock_package(ven_0x1028_dev_0x1234)"""
 # variable DEBUG_INVENTORY=1
 decorate(traceLog())
 def InventoryGenerator():
-    yield package.Device( 
+    yield package.Device(
             name = "debug_system_bios",
             displayname = "System BIOS for Imaginary Server 1234",
             version = "A02")
-    yield package.Device( 
+    yield package.Device(
             name = "debug_system_bmc",
             displayname = "Baseboard Management Controller for Imaginary Server 1234",
             version = "1.0")
-    yield package.Device( 
+    yield package.Device(
             name = "debug_pci_firmware_ven_crappy_dev_slow",
             displayname = "ReallyFast Network Controller",
             version = "1.0")
-    yield package.Device( 
+    yield package.Device(
             name = "debug_pci_firmware_ven_0x0c64_dev_0xrocked",
             displayname = "Pokey Modem -- Enhanced 1200baud",
             version = "2.0")
-    yield package.Device( 
+    yield package.Device(
             name = "debug_pci_firmware_ven_corrupt_dev_yourdata",
             displayname = "SafeData RAID Controller v2i",
             version = "2.0")
-    yield package.Device( 
+    yield package.Device(
             name = "debug_pci_firmware_ven_violates_dev_scsistandard",
             displayname = "AdapFirm SloTek AHA-1501",
             version = "3.0")
-    yield package.Device( 
+    yield package.Device(
             name = "debug_pci_firmware_ven_draws_dev_polygons",
             displayname = "PixelPusher 2000 Video Adapter",
             version = "4.0")

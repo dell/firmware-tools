@@ -25,7 +25,7 @@ class TestCase(unittest.TestCase):
         self.inventory['pkgA'] = pkgA
         self.inventory['pkgB'] = pkgB
         self.inventory['pkgC'] = pkgC
-    
+
     def tearDown(self):
         if globals().get('firmwaretools'): del(firmwaretools)
         for k in sys.modules.keys():
@@ -72,7 +72,7 @@ class TestCase(unittest.TestCase):
             self.assertEquals(0, d.depPass)
 
 
- 
+
 
 
 

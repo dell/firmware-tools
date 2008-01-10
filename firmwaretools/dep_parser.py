@@ -28,8 +28,8 @@ class DepParser(object):
     t_COMMA = r','
     t_ignore = " \t"
 
-    def t_error(self, t): 
-        print "Illegal character '%s'" % t.value[0] 
+    def t_error(self, t):
+        print "Illegal character '%s'" % t.value[0]
         t.skip(1)
 
     decorate(traceLog())
@@ -41,7 +41,7 @@ class DepParser(object):
         import ply_lex
         lexer = ply_lex.lex( module=self )
 
-        import ply_yacc 
+        import ply_yacc
         parser = ply_yacc.yacc( module=self, write_tables=0, debug=0 )
 
         parser.parse(string, lexer=lexer, debug=0)
@@ -50,13 +50,13 @@ class DepParser(object):
         ('left', 'COMMA'),
         )
 
-    def p_error(self, t): 
+    def p_error(self, t):
         print "Syntax error at '%s'" % t
 
     def p_stmt(self, t):
         # statement_list can be 1) empty, 2) single statement, or 3) list
-        """statement_list : 
-                          | statement  
+        """statement_list :
+                          | statement
                           | statement_list COMMA statement
            statement : dep"""
         pass

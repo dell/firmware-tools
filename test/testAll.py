@@ -24,10 +24,10 @@ if __name__ == "__main__":
 
     moduleNames = glob.glob( "%s/test*.py" % testModulePath )
     moduleNames = [ m[len(testModulePath):-3] for m in moduleNames ]
-        
+
     tests = []
     for moduleName in moduleNames:
-        if "testAll" in moduleName: 
+        if "testAll" in moduleName:
             continue
         module = __import__(moduleName, globals(), locals(), [])
         module.TestCase.top_srcdir=top_srcdir

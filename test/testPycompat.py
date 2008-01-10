@@ -15,13 +15,13 @@ class TestCase(unittest.TestCase):
         for k in sys.modules.keys():
             if k.startswith("firmwaretools"):
                 del(sys.modules[k])
-    
+
     def tearDown(self):
         if globals().get('firmwaretools'): del(firmwaretools)
         for k in sys.modules.keys():
             if k.startswith("firmwaretools"):
                 del(sys.modules[k])
-        
+
     def testExcCommandNoTimeout(self):
         import firmwaretools.pycompat as pycompat
         pycompat.executeCommand("sleep 0", timeout=0)
