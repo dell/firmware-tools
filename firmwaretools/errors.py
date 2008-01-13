@@ -2,6 +2,6 @@
 
 import exceptions
 
-class FTBaseError(exceptions.Exception): pass
+class BaseError(exceptions.Exception): pass
 
-class ConfigError(FTBaseError): pass
+class ConfigError(BaseError): pass
