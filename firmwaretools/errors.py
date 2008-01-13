@@ -5,3 +5,4 @@ import exceptions
 class BaseError(exceptions.Exception): pass
 
 class ConfigError(BaseError): pass
+class LockError(BaseError): pass

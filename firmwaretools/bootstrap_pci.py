@@ -22,7 +22,9 @@ import sys
 # my stuff
 import firmwaretools.package as package
 from firmwaretools.trace_decorator import decorate, traceLog, getLog
+import firmwaretools.plugins as plugins
 
+plugin_type = (plugins.TYPE_BOOTSTRAP, plugins.TYPE_INVENTORY)
 requires_api_version = "1.0"
 
 # ======
