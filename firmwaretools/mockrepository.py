@@ -33,6 +33,9 @@ moduleVerboseLog = getLog(prefix="verbose.")
 # a null function that just eats args. Default callback
 def nullFunc(*args, **kargs): pass
 
+def config_hook(conduit, *args, **kargs):
+    repository.Repository.iterPackages = iterPackages_DEBUG
+
 decorate(traceLog())
 def iterPackages_DEBUG(self, cb=(nullFunc, None)):
     # TODO: put this in a separate function
@@ -89,4 +92,3 @@ def iterPackages_DEBUG(self, cb=(nullFunc, None)):
         name="debug_pci_firmware_ven_draws_dev_polygons",
         version="4.1.2")
 
-repository.Repository.iterPackages = iterPackages_DEBUG

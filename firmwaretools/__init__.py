@@ -27,6 +27,7 @@ import sys
 from trace_decorator import decorate, traceLog, getLog
 import errors
 import constants
+import repository
 
 #import config
 import plugins
@@ -62,6 +63,13 @@ class FtBase(object):
         # Start with plugins disabled
         self.disablePlugins()
 
+    def _getRepo(self):
+        if self._repo is not None:
+            return self._repo
+
+        self._repo = repository.Repository( self.conf.storageTopdir )
+        return self._repo
+
 
     def _getConfig(self, cfgFiles=None, pluginTypes=(plugins.TYPE_CORE, plugins.TYPE_INVENTORY, plugins.TYPE_BOOTSTRAP), optparser=None, disabledPlugins=None):
         if self._conf is not None:
@@ -83,6 +91,8 @@ class FtBase(object):
         self.conf.uid = os.geteuid()
 
         self.doPluginSetup(optparser, pluginTypes, disabledPlugins)
+
+        return self._conf
 
 
     def setupLogging(self):
@@ -168,8 +178,8 @@ class FtBase(object):
         self.plugins = plugins.Plugins(self, optparser, pluginTypes, disabledPlugins)
 
     # properties so they auto-create themselves with defaults
-    repo = property(fget=lambda self: self._getRepos(),
-                     fset=lambda self, value: setattr(self, "_repos", value),
+    repo = property(fget=lambda self: self._getRepo(),
+                     fset=lambda self, value: setattr(self, "_repo", value),
                      fdel=lambda self: self._delRepos())
     conf = property(fget=lambda self: self._getConfig(),
                     fset=lambda self, value: setattr(self, "_conf", value),
