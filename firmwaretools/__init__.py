@@ -21,6 +21,7 @@ Firmware-tools: update infrastructure for firmware
 
 import ConfigParser
 import logging
+import logging.config
 import os
 import sys
 
@@ -63,6 +64,7 @@ class FtBase(object):
         # Start with plugins disabled
         self.disablePlugins()
 
+    decorate(traceLog())
     def _getRepo(self):
         if self._repo is not None:
             return self._repo
@@ -165,6 +167,7 @@ class FtBase(object):
 
         return conf
 
+    # called early so no tracing.
     def disablePlugins(self):
         '''Disable plugins
         '''
@@ -201,9 +204,11 @@ class FtBase(object):
             os.unlink(PID_FILE)
 
 
+    decorate(traceLog())
     def registerBootstrapFunction(self, name, function):
         self._bootstrapFuncs[name] = function
 
+    decorate(traceLog())
     def yieldBootstrap(self):
         self.plugins.run("prebootstrap")
         for name, func in self._bootstrapFuncs.items():
@@ -211,9 +216,11 @@ class FtBase(object):
                 yield i
 
 
+    decorate(traceLog())
     def registerInventoryFunction(self, name, function):
         self._inventoryFuncs[name] = function
 
+    decorate(traceLog())
     def yieldInventory(self):
         self.plugins.run("preinventory")
         for name, func in self._inventoryFuncs.items():
