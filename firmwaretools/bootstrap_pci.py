@@ -30,6 +30,13 @@ requires_api_version = "1.0"
 # ======
 # public API
 # ======
+
+def config_hook(conduit, *args, **kargs):
+    conduit.getBase().registerBootstrapFunction( "bootstrap_pci", BootstrapGenerator )
+    conduit.getBase().registerInventoryFunction( "bootstrap_pci", InventoryGenerator )
+
+
+
 decorate(traceLog())
 def BootstrapGenerator():
     for i in lspciGenerator():

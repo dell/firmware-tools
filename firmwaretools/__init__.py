@@ -51,14 +51,19 @@ class FtBase(object):
         self.logger = getLog()
         self.verbose_logger = getLog(prefix="verbose.")
 
+        self.cmdargs = []
+
         self._conf = None
         self._repo = None
+
+        self._bootstrapFuncs = {}
+        self._inventoryFuncs = {}
 
         # Start with plugins disabled
         self.disablePlugins()
 
 
-    def _getConfig(self, cfgFiles=None, pluginTypes=(plugins.TYPE_CORE,), optparser=None, disabledPlugins=None):
+    def _getConfig(self, cfgFiles=None, pluginTypes=(plugins.TYPE_CORE, plugins.TYPE_INVENTORY, plugins.TYPE_BOOTSTRAP), optparser=None, disabledPlugins=None):
         if self._conf is not None:
             return self._conf
 
@@ -184,5 +189,27 @@ class FtBase(object):
         if self.conf.uid == 0:
             fcntl.lockf(self.runLock.fileno(), fcntl.LOCK_UN)
             os.unlink(PID_FILE)
+
+
+    def registerBootstrapFunction(self, name, function):
+        self._bootstrapFuncs[name] = function
+
+    def yieldBootstrap(self):
+        self.plugins.run("prebootstrap")
+        for name, func in self._bootstrapFuncs.items():
+            for i in func():
+                yield i
+
+
+    def registerInventoryFunction(self, name, function):
+        self._inventoryFuncs[name] = function
+
+    def yieldInventory(self):
+        self.plugins.run("preinventory")
+        for name, func in self._inventoryFuncs.items():
+            for i in func():
+                yield i
+
+
 
 

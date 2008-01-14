@@ -27,18 +27,24 @@ API_VERSION = '1.0'
 # Plugin types
 TYPE_CORE = 0
 TYPE_INTERACTIVE = 1
-TYPE_INVENTORY = 1
-TYPE_BOOTSTRAP = 1
+TYPE_INVENTORY = 2
+TYPE_BOOTSTRAP = 3
+
+TYPE_MOCK_CORE = 4
+TYPE_MOCK_INVENTORY = 5
+TYPE_MOCK_BOOTSTRAP = 6
+
 ALL_TYPES = (TYPE_CORE, TYPE_INTERACTIVE, TYPE_BOOTSTRAP, TYPE_INVENTORY)
 
 # Mapping of slots to conduit classes
 SLOT_TO_CONDUIT = {
     'config': 'PluginConduit',
-    'postconfig': 'PluginConduit',
-    'init': 'PluginConduit',
+    'prebootstrap': 'PluginConduit',
     'close': 'PluginConduit',
     }
 
+moduleLog = getLog()
+moduleLogVerbose = getLog(prefix="verbose.")
 
 class PluginExit(Exception):
     '''Used by plugins to signal to stop
@@ -76,6 +82,7 @@ class Plugins:
         self._plugins = {}
         for i in self.base.listPluginsFromIni():
             conf = self.base.getPluginConfFromIni(i)
+            moduleLogVerbose.info( "Checking Plugin (%s)" % i )
             if conf.enabled:
                 self._loadModule(i, conf, types)
 
@@ -116,12 +123,15 @@ class Plugins:
             plugintypes = (plugintypes,)
         for plugintype in plugintypes:
             if plugintype not in types:
+                moduleLogVerbose.info("\tPlugin %s not loaded: doesnt match load type (%s)" % (pluginName, plugintypes))
                 return
         # Check if this plugin has been temporary disabled
         if self.disabledPlugins:
             if modname in self.disabledPlugins:
+                moduleLogVerbose.info("\tPlugin %s not loaded: disabled" % pluginName)
                 return
 
+        moduleLogVerbose.info("\tLoaded %s plugin" % pluginName)
         self._plugins[pluginName] = {"conf": conf, "module": module}
 
 
@@ -137,6 +147,7 @@ class Plugins:
 
         for pluginName, dets in self._plugins.items():
             module = dets['module']
+            conf = dets['conf']
             hook = "%s_hook" % slotname
             if hasattr(module, hook):
                 getattr(module, hook)(conduitcls(self, self.base, conf, **kwargs))
@@ -174,14 +185,6 @@ class PluginConduit:
         self.logger.error(msg)
 
     decorate(traceLog())
-    def promptYN(self, msg):
-        self.info(2, msg)
-        if self._base.conf.assumeyes:
-            return 1
-        else:
-            return self._base.userconfirm()
-
-    decorate(traceLog())
     def getVersion(self):
         import firmwaretools
         return firmwaretools.__version__
@@ -190,19 +193,20 @@ class PluginConduit:
     def getOptParser(self):
         '''Return the optparse.OptionParser instance for this execution of Yum
 
-        In the "config" and "init" slots a plugin may add extra options to this
+        In the "config" slot a plugin may add extra options to this
         instance to extend the command line options that Yum exposes.
 
         In all other slots a plugin may only read the OptionParser instance.
         Any modification of the instance at this point will have no effect.
 
-        See the getCmdLine() method for details on how to retrieve the parsed
-        values of command line options.
-
         @return: the global optparse.OptionParser instance used by Yum. May be
             None if an OptionParser isn't in use.
         '''
         return self._parent.optparser
+
+    decorate(traceLog())
+    def getBase(self):
+        return self._base
 
 decorate(traceLog())
 def parsever(apiver):

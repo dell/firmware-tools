@@ -20,11 +20,19 @@ import logging
 # import arranged alphabetically
 import package
 from firmwaretools.trace_decorator import decorate, traceLog, getLog
+import firmwaretools.plugins as plugins
 
+plugin_type = (plugins.TYPE_MOCK_INVENTORY, plugins.TYPE_MOCK_BOOTSTRAP)
 requires_api_version = "1.0"
 
 moduleLog = getLog()
 moduleVerboseLog = getLog(prefix="verbose.")
+
+
+def config_hook(conduit, *args, **kargs):
+    conduit.getBase().registerBootstrapFunction( "mockpackage", BootstrapGenerator )
+    conduit.getBase().registerInventoryFunction( "mockpackage", InventoryGenerator )
+
 
 # old style
 class MockPackageWrapper(object):

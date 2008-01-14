@@ -82,19 +82,24 @@ class BaseCli(firmwaretools.FtBase):
         """parses command line arguments, takes cli args:
         sets up self.conf and self.cmds as well as logger objects 
         in base instance"""
-        
 
-        self.optparser = FtOptionParser(
-            usage='yum [options] < %s >' % (', '.join(self.cli_commands)))
+        self.cmdargs = args
 
+        self.optparser = FtOptionParser( usage='ft [options]', version=__VERSION__)
         
         # Parse only command line options that affect basic yum setup
         self.opts = self.optparser.firstParse(args)
 
+        pluginTypes = [plugins.TYPE_CORE, plugins.TYPE_INTERACTIVE] 
+        if not self.opts.fake_mode:
+            pluginTypes.extend([plugins.TYPE_INVENTORY, plugins.TYPE_BOOTSTRAP])
+        else:
+            pluginTypes.extend([plugins.TYPE_MOCK_CORE, plugins.TYPE_MOCK_INVENTORY, plugins.TYPE_MOCK_BOOTSTRAP])
+
         # Read up configuration options and initialise plugins
         try:
             self._getConfig(self.opts.configFiles, 
-                    pluginTypes=(plugins.TYPE_CORE, plugins.TYPE_INTERACTIVE),
+                    pluginTypes,
                     optparser=self.optparser,
                     disabledPlugins=self.opts.disabled_plugins)
                     
@@ -105,29 +110,21 @@ class BaseCli(firmwaretools.FtBase):
             self.logger.critical(_('Options Error: %s'), e)
             sys.exit(1)
 
-        # update usage in case plugins have added commands
-        self.optparser.set_usage('ft [options] < %s >''' % (
-            ', '.join(self.cli_commands)))
-
-        self.opts, self.args = self.optparser.parse_args(args)
+        # subcommands can add new optparser stuff in doCheck()
+        self.parseCommands()
 
         # Now parse the command line for real and 
-        # apply some of the options to self.conf
-        #(self.opts, self.args) = self.optparser.setupYumConfig()
-
-        self.parseCommands()
+        self.opts, self.args = self.optparser.parse_args(args)
 
         
     def parseCommands(self):
         """reads self.cmds and parses them out to make sure that the requested 
         base command + argument makes any sense at all""" 
-
-        
         if not self.cli_commands.has_key(self.opts.mode):
             self.usage()
             raise CliError, "mode not specified."
     
-        self.cli_commands[self.opts.mode].doCheck(self, self.opts.mode, self.args)
+        self.cli_commands[self.opts.mode].doCheck(self, self.opts.mode, self.cmdargs)
 
     def doShell(self):
         """do a shell-like interface for commands"""
@@ -154,6 +151,8 @@ class BaseCli(firmwaretools.FtBase):
     def shellUsage(self):
         ''' Print out the shell usage '''
         self.optparser.print_usage()
+
+
     
 
 from optparse import OptionParser
@@ -176,8 +175,12 @@ class FtOptionParser(OptionParser):
         self.add_option("--fake-mode", action="store_true", dest="fake_mode", default=False, help="Display fake data for unit-testing.")
         self.add_option("--disableplugin", action="append", dest="disabled_plugins", default=[], help="Disable single named plugin.")
 
-        self.parseOptionsFirst_novalopts = ['--version','-q', '-v', "--quiet", "--verbose", "--trace"]
-        self.parseOptionsFirst_valopts = ['-c', '--config', '--disableplugin', "--extra-plugin-config"]
+        # put all 'mode' arguments here so we know early what mode we are in. 
+        self.parseOptionsFirst_novalopts = [
+                "--version","-q", "-v", "--quiet", "--verbose", "--trace", "--fake-mode",
+                "--inventory", "--update", "--bootstrap", "--listplugins",
+                ]
+        self.parseOptionsFirst_valopts = ["-c", "--config", "--disableplugin", "--extra-plugin-config"]
 
     def firstParse(self, args):
         args = _filtercmdline(

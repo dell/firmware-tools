@@ -22,6 +22,9 @@ Classes for subcommands of the yum command line interface.
 import os
 import firmwaretools.errors
 from firmwaretools.i18n import _
+from firmwaretools.trace_decorator import decorate, traceLog, getLog
+
+moduleLog = getLog()
 
 class YumCommand(object):
         
@@ -71,7 +74,10 @@ class BootstrapCommand(YumCommand):
         pass
 
     def doCommand(self, base, mode, args):
-        return [0, "Hello World"]
+        for pkg in base.yieldBootstrap():
+            moduleLog.info("%s" % pkg.name)
+            #sys.stdout.write( "%s," % pkg.name )
+        return [0, "Done"]
 
 class ListPluginsCommand(YumCommand):
     def getModes(self):
