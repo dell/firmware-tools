@@ -152,6 +152,110 @@ class BaseCli(firmwaretools.FtBase):
         ''' Print out the shell usage '''
         self.optparser.print_usage()
 
+    def updateFirmware(self):
+        print
+        print "Searching storage directory for available BIOS updates..."
+        r = self.repo
+
+        depFailures = {}
+        def show_work(*args, **kargs):
+            #print "Got callback: %s  %s" % (args, kargs)
+            if kargs.get("what") == "found_package_ini":
+                p = kargs.get("path")
+                if len(p) > 50:
+                    p = p[-50:]
+                firmwaretools.pycompat.spinPrint("Checking: %s" % p)
+
+            if kargs.get("what") == "fail_dependency_check":
+                pkg = kargs.get("package")
+                pkgName = "%s-%s" % (pkg.name, pkg.version)
+                if pkg.conf.has_option("package", "limit_system_support"):
+                    pkgName = pkgName + "-" + pkg.conf.get("package", "limit_system_support")
+                kargs.get("cb")[1][pkgName] = (kargs.get("package"), kargs.get("reason"))
+
+        updateSet = firmwaretools.repository.generateUpdateSet(r, self.yieldInventory(), cb=(show_work, depFailures) )
+        print "\033[2K\033[0G"  # clear line
+        needUpdate = 0
+        for device in updateSet.iterDevices():
+            print "Checking %s - %s" % (str(device), device.version)
+            for availPkg in updateSet.iterAvailableUpdates(device):
+                print "\tAvailable: %s - %s" % (availPkg.name, availPkg.version)
+
+            pkg = updateSet.getUpdatePackageForDevice(device)
+            if pkg is None:
+                print "\tDid not find a newer package to install that meets all installation checks."
+            else:
+                print "\tFound Update: %s - %s" % (pkg.name, pkg.version)
+                needUpdate = 1
+
+        if depFailures:
+            print
+            print "Following packages could apply, but have dependency failures:"
+
+        for pkg, reason in depFailures.values():
+            print "\t%s - %s" % (pkg.name, pkg.version)
+            print "\t\t REASON: %s" % reason
+
+        if not needUpdate:
+            print
+            print "This system does not appear to have any updates available."
+            print "No action necessary."
+            print
+            return 1
+        else:
+            print
+            print "Found firmware which needs to be updated."
+            print
+
+        # if we get to this point, that means update is necessary.
+        # any exit before this point means that there was an error, or no update
+        # was necessary and should return non-zero
+        if self.opts.interactive == 2:
+            print
+            print "Test mode complete."
+            print
+            return 0
+
+        if self.opts.interactive == 1:
+            print
+            print "Please run the program with the '--yes' switch to enable BIOS update."
+            print "   UPDATE NOT COMPLETED!"
+            print
+            return 0
+
+        print "Running updates..."
+        for pkg in updateSet.generateInstallationOrder():
+            try:
+
+                def statusFunc():
+                    if pkg.getCapability('accurate_update_percentage'):
+                        firmwaretools.pycompat.spinPrint("%s%% Installing %s - %s" % (pkg.getProgress() * 100, pkg.name, pkg.version))
+                    else:
+                        firmwaretools.pycompat.spinPrint("Installing %s - %s" % (pkg.name, pkg.version))
+                    time.sleep(0.2)
+
+                ret = firmwaretools.pycompat.runLongProcess(pkg.install, waitLoopFunction=statusFunc)
+                print firmwaretools.pycompat.clearLine(),
+                print "100%% Installing %s - %s" % (pkg.name, pkg.version)
+                print "Done: %s" % pkg.getStatusStr()
+                print
+
+            except (firmwaretools.package.NoInstaller,), e:
+                print "package %s - %s does not have an installer available." % (pkg.name, pkg.version)
+                print "skipping this package for now."
+                continue
+            except (firmwaretools.package.InstallError,), e:
+                print "Installation failed for package: %s - %s" % (pkg.name, pkg.version)
+                print "aborting update..."
+                print
+                print "The error message from the low-level command was:"
+                print
+                print e
+                break
+
+
+
+
 
     
 
