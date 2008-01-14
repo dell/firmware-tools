@@ -19,7 +19,6 @@ import atexit
 import gettext
 
 from trace_decorator import decorate, traceLog, getLog
-import config
 import errors
 
 API_VERSION = '1.0'
