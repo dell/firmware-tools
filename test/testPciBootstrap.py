@@ -23,19 +23,22 @@ class TestCase(unittest.TestCase):
                 del(sys.modules[k])
 
     def testBootstrapInventory(self):
-        import firmwaretools.clifuncs
-        import firmwaretools.config
-        import firmwaretools.mockpackage
+        import firmwaretools
+        import firmwaretools.plugins as plugins
 
         # manually setup fake config file
-        cfg = firmwaretools.config.FTConfig(usage="", version="unit test")
-        args = cfg.parse(["--fake-mode",])
+        f = firmwaretools.FtBase()
+        pluginTypes = [
+            plugins.TYPE_CORE, plugins.TYPE_INTERACTIVE,
+            plugins.TYPE_MOCK_CORE, plugins.TYPE_MOCK_INVENTORY, plugins.TYPE_MOCK_BOOTSTRAP,
+            ] 
+        f._getConfig(None, pluginTypes, None, [])
 
         # import functions for bootstrap/compare
 
         # run bootstrap and compare.
         index = 0
-        for pkg in firmwaretools.clifuncs.runBootstrapInventory(cfg):
+        for pkg in f.yieldBootstrap():
             self.assertEqual( firmwaretools.mockpackage.mockExpectedOutput.split("\n")[index], pkg.name )
             index = index + 1
 
