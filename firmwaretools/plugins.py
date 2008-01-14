@@ -40,6 +40,7 @@ ALL_TYPES = (TYPE_CORE, TYPE_INTERACTIVE, TYPE_BOOTSTRAP, TYPE_INVENTORY)
 SLOT_TO_CONDUIT = {
     'config': 'PluginConduit',
     'prebootstrap': 'PluginConduit',
+    'preinventory': 'PluginConduit',
     'close': 'PluginConduit',
     }
 
@@ -134,6 +135,8 @@ class Plugins:
         moduleLogVerbose.info("\tLoaded %s plugin" % pluginName)
         self._plugins[pluginName] = {"conf": conf, "module": module}
 
+    def listLoaded(self):
+        return self._plugins.keys()
 
     decorate(traceLog())
     def run(self, slotname, **kwargs):

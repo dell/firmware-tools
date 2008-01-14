@@ -64,19 +64,37 @@ class InventoryCommand(YumCommand):
         pass
 
     def doCommand(self, base, mode, args):
-        return [0, "Hello World"]
+        for pkg in base.yieldInventory():
+            moduleLog.info("%s = %s" % (str(pkg), pkg.version))
+
+        return [0, "Done"]
 
 class BootstrapCommand(YumCommand):
     def getModes(self):
         return ['bootstrap']
 
     def doCheck(self, base, mode, args):
-        pass
+        # need to add bootstrap-specific options to optparser
+        base.optparser.add_option("-u", "--up2date_mode", action="store_true", dest="comma_separated", default=False, help="Comma-separate values for use with up2date.")
+        base.optparser.add_option("-a", "--apt_mode", action="store_true", dest="apt_mode", default=False, help="fixup names so that they are compatible with apt")
 
     def doCommand(self, base, mode, args):
+        parse=str
+        if base.opts.apt_mode:
+            parse = debianCleanName
+
+        out = ""
         for pkg in base.yieldBootstrap():
-            moduleLog.info("%s" % pkg.name)
-            #sys.stdout.write( "%s," % pkg.name )
+            if base.opts.comma_separated:
+                out = out + ",%s" % parse(pkg.name)
+            else:
+                moduleLog.info("%s" % parse(pkg.name))
+        
+        # strip leading comma:
+        out = out[1:]
+        if out:
+            moduleLog.info(out) 
+
         return [0, "Done"]
 
 class ListPluginsCommand(YumCommand):
@@ -87,5 +105,22 @@ class ListPluginsCommand(YumCommand):
         pass
 
     def doCommand(self, base, mode, args):
+        moduleLog.info("Available Plugins:")
+        for p in base.listPluginsFromIni():
+            moduleLog.info("\t%s" % p)
+
+        moduleLog.info("Loaded Plugins:")
+        for p in base.plugins.listLoaded():
+            moduleLog.info("\t%s" % p)
+
         return [0, "Hello World"]
+
+
+# used by bootstrap
+def debianCleanName(s):
+    s = s.replace('_', '-')
+    s = s.replace('(', '-')
+    s = s.replace(')', '')
+    s = s.lower()
+    return s
 
