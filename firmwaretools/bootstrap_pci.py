@@ -22,12 +22,21 @@ import sys
 # my stuff
 import firmwaretools.package as package
 from firmwaretools.trace_decorator import decorate, traceLog, getLog
+import firmwaretools.plugins as plugins
 
+plugin_type = (plugins.TYPE_BOOTSTRAP, plugins.TYPE_INVENTORY)
 requires_api_version = "1.0"
 
 # ======
 # public API
 # ======
+
+def config_hook(conduit, *args, **kargs):
+    conduit.getBase().registerBootstrapFunction( "bootstrap_pci", BootstrapGenerator )
+    conduit.getBase().registerInventoryFunction( "bootstrap_pci", InventoryGenerator )
+
+
+
 decorate(traceLog())
 def BootstrapGenerator():
     for i in lspciGenerator():

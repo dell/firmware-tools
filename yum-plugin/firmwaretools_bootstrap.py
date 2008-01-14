@@ -95,7 +95,7 @@ for hook in (
     'clean',
     'pretrans',
     'posttrans',
-#    'exclude',
+    'exclude',
     'preresolve',
     'postresolve',
     ):
