@@ -1,0 +1,3 @@
+version=3
+
+http://linux.dell.com/files/libsmbios/download/firmware-tools/firmware-tools-(.*)/firmware-tools-(.*)\.tar\.gz
