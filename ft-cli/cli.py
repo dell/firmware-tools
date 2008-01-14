@@ -84,6 +84,10 @@ class BaseCli(firmwaretools.FtBase):
         # Parse only command line options that affect basic yum setup
         self.opts = self.optparser.firstParse(args)
 
+        self.verbosity = self.opts.verbosity
+        self.trace = self.opts.trace
+        self.loggingConfig = self.opts.configFiles[0]
+
         pluginTypes = [plugins.TYPE_CORE, plugins.TYPE_INTERACTIVE] 
         if not self.opts.fake_mode:
             pluginTypes.extend([plugins.TYPE_INVENTORY, plugins.TYPE_BOOTSTRAP])

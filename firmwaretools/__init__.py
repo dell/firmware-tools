@@ -58,6 +58,10 @@ class FtBase(object):
         self._conf = None
         self._repo = None
 
+        self.verbosity = 0
+        self.trace = 0
+        self.loggingConfig = os.path.join(CONFDIR, "firmware.conf")
+
         self._bootstrapFuncs = {}
         self._inventoryFuncs = {}
 
@@ -86,7 +90,7 @@ class FtBase(object):
         class foo: pass
         self.conf = foo()
 
-        self.setupLogging()
+        self.setupLogging(self.loggingConfig, self.verbosity, self.trace)
 
         self.setConfFromIni(cfgFiles)
 
@@ -97,9 +101,9 @@ class FtBase(object):
         return self._conf
 
 
-    def setupLogging(self):
+    def setupLogging(self, configFile, verbosity=1, trace=0):
         # set up logging
-        logging.config.fileConfig(self.opts.configFiles[0])
+        logging.config.fileConfig(configFile)
         root_log       = logging.getLogger()
         ft_log         = logging.getLogger("firmwaretools")
         ft_verbose_log = logging.getLogger("verbose")
@@ -109,14 +113,14 @@ class FtBase(object):
         ft_trace_log.propagate = 0
         ft_verbose_log.propagate = 0
 
-        if self.opts.verbosity >= 1:
+        if verbosity >= 1:
             ft_log.propagate = 1
-        if self.opts.verbosity >= 2:
+        if verbosity >= 2:
             ft_verbose_log.propagate = 1
-        if self.opts.verbosity >= 3:
+        if verbosity >= 3:
             for hdlr in root_log.handlers:
                 hdlr.setLevel(logging.DEBUG)
-        if self.opts.trace:
+        if trace:
             ft_trace_log.propagate = 1
 
     decorate(traceLog())
