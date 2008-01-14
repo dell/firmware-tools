@@ -37,14 +37,7 @@ import signal
 import ftcommands
 from firmwaretools import errors
 
-# these are replaced by autotools when installed.
-__VERSION__="unreleased_version"
-SYSCONFDIR=os.path.join(os.path.dirname(os.path.realpath(sys._getframe(0).f_code.co_filename)),"..","etc")
-PYTHONDIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..")
-PKGPYTHONDIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","firmwaretools")
-PKGDATADIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..")
-CONFDIR=os.path.join(SYSCONFDIR,"firmware")
-# end build system subs
+__VERSION__=firmwaretools.__VERSION__
 
 def sigquit(signum, frame):
     """ SIGQUIT handler for the cli. """
@@ -60,8 +53,9 @@ class BaseCli(firmwaretools.FtBase):
     def __init__(self):
         # handle sigquit early on
         signal.signal(signal.SIGQUIT, sigquit)
-        firmwaretools.FtBase.__init__(self)
         logging.basicConfig()
+        logging.raiseExceptions = 0
+        firmwaretools.FtBase.__init__(self)
 
         self.logger = getLog()
         self.verbose_logger = getLog(prefix="verbose.")
@@ -117,6 +111,7 @@ class BaseCli(firmwaretools.FtBase):
         self.opts, self.args = self.optparser.parse_args(args)
 
         
+    decorate(traceLog())
     def parseCommands(self):
         """reads self.cmds and parses them out to make sure that the requested 
         base command + argument makes any sense at all""" 
@@ -126,10 +121,12 @@ class BaseCli(firmwaretools.FtBase):
     
         self.cli_commands[self.opts.mode].doCheck(self, self.opts.mode, self.cmdargs)
 
+    decorate(traceLog())
     def doShell(self):
         """do a shell-like interface for commands"""
         pass
 
+    decorate(traceLog())
     def doCommands(self):
         """
         Calls the base command passes the extended commands/args out to be
@@ -144,14 +141,17 @@ class BaseCli(firmwaretools.FtBase):
         return self.cli_commands[self.opts.mode].doCommand(self, self.opts.mode, self.args)
     
 
+    decorate(traceLog())
     def usage(self):
         ''' Print out command line usage '''
         self.optparser.print_help()
 
+    decorate(traceLog())
     def shellUsage(self):
         ''' Print out the shell usage '''
         self.optparser.print_usage()
 
+    decorate(traceLog())
     def updateFirmware(self):
         print
         print "Searching storage directory for available BIOS updates..."
@@ -294,7 +294,7 @@ class FtOptionParser(OptionParser):
         opts, args = self.parse_args(args=args)
 
         if not opts.configFiles:
-            opts.configFiles = [os.path.join(CONFDIR, "firmware.conf"), ]
+            opts.configFiles = [os.path.join(firmwaretools.CONFDIR, "firmware.conf"), ]
 
         opts.configFiles = opts.configFiles + opts.extraConfigs
 
