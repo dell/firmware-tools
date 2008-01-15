@@ -26,19 +26,18 @@ __VERSION__="unreleased_version"
 SYSCONFDIR=os.path.realpath(os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","etc"))
 PYTHONDIR=os.path.realpath(os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),".."))
 PKGPYTHONDIR=os.path.realpath(os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","firmwaretools"))
-PKGDATADIR=os.path.realpath(os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","glade"))
 CONFDIR=os.path.realpath(os.path.join(SYSCONFDIR,"firmware"))
-GLADEDIR=os.path.realpath(PKGDATADIR)
+GLADEDIR=os.path.realpath(os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","glade"))
+PKGDATADIR=os.path.realpath(os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","ft-cli"))
 # end build system subs
 
 # import all local modules after this. This allows us to run from build tree
 sys.path.insert(0,PYTHONDIR)
+sys.path.insert(0,PKGDATADIR)
 
 import firmwaretools.trace_decorator as trace_decorator
-import firmwaretools.guihelpers as guihelpers
+import guihelpers
 import firmwaretools.repository as repository
-import firmwaretools.config
-import firmwaretools.clifuncs
 import firmwaretools.package
 
 PROGRAM_NAME="Firmware Inventory and Update GUI"
@@ -82,7 +81,7 @@ class UpdateSetPinCommand(Command):
 
 class InventoryFirmware:
     GLADE_FILE = '/inventory_firmware_gui.glade'
-    def __init__(self, cfg):
+    def __init__(self, base):
         self.wTree = gtk.glade.XML(GLADEDIR + self.GLADE_FILE)
         self.wTree.signal_autoconnect(self)
         self.main_window = self.wTree.get_widget("MainWindow")
@@ -130,17 +129,16 @@ class InventoryFirmware:
             # eats all its args...
             guihelpers.gtkYield()
 
-        # collect inventory
-        r = firmwaretools.repository.Repository( cfg.ini.get("main", "storage_topdir") )
-        firmwaretools.package.RepositoryPackage.mainIni = cfg.ini
-
         # the following two lines are equivalent, but runLongProcess() does the
         # action in a background thread so the GUI will update while it works.
-        #self.updateSet = repository.generateUpdateSet(r, firmwaretools.clifuncs.runInventory(cfg), cb=(myYield, None))
-        self.updateSet = guihelpers.runLongProcessGtk(repository.generateUpdateSet, args=(r, firmwaretools.clifuncs.runInventory(cfg)), kargs={'cb':(myYield, None)})
+        #self.updateSet = repository.generateUpdateSet(base.repo, base.yieldInventory(), cb=(myYield, None))
+        self.updateSet = guihelpers.runLongProcessGtk(
+            repository.generateUpdateSet, 
+            args=(base.repo, base.yieldInventory()), 
+            kargs={'cb':(myYield, None)})
 
         self._populateInventoryTree()
-        self._populateBootstrapTree(cfg)
+        self._populateBootstrapTree(base)
         self.inventoryTreeView.expand_all()
         self._refresh()
 
@@ -316,9 +314,9 @@ class InventoryFirmware:
 
     # this is a helper function to initially populate the tree model.
     # should only ever be called once.
-    def _populateBootstrapTree(self, cfg):
+    def _populateBootstrapTree(self, base):
         self.bootstrapTreeModel.clear()
-        for dev in firmwaretools.clifuncs.runBootstrapInventory(cfg):
+        for dev in base.yieldBootstrap():
             guihelpers.gtkYield()
             self.bootstrapTreeModel.append(None, [dev.name, dev.displayname, dev.version])
 
@@ -735,14 +733,29 @@ def main():
         print >> sys.stderr, 'Failed to set locale, defaulting to C'
         locale.setlocale(locale.LC_ALL, 'C')
 
-
-
     try:
-        cfg = firmwaretools.config.FTConfig(usage=__doc__, version=__VERSION__)
-        cfg.parse(sys.argv[1:])
+        import cli
+        import firmwaretools.plugins as plugins
+        base = firmwaretools.FtBase()
+        parser = cli.FtOptionParser(usage=__doc__, version=__VERSION__)
+        opts = parser.firstParse(sys.argv[1:])
+        configFiles = opts.configFiles
+        base.loggingConfig = configFiles[0]
+        opts,args = parser.parse_args(sys.argv[1:])
+
+        pluginTypes = [plugins.TYPE_CORE, ] 
+        if not opts.fake_mode:
+            pluginTypes.extend([plugins.TYPE_INVENTORY, plugins.TYPE_BOOTSTRAP])
+        else:
+            pluginTypes.extend([plugins.TYPE_MOCK_CORE, plugins.TYPE_MOCK_INVENTORY, plugins.TYPE_MOCK_BOOTSTRAP])
+
+        base.opts = opts
+        base.verbosity = opts.verbosity
+        base.trace = opts.trace
+        base._getConfig(configFiles, pluginTypes, parser, opts.disabledPlugins)
 
         #gnome.init(PROGRAM_NAME, version)
-        test = InventoryFirmware(cfg)
+        test = InventoryFirmware(base)
         gtk.main()
 
     except:
