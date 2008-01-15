@@ -88,7 +88,7 @@ class Plugins:
                 self._loadModule(i, conf, types)
 
         # Call close handlers when yum exit's
-        atexit.register(self.run, 'close')
+        #atexit.register(self.run, 'close')
 
         # Let plugins register custom config file options
         self.run('config')
