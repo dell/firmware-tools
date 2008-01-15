@@ -46,10 +46,7 @@ plugin_PYTHON = \
 	ft-cli/plugins/listplugins.py	\
 	ft-cli/plugins/update.py
 
-
 REPLACE_VARS_ON_INSTALL= 		   \
 	$(sbindir)/firmwaretool  	   \
 	$(sbindir)/inventory_firmware_gui  \
 	$(pkgpythondir)/__init__.py
-
-
