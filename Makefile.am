@@ -11,39 +11,45 @@ TESTS = test/testAll.py
 nodist_check_SCRIPTS = test/testAll.py
 
 dist_sbin_SCRIPTS = \
-	bin/bootstrap_firmware  \
-	bin/inventory_firmware  \
-	bin/inventory_firmware_gui  \
-	bin/update_firmware
+	bin/firmwaretool  \
+	bin/inventory_firmware_gui
 
 nodist_pkgdata_DATA = glade/inventory_firmware_gui.glade
 
 pkgpython_PYTHON = \
 	firmwaretools/__init__.py       \
 	firmwaretools/bootstrap_pci.py  \
-	firmwaretools/config.py       \
-	firmwaretools/clifuncs.py       \
 	firmwaretools/dep_parser.py     \
 	firmwaretools/errors.py     \
-	firmwaretools/guihelpers.py     \
 	firmwaretools/i18n.py     \
 	firmwaretools/mockpackage.py    \
 	firmwaretools/mockrepository.py \
 	firmwaretools/package.py   	\
+	firmwaretools/plugins.py   	\
 	firmwaretools/ply_lex.py   	\
 	firmwaretools/ply_yacc.py	\
 	firmwaretools/pycompat.py	\
 	firmwaretools/repository.py	\
 	firmwaretools/trace_decorator.py
 
+clidir = $(datadir)/$(PACKAGE)
+cli_PYTHON = \
+	ft-cli/cli.py	\
+	ft-cli/ftcommands.py	\
+	ft-cli/ftmain.py	\
+	ft-cli/guihelpers.py
+
+plugindir = $(clidir)/plugins
+plugin_PYTHON = \
+	ft-cli/plugins/bootstrap.py	\
+	ft-cli/plugins/inventory.py	\
+	ft-cli/plugins/listplugins.py	\
+	ft-cli/plugins/update.py
+
 
 REPLACE_VARS_ON_INSTALL= 		   \
-	$(sbindir)/bootstrap_firmware  	   \
-	$(sbindir)/inventory_firmware  	   \
+	$(sbindir)/firmwaretool  	   \
 	$(sbindir)/inventory_firmware_gui  \
-	$(sbindir)/update_firmware	   \
-	$(pkgpythondir)/clifuncs.py	   \
-	$(pkgpythondir)/config.py	   \
 	$(pkgpythondir)/__init__.py
 
 
