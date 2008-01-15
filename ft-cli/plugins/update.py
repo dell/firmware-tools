@@ -32,7 +32,8 @@ moduleLog = getLog()
 def config_hook(conduit, *args, **kargs):
     conduit.getOptParser().addEarlyParse("--update")
     conduit.getOptParser().add_option(
-        "--update", help="", action="store_const", const="update", dest="mode")
+        "--update", help="Update the system's firmware.",
+        action="store_const", const="update", dest="mode")
     conduit.getBase().registerCommand(UpdateCommand())
 
 class UpdateCommand(ftcommands.YumCommand):
