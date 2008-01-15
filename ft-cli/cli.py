@@ -96,7 +96,7 @@ class BaseCli(firmwaretools.FtBase):
             self._getConfig(self.opts.configFiles, 
                     pluginTypes,
                     optparser=self.optparser,
-                    disabledPlugins=self.opts.disabled_plugins)
+                    disabledPlugins=self.opts.disabledPlugins)
                     
         except errors.ConfigError, e:
             self.logger.critical(_('Config Error: %s'), e)
@@ -136,7 +136,6 @@ class BaseCli(firmwaretools.FtBase):
     def updateFirmware(self):
         print
         print "Searching storage directory for available BIOS updates..."
-        r = self.repo
 
         depFailures = {}
         def show_work(*args, **kargs):
@@ -154,7 +153,7 @@ class BaseCli(firmwaretools.FtBase):
                     pkgName = pkgName + "-" + pkg.conf.get("package", "limit_system_support")
                 kargs.get("cb")[1][pkgName] = (kargs.get("package"), kargs.get("reason"))
 
-        updateSet = firmwaretools.repository.generateUpdateSet(r, self.yieldInventory(), cb=(show_work, depFailures) )
+        updateSet = firmwaretools.repository.generateUpdateSet(self.repo, self.yieldInventory(), cb=(show_work, depFailures) )
         print "\033[2K\033[0G"  # clear line
         needUpdate = 0
         for device in updateSet.iterDevices():
@@ -246,7 +245,7 @@ class FtOptionParser(OptionParser):
         self.add_option("-q", "--quiet", action="store_const", const=0, dest="verbosity", help="Minimize program output. Only errors and warnings are displayed.")
         self.add_option("--trace", action="store_true", dest="trace", default=False, help="Enable verbose function tracing.")
         self.add_option("--fake-mode", action="store_true", dest="fake_mode", default=False, help="Display fake data for unit-testing.")
-        self.add_option("--disableplugin", action="append", dest="disabled_plugins", default=[], help="Disable single named plugin.")
+        self.add_option("--disableplugin", action="append", dest="disabledPlugins", default=[], help="Disable single named plugin.")
 
         # put all 'mode' arguments here so we know early what mode we are in. 
         self.parseOptionsFirst_novalopts = [
