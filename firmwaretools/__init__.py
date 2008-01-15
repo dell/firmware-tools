@@ -27,7 +27,6 @@ import sys
 
 from trace_decorator import decorate, traceLog, getLog
 import errors
-import constants
 import repository
 
 #import config
