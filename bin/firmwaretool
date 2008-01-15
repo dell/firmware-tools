@@ -5,7 +5,7 @@ import os
 # these are replaced by autotools when installed.
 __VERSION__="unreleased_version"
 PYTHONDIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..")
-PKGPYTHONDIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","firmwaretools")
+PKGDATADIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","ft-cli")
 # end build system subs
 
 sys.path.insert(0, PKGDATADIR)

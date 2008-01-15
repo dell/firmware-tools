@@ -38,7 +38,7 @@ __VERSION__="unreleased_version"
 SYSCONFDIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","etc")
 PYTHONDIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..")
 PKGPYTHONDIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","firmwaretools")
-PKGDATADIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..")
+PKGDATADIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","ft-cli")
 DATADIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","ft-cli")
 CONFDIR=os.path.join(SYSCONFDIR,"firmware")
 # end build system subs
@@ -130,9 +130,9 @@ class FtBase(object):
         defaults = { 
             "sysconfdir": SYSCONFDIR, 
             "pythondir": PYTHONDIR, 
+            "datadir": DATADIR, 
             "pkgpythondir": PKGPYTHONDIR, 
             "pkgdatadir": PKGDATADIR, 
-            "datadir": DATADIR, 
             "confdir": CONFDIR, 
         } 
         self._ini = ConfigParser.SafeConfigParser(defaults) 
@@ -141,7 +141,7 @@ class FtBase(object):
 
         mapping = {
             # conf.WHAT    : (iniSection, iniOption, default)
-            "storageTopdir": ('main', 'storage_topdir', PKGDATADIR),
+            "storageTopdir": ('main', 'storage_topdir', "%s/firmware" % DATADIR),
             "pluginConfDir": ('main', 'plugin_config_dir', os.path.join(CONFDIR, "firmware.d")),
             "rpmMode": ('main', 'rpm_mode', "manual"),
         }

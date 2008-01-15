@@ -23,11 +23,8 @@ import gnome.ui
 
 # these are replaced by autotools when installed.
 __VERSION__="unreleased_version"
-SYSCONFDIR=os.path.realpath(os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","etc"))
 PYTHONDIR=os.path.realpath(os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),".."))
-PKGPYTHONDIR=os.path.realpath(os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","firmwaretools"))
-CONFDIR=os.path.realpath(os.path.join(SYSCONFDIR,"firmware"))
-GLADEDIR=os.path.realpath(os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","glade"))
+PKGGLADEDIR=os.path.realpath(os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","glade"))
 PKGDATADIR=os.path.realpath(os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","ft-cli"))
 # end build system subs
 
@@ -82,7 +79,7 @@ class UpdateSetPinCommand(Command):
 class InventoryFirmware:
     GLADE_FILE = '/inventory_firmware_gui.glade'
     def __init__(self, base):
-        self.wTree = gtk.glade.XML(GLADEDIR + self.GLADE_FILE)
+        self.wTree = gtk.glade.XML(PKGGLADEDIR + self.GLADE_FILE)
         self.wTree.signal_autoconnect(self)
         self.main_window = self.wTree.get_widget("MainWindow")
         self.wTree.get_widget("about_dialog").destroy()
@@ -523,7 +520,7 @@ class InventoryFirmware:
                 self._fixupChildren(self.inventoryTreeModel, self.inventoryTreeModel.get_iter(device_path))
 
     def on_help_about(self, *args):
-        wTree = gtk.glade.XML(GLADEDIR + self.GLADE_FILE, "about_dialog")
+        wTree = gtk.glade.XML(PKGGLADEDIR + self.GLADE_FILE, "about_dialog")
         wTree.get_widget("about_dialog").set_property('name',PROGRAM_NAME)
         wTree.get_widget("about_dialog").set_property('version',__VERSION__)
         wTree.get_widget("about_dialog").run() # modal until 'close'
