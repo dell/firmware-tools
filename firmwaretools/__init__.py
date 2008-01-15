@@ -21,6 +21,7 @@ Firmware-tools: update infrastructure for firmware
 
 import ConfigParser
 import fcntl
+import glob
 import logging
 import logging.config
 import os
@@ -150,6 +151,10 @@ class FtBase(object):
                 setattr(self.conf, key, self._ini.get(val[0], val[1]))
             else:
                 setattr(self.conf, key, val[2])
+
+        # read plugin configs
+        for i in glob.glob( "%s/*.conf" % self.conf.pluginConfDir ):
+            self._ini.read(i)
 
     decorate(traceLog())
     def listPluginsFromIni(self):
