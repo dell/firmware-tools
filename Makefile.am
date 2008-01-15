@@ -2,8 +2,8 @@
 
 include Makefile-std
 
-pkgetcdir = $(sysconfdir)/firmware/
-nodist_pkgetc_DATA = etc/firmware/firmware.conf
+pkgconfdir = $(sysconfdir)/firmware/
+nodist_pkgconf_DATA = etc/firmware/firmware.conf
 
 EXTRA_DIST += etc doc glade pkg/debian test yum-plugin COPYING-GPL COPYING-OSL COPYING.LIB
 

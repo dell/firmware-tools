@@ -44,7 +44,7 @@ install-data-hook:
 	    perl -p -i -e 's|^PYTHONDIR\s*=.*|PYTHONDIR="$(pythondir)"|' $$file           ;\
 	    perl -p -i -e 's|^PKGPYTHONDIR\s*=.*|PKGPYTHONDIR="$(pkgpythondir)"|' $$file  ;\
 	    perl -p -i -e 's|^PKGDATADIR\s*=.*|PKGDATADIR="$(pkgdatadir)"|' $$file        ;\
-	    perl -p -i -e 's|^PKGCONFDIR\s*=.*|PKGCONFDIR="$(pkgconfdir)"|' $$file        ;\
+	    perl -p -i -e 's|^PKGCONFDIR\s*=.*|PKGCONFDIR="$(pkgconfdir)/"|' $$file        ;\
 	    perl -p -i -e 's|^PKGGLADEDIR\s*=.*|PKGGLADEDIR="$(pkgdatadir)"|' $$file        ;\
 	done
 

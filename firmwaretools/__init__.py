@@ -40,7 +40,7 @@ PYTHONDIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..")
 PKGPYTHONDIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","firmwaretools")
 PKGDATADIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","ft-cli")
 DATADIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","ft-cli")
-CONFDIR=os.path.join(SYSCONFDIR,"firmware")
+PKGCONFDIR=os.path.join(SYSCONFDIR,"firmware")
 # end build system subs
 
 PID_FILE = '/var/run/ft.pid'
@@ -62,7 +62,7 @@ class FtBase(object):
 
         self.verbosity = 0
         self.trace = 0
-        self.loggingConfig = os.path.join(CONFDIR, "firmware.conf")
+        self.loggingConfig = os.path.join(PKGCONFDIR, "firmware.conf")
 
         self._bootstrapFuncs = {}
         self._inventoryFuncs = {}
@@ -84,7 +84,7 @@ class FtBase(object):
             return self._conf
 
         if cfgFiles is None:
-            cfgFiles = [os.path.join(CONFDIR, "firmware.conf"),]
+            cfgFiles = [os.path.join(PKGCONFDIR, "firmware.conf"),]
 
         if disabledPlugins is None:
             disabledPlugins = []
@@ -133,7 +133,7 @@ class FtBase(object):
             "datadir": DATADIR, 
             "pkgpythondir": PKGPYTHONDIR, 
             "pkgdatadir": PKGDATADIR, 
-            "confdir": CONFDIR, 
+            "pkgconfdir": PKGCONFDIR, 
         } 
         self._ini = ConfigParser.SafeConfigParser(defaults) 
         for i in cfgFiles:
@@ -142,7 +142,7 @@ class FtBase(object):
         mapping = {
             # conf.WHAT    : (iniSection, iniOption, default)
             "storageTopdir": ('main', 'storage_topdir', "%s/firmware" % DATADIR),
-            "pluginConfDir": ('main', 'plugin_config_dir', os.path.join(CONFDIR, "firmware.d")),
+            "pluginConfDir": ('main', 'plugin_config_dir', os.path.join(PKGCONFDIR, "firmware.d")),
             "rpmMode": ('main', 'rpm_mode', "manual"),
         }
         for key, val in mapping.items():
