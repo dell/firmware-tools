@@ -25,7 +25,7 @@ import firmwaretools.plugins as plugins
 import ftcommands
 
 plugin_type = (plugins.TYPE_CLI,)
-requires_api_version = "1.0"
+requires_api_version = "2.0"
 
 moduleLog = getLog()
 

@@ -20,7 +20,7 @@ import sys
 from trace_decorator import decorate, traceLog, getLog
 import errors
 
-API_VERSION = '1.0'
+API_VERSION = '2.0'
 
 # Plugin types
 TYPE_CORE = 0

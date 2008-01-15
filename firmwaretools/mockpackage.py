@@ -23,7 +23,7 @@ from firmwaretools.trace_decorator import decorate, traceLog, getLog
 import firmwaretools.plugins as plugins
 
 plugin_type = (plugins.TYPE_MOCK_INVENTORY, plugins.TYPE_MOCK_BOOTSTRAP)
-requires_api_version = "1.0"
+requires_api_version = "2.0"
 
 moduleLog = getLog()
 moduleVerboseLog = getLog(prefix="verbose.")
