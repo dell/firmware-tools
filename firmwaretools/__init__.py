@@ -43,6 +43,8 @@ DATADIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","ft-cli
 CONFDIR=os.path.join(SYSCONFDIR,"firmware")
 # end build system subs
 
+PID_FILE = '/var/run/ft.pid'
+
 class FtBase(object):
     """This is a primary structure and base class. It houses the objects and
        methods needed to perform most things . It is almost an abstract
@@ -196,7 +198,7 @@ class FtBase(object):
     decorate(traceLog())
     def lock(self):
         if self.conf.uid == 0:
-            self.runLock = open(constants.PID_FILE, "a+")
+            self.runLock = open(PID_FILE, "a+")
             try:
                 fcntl.lockf(self.runLock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
             except IOError, e:
