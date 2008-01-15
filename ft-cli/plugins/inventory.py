@@ -20,26 +20,32 @@ Classes for subcommands of the yum command line interface.
 """
 
 from firmwaretools.trace_decorator import decorate, traceLog, getLog
+import firmwaretools.plugins as plugins
+
+import ftcommands
+
+plugin_type = (plugins.TYPE_CLI,)
+requires_api_version = "1.0"
 
 moduleLog = getLog()
 
-class YumCommand(object):
-        
+def config_hook(conduit, *args, **kargs):
+    conduit.getOptParser().addEarlyParse("--inventory")
+    conduit.getOptParser().add_option(
+            "--inventory", help="List system inventory", 
+            action="store_const", const="inventory", 
+            dest="mode", default=None)
+    conduit.getBase().registerCommand(InventoryCommand())
+
+class InventoryCommand(ftcommands.YumCommand):
+    decorate(traceLog())
     def getModes(self):
-        return []
+        return ['inventory']
 
-    def doCheck(self, base, mode, cmdline, processedArgs):
-        pass
-
-    def addSubOptions(self, base, mode, cmdline, processedArgs):
-        pass
-
+    decorate(traceLog())
     def doCommand(self, base, mode, cmdline, processedArgs):
-        """
-        @return: (exit_code, [ errors ]) where exit_code is:
-           0 = we're done, exit
-           1 = we've errored, exit with error string
-        """
-        return 0, ['Nothing to do']
-    
+        for pkg in base.yieldInventory():
+            moduleLog.info("%s = %s" % (str(pkg), pkg.version))
+
+        return [0, "Done"]
 

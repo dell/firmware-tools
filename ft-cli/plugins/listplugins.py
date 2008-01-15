@@ -20,26 +20,37 @@ Classes for subcommands of the yum command line interface.
 """
 
 from firmwaretools.trace_decorator import decorate, traceLog, getLog
+import firmwaretools.plugins as plugins
+
+import ftcommands
+
+plugin_type = (plugins.TYPE_CLI,)
+requires_api_version = "1.0"
 
 moduleLog = getLog()
 
-class YumCommand(object):
-        
+def config_hook(conduit, *args, **kargs):
+    conduit.getOptParser().addEarlyParse("--listplugins")
+    conduit.getOptParser().add_option(
+        "--listplugins", action="store_const", const="listplugins", 
+        dest="mode", help="list available plugins.")
+    conduit.getBase().registerCommand(ListPluginsCommand())
+
+class ListPluginsCommand(ftcommands.YumCommand):
+    decorate(traceLog())
     def getModes(self):
-        return []
+        return ['listplugins']
 
-    def doCheck(self, base, mode, cmdline, processedArgs):
-        pass
-
-    def addSubOptions(self, base, mode, cmdline, processedArgs):
-        pass
-
+    decorate(traceLog())
     def doCommand(self, base, mode, cmdline, processedArgs):
-        """
-        @return: (exit_code, [ errors ]) where exit_code is:
-           0 = we're done, exit
-           1 = we've errored, exit with error string
-        """
-        return 0, ['Nothing to do']
-    
+        moduleLog.info("Available Plugins:")
+        for p in base.listPluginsFromIni():
+            moduleLog.info("\t%s" % p)
+
+        moduleLog.info("Loaded Plugins:")
+        for p in base.plugins.listLoaded():
+            moduleLog.info("\t%s" % p)
+
+        return [0, "Done"]
+
 

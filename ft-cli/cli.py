@@ -61,10 +61,6 @@ class BaseCli(firmwaretools.FtBase):
         self.verbose_logger = getLog(prefix="verbose.")
 
         self.cli_commands = {}
-        self.registerCommand(ftcommands.UpdateCommand())
-        self.registerCommand(ftcommands.InventoryCommand())
-        self.registerCommand(ftcommands.BootstrapCommand())
-        self.registerCommand(ftcommands.ListPluginsCommand())
 
     def registerCommand(self, command):
         for name in command.getModes():
@@ -77,18 +73,19 @@ class BaseCli(firmwaretools.FtBase):
         sets up self.conf and self.cmds as well as logger objects 
         in base instance"""
 
-        self.cmdargs = args
+        self.fullCmdLine = args
 
         self.optparser = FtOptionParser( usage='ft [options]', version=__VERSION__)
         
         # Parse only command line options that affect basic yum setup
+        self.args = []
         self.opts = self.optparser.firstParse(args)
 
         self.verbosity = self.opts.verbosity
         self.trace = self.opts.trace
         self.loggingConfig = self.opts.configFiles[0]
 
-        pluginTypes = [plugins.TYPE_CORE, plugins.TYPE_INTERACTIVE] 
+        pluginTypes = [plugins.TYPE_CLI, plugins.TYPE_CORE, plugins.TYPE_INTERACTIVE] 
         if not self.opts.fake_mode:
             pluginTypes.extend([plugins.TYPE_INVENTORY, plugins.TYPE_BOOTSTRAP])
         else:
@@ -108,52 +105,32 @@ class BaseCli(firmwaretools.FtBase):
             self.logger.critical(_('Options Error: %s'), e)
             sys.exit(1)
 
-        # subcommands can add new optparser stuff in doCheck()
-        self.parseCommands()
+        # redo firstparse in case plugin added a new mode
+        self.opts = self.optparser.firstParse(args)
+
+        # subcommands can add new optparser stuff in addSubOptions()
+        self.doCommands("addSubOptions")
 
         # Now parse the command line for real and 
         self.opts, self.args = self.optparser.parse_args(args)
 
-        
+        # check fully-processed cmdline options
+        self.doCommands("doCheck")
+ 
     decorate(traceLog())
-    def parseCommands(self):
-        """reads self.cmds and parses them out to make sure that the requested 
-        base command + argument makes any sense at all""" 
+    def doCommands(self, funcName="doCommand"):
         if not self.cli_commands.has_key(self.opts.mode):
             self.usage()
             raise CliError, "mode not specified."
-    
-        self.cli_commands[self.opts.mode].doCheck(self, self.opts.mode, self.cmdargs)
 
-    decorate(traceLog())
-    def doShell(self):
-        """do a shell-like interface for commands"""
-        pass
+        return getattr(self.cli_commands[self.opts.mode], funcName)(self,
+            self.opts.mode, self.fullCmdLine, self.args)
 
-    decorate(traceLog())
-    def doCommands(self):
-        """
-        Calls the base command passes the extended commands/args out to be
-        parsed (most notably package globs).
-        
-        Returns a numeric result code and an optional string
-           - 0 = we're done, exit
-           - 1 = we've errored, exit with error string
-           - 2 = we've got work yet to do, onto the next stage
-        """
-        
-        return self.cli_commands[self.opts.mode].doCommand(self, self.opts.mode, self.args)
-    
 
     decorate(traceLog())
     def usage(self):
         ''' Print out command line usage '''
         self.optparser.print_help()
-
-    decorate(traceLog())
-    def shellUsage(self):
-        ''' Print out the shell usage '''
-        self.optparser.print_usage()
 
     decorate(traceLog())
     def updateFirmware(self):
@@ -256,24 +233,12 @@ class BaseCli(firmwaretools.FtBase):
                 print
                 print e
                 break
-
-
-
-
-
     
 
-from optparse import OptionParser
 class FtOptionParser(OptionParser):
     """Unified cmdline option parsing and config file handling."""
     def __init__(self, *args, **kargs):
         OptionParser.__init__(self, *args, **kargs)
-        
-        self.add_option("--inventory", help="", action="store_const", const="inventory", dest="mode", default=None)
-        self.add_option("--update", help="", action="store_const", const="update", dest="mode")
-        self.add_option("--bootstrap", help="", action="store_const", const="bootstrap", dest="mode")
-        self.add_option("--listplugins", action="store_const", const="listplugins", dest="mode", help="list available plugins.")
-
 
         self.add_option("-c", "--config", help="Override default config file with user-specified config file.", dest="configFiles", action="append", default=[])
         self.add_option("--extra-plugin-config", help="Add additional plugin config file.", action="append", default=[], dest="extraConfigs")
@@ -285,10 +250,16 @@ class FtOptionParser(OptionParser):
 
         # put all 'mode' arguments here so we know early what mode we are in. 
         self.parseOptionsFirst_novalopts = [
-                "--version","-q", "-v", "--quiet", "--verbose", "--trace", "--fake-mode",
-                "--inventory", "--update", "--bootstrap", "--listplugins",
-                ]
-        self.parseOptionsFirst_valopts = ["-c", "--config", "--disableplugin", "--extra-plugin-config"]
+            "--version", "--help", "-q", "-v", "--quiet", "--verbose", 
+            "--trace", "--fake-mode", ]
+        self.parseOptionsFirst_valopts = [
+            "-c", "--config", "--disableplugin", "--extra-plugin-config"]
+
+    def addEarlyParse(self, opt, arg=0):
+        if arg:
+            self.parseOptionsFirst_valopts.append(opt)
+        else:
+            self.parseOptionsFirst_novalopts.append(opt)
 
     def firstParse(self, args):
         args = _filtercmdline(
