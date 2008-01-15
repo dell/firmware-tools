@@ -62,6 +62,10 @@ make install DESTDIR=%{buildroot} INSTALL="%{__install} -p"
 mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/firmware/firmware.d/
 mkdir -p $RPM_BUILD_ROOT/%{_datadir}/firmware
 
+ln $RPM_BUILD_ROOT/usr/sbin/firmwaretool $RPM_BUILD_ROOT/usr/sbin/inventory_firmware
+ln $RPM_BUILD_ROOT/usr/sbin/firmwaretool $RPM_BUILD_ROOT/usr/sbin/bootstrap_firmware
+ln $RPM_BUILD_ROOT/usr/sbin/firmwaretool $RPM_BUILD_ROOT/usr/sbin/update_firmware
+
 %if "%{enable_yum_plugins}" != "1"
 rm -rf $RPM_BUILD_ROOT/usr/lib/yum-plugins
 rm -rf $RPM_BUILD_ROOT/etc/yum/pluginconf.d
