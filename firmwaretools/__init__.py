@@ -130,6 +130,7 @@ class FtBase(object):
             "pythondir": PYTHONDIR, 
             "pkgpythondir": PKGPYTHONDIR, 
             "pkgdatadir": PKGDATADIR, 
+            "datadir": DATADIR, 
             "confdir": CONFDIR, 
         } 
         self._ini = ConfigParser.SafeConfigParser(defaults) 
@@ -158,15 +159,15 @@ class FtBase(object):
         class foo(object): pass
         conf = foo()
 
+        conf.module = None
+        conf.enabled = False
+        conf.search = None
+
         for i in self._ini.options(section):
             setattr(conf, i, self._ini.get(section, i))
 
         #required ("enabled", "module"):
         if getattr(conf, "module", None) is None:
-            conf.module = None
-            conf.enabled = False
-
-        if getattr(conf, "enabled", None) is None:
             conf.enabled = False
 
         return conf
