@@ -20,6 +20,7 @@ Firmware-tools: update infrastructure for firmware
 """
 
 import ConfigParser
+import fcntl
 import logging
 import logging.config
 import os
