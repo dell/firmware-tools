@@ -13,10 +13,9 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # Copyright 2005 Duke University
 
-import os
-import imp
 import atexit
 import gettext
+import sys
 
 from trace_decorator import decorate, traceLog, getLog
 import errors
@@ -29,9 +28,11 @@ TYPE_INTERACTIVE = 1
 TYPE_INVENTORY = 2
 TYPE_BOOTSTRAP = 3
 
-TYPE_MOCK_CORE = 4
-TYPE_MOCK_INVENTORY = 5
-TYPE_MOCK_BOOTSTRAP = 6
+TYPE_CLI = 4
+
+TYPE_MOCK_CORE = 5
+TYPE_MOCK_INVENTORY = 6
+TYPE_MOCK_BOOTSTRAP = 7
 
 ALL_TYPES = (TYPE_CORE, TYPE_INTERACTIVE, TYPE_BOOTSTRAP, TYPE_INVENTORY)
 
@@ -95,7 +96,14 @@ class Plugins:
     decorate(traceLog())
     def _loadModule(self, pluginName, conf, types):
         # load plugin
-        module = __import__(conf.module, globals(),  locals(), [])
+        try:
+            savePath = sys.path
+            if conf.search is not None:
+                sys.path.insert(0, conf.search)
+            module = __import__(conf.module, globals(),  locals(), [])
+        finally:
+            sys.path = savePath
+
         for i in conf.module.split(".")[1:]:
             module = getattr(module, i)
 
