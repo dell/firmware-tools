@@ -45,7 +45,7 @@ class InventoryCommand(ftcommands.YumCommand):
     decorate(traceLog())
     def doCommand(self, base, mode, cmdline, processedArgs):
         for pkg in base.yieldInventory():
-            moduleLog.info("%s = %s" % (str(pkg), pkg.version))
+            print("%s = %s" % (str(pkg), pkg.version))
 
         return [0, "Done"]
 
