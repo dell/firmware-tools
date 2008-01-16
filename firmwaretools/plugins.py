@@ -22,27 +22,36 @@ import errors
 
 API_VERSION = '2.0'
 
+NEXT_AVAIL_TYPE_NUM = 0
+def registerPluginType(name):
+    global NEXT_AVAIL_TYPE_NUM
+    globals()[name] = NEXT_AVAIL_TYPE_NUM
+    NEXT_AVAIL_TYPE_NUM = NEXT_AVAIL_TYPE_NUM + 1
+
 # Plugin types
-TYPE_CORE = 0
-TYPE_INTERACTIVE = 1
-TYPE_INVENTORY = 2
-TYPE_BOOTSTRAP = 3
+registerPluginType("TYPE_CORE")
+registerPluginType("TYPE_INVENTORY")
+registerPluginType("TYPE_BOOTSTRAP")
 
-TYPE_CLI = 4
+registerPluginType("TYPE_CLI")
 
-TYPE_MOCK_CORE = 5
-TYPE_MOCK_INVENTORY = 6
-TYPE_MOCK_BOOTSTRAP = 7
+# testing types
+registerPluginType("TYPE_MOCK_CORE")
+registerPluginType("TYPE_MOCK_INVENTORY")
+registerPluginType("TYPE_MOCK_BOOTSTRAP")
 
-ALL_TYPES = (TYPE_CORE, TYPE_INTERACTIVE, TYPE_BOOTSTRAP, TYPE_INVENTORY)
+# all the 'normal' types
+ALL_TYPES = (TYPE_CORE, TYPE_BOOTSTRAP, TYPE_INVENTORY)
 
-# Mapping of slots to conduit classes
-SLOT_TO_CONDUIT = {
-    'config': 'PluginConduit',
-    'prebootstrap': 'PluginConduit',
-    'preinventory': 'PluginConduit',
-    'close': 'PluginConduit',
-    }
+SLOT_TO_CONDUIT = {}
+def registerSlotToConduit(slot, conduit):
+    global SLOT_TO_CONDUIT
+    SLOT_TO_CONDUIT[slot] = conduit
+
+registerSlotToConduit('config', 'PluginConduit')
+registerSlotToConduit('prebootstrap', 'PluginConduit')
+registerSlotToConduit('preinventory', 'PluginConduit')
+registerSlotToConduit('close', 'PluginConduit')
 
 moduleLog = getLog()
 moduleLogVerbose = getLog(prefix="verbose.")
@@ -142,6 +151,7 @@ class Plugins:
         moduleLogVerbose.info("\tLoaded %s plugin" % pluginName)
         self._plugins[pluginName] = {"conf": conf, "module": module}
 
+    decorate(traceLog())
     def listLoaded(self):
         return self._plugins.keys()
 
