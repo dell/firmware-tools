@@ -16,8 +16,8 @@ exeName = os.path.realpath(sys.argv[0])
 top_srcdir = os.path.join(os.path.dirname(exeName), "..")
 top_builddir = os.getcwd()
 
-sys.path.insert(0,top_builddir)
-sys.path.insert(0,"%s/ft-cli/" % top_builddir)
+sys.path.insert(0,top_srcdir)
+sys.path.insert(0,"%s/ft-cli/" % top_srcdir)
 
 # runs all modules TestCase() classes in files that match test*.py
 if __name__ == "__main__":
