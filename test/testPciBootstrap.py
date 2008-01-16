@@ -29,7 +29,7 @@ class TestCase(unittest.TestCase):
         # manually setup fake config file
         f = firmwaretools.FtBase()
         pluginTypes = [
-            plugins.TYPE_CORE, plugins.TYPE_INTERACTIVE,
+            plugins.TYPE_CORE,
             plugins.TYPE_MOCK_CORE, plugins.TYPE_MOCK_INVENTORY, plugins.TYPE_MOCK_BOOTSTRAP,
             ] 
         f._getConfig(None, pluginTypes, None, [])

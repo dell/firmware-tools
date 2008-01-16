@@ -85,7 +85,7 @@ class BaseCli(firmwaretools.FtBase):
         self.trace = self.opts.trace
         self.loggingConfig = self.opts.configFiles[0]
 
-        pluginTypes = [plugins.TYPE_CLI, plugins.TYPE_CORE, plugins.TYPE_INTERACTIVE] 
+        pluginTypes = [plugins.TYPE_CLI, plugins.TYPE_CORE]
         if not self.opts.fake_mode:
             pluginTypes.extend([plugins.TYPE_INVENTORY, plugins.TYPE_BOOTSTRAP])
         else:
