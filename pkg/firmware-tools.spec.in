@@ -63,10 +63,11 @@ mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/firmware/firmware.d/
 mkdir -p $RPM_BUILD_ROOT/%{_datadir}/firmware
 
 # backwards compatibility symlinks
-ln $RPM_BUILD_ROOT/usr/sbin/firmwaretool $RPM_BUILD_ROOT/usr/sbin/inventory_firmware
-ln $RPM_BUILD_ROOT/usr/sbin/firmwaretool $RPM_BUILD_ROOT/usr/sbin/bootstrap_firmware
-ln $RPM_BUILD_ROOT/usr/sbin/firmwaretool $RPM_BUILD_ROOT/usr/sbin/update_firmware
-ln $RPM_BUILD_ROOT/usr/sbin/firmwaretool $RPM_BUILD_ROOT/usr/bin/update_firmware
+mkdir -p $RPM_BUILD_ROOT/%{_bindir}
+ln $RPM_BUILD_ROOT/%{_sbindir}/firmwaretool $RPM_BUILD_ROOT/%{_sbindir}/inventory_firmware
+ln $RPM_BUILD_ROOT/%{_sbindir}/firmwaretool $RPM_BUILD_ROOT/%{_sbindir}/bootstrap_firmware
+ln $RPM_BUILD_ROOT/%{_sbindir}/firmwaretool $RPM_BUILD_ROOT/%{_sbindir}/update_firmware
+ln $RPM_BUILD_ROOT/%{_sbindir}/firmwaretool $RPM_BUILD_ROOT/%{_bindir}/update_firmware
 
 %if "%{enable_yum_plugins}" != "1"
 rm -rf $RPM_BUILD_ROOT/usr/lib/yum-plugins
@@ -83,6 +84,7 @@ rm -rf $RPM_BUILD_ROOT
 %doc COPYING-GPL COPYING-OSL COPYING.LIB README
 %{python_sitelib}/*
 %attr(0755,root,root) %{_sbindir}/*
+%attr(0755,root,root) %{_bindir}/*
 %{_datadir}/firmware-tools/
 %dir %{_sysconfdir}/firmware
 %dir %{_sysconfdir}/firmware/firmware.d
