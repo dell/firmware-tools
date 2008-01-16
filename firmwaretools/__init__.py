@@ -34,13 +34,16 @@ import repository
 #import config
 import plugins
 
+def mkselfrelpath(*args):
+    return os.path.normpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), *args))
+    
 # these are replaced by autotools when installed.
 __VERSION__="unreleased_version"
-SYSCONFDIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","etc")
-PYTHONDIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..")
-PKGPYTHONDIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","firmwaretools")
-PKGDATADIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","ft-cli")
-DATADIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","ft-cli")
+SYSCONFDIR=mkselfrelpath("..", "etc")
+PYTHONDIR=mkselfrelpath("..")
+PKGPYTHONDIR=mkselfrelpath("..", "firmwaretools")
+PKGDATADIR=mkselfrelpath("..", "ft-cli")
+DATADIR=mkselfrelpath("..", "ft-cli")
 PKGCONFDIR=os.path.join(SYSCONFDIR,"firmware")
 # end build system subs
 
