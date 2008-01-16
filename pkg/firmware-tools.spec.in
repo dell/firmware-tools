@@ -64,10 +64,10 @@ mkdir -p $RPM_BUILD_ROOT/%{_datadir}/firmware
 
 # backwards compatibility symlinks
 mkdir -p $RPM_BUILD_ROOT/%{_bindir}
-ln $RPM_BUILD_ROOT/%{_sbindir}/firmwaretool $RPM_BUILD_ROOT/%{_sbindir}/inventory_firmware
-ln $RPM_BUILD_ROOT/%{_sbindir}/firmwaretool $RPM_BUILD_ROOT/%{_sbindir}/bootstrap_firmware
-ln $RPM_BUILD_ROOT/%{_sbindir}/firmwaretool $RPM_BUILD_ROOT/%{_sbindir}/update_firmware
-ln $RPM_BUILD_ROOT/%{_sbindir}/firmwaretool $RPM_BUILD_ROOT/%{_bindir}/update_firmware
+ln -s firmwaretool $RPM_BUILD_ROOT/%{_sbindir}/inventory_firmware
+ln -s firmwaretool $RPM_BUILD_ROOT/%{_sbindir}/bootstrap_firmware
+ln -s firmwaretool $RPM_BUILD_ROOT/%{_sbindir}/update_firmware
+ln -s %{_sbindir}/firmwaretool $RPM_BUILD_ROOT/%{_bindir}/update_firmware
 
 %if "%{enable_yum_plugins}" != "1"
 rm -rf $RPM_BUILD_ROOT/usr/lib/yum-plugins
