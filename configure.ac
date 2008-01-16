@@ -55,12 +55,10 @@ PACKAGE_STRING=[`echo ${RELEASE_NAME} ${RELEASE_MAJOR}.${RELEASE_MINOR}.${RELEAS
 VERSION=$PACKAGE_VERSION
 
 cat confdefs.h |
-    grep -v 'define VERSION ' |
     grep -v 'define PACKAGE_VERSION ' |
     grep -v 'define PACKAGE_STRING '  > confdefs.new
 mv confdefs.new confdefs.h
 cat >>confdefs.h <<_ACEOF 
-#define VERSION "$VERSION"
 #define PACKAGE_VERSION "$PACKAGE_VERSION"
 #define PACKAGE_STRING "$PACKAGE_STRING"
 _ACEOF
