@@ -5,7 +5,7 @@ include Makefile-std
 pkgconfdir = $(sysconfdir)/firmware/
 nodist_pkgconf_DATA = etc/firmware/firmware.conf
 
-EXTRA_DIST += etc doc glade pkg/debian test yum-plugin COPYING-GPL COPYING-OSL COPYING.LIB
+EXTRA_DIST += etc doc glade test yum-plugin COPYING-GPL COPYING-OSL COPYING.LIB
 
 TESTS = test/testAll.py
 nodist_check_SCRIPTS = test/testAll.py
