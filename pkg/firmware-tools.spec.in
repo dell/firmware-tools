@@ -32,7 +32,7 @@ Source0:        http://linux.dell.com/libsmbios/download/%{name}/%{name}-%{versi
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch:      noarch
 
-BuildRequires:  python-devel
+BuildRequires:  python-devel, python-decoratortools
 Requires: rpm-python
 Provides: firmware_inventory(pci) = 0:%{release_version}
 
