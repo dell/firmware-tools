@@ -232,6 +232,10 @@ class PluginConduit:
     def getBase(self):
         return self._base
 
+    decorate(traceLog())
+    def getConf(self):
+        return self._conf
+
 decorate(traceLog())
 def parsever(apiver):
     maj, min = apiver.split('.')
