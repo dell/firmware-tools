@@ -110,15 +110,19 @@ class Plugins:
             if conf.search is not None:
                 sys.path.insert(0, conf.search)
             module = __import__(conf.module, globals(),  locals(), [])
-        finally:
             sys.path = savePath
+        except:
+            sys.path = savePath
+            raise errors.ConfigError(
+                'Plugin "%s" cannot be found.' % conf.module)
+
 
         for i in conf.module.split(".")[1:]:
             module = getattr(module, i)
 
         # Check API version required by the plugin
         if not hasattr(module, 'requires_api_version'):
-             raise errors.ConfigError(
+            raise errors.ConfigError(
                 'Plugin "%s" doesn\'t specify required API version' % conf.module
                 )
 
