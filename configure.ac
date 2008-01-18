@@ -15,7 +15,7 @@ temp_RELEASE_EXTRALEVEL=
 
 AC_PREREQ(2.61)
 AC_CONFIG_AUX_DIR([pkg])
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE(1.9 tar-ustar no-define)
 AM_MAINTAINER_MODE
 
 # Checks for programs.
@@ -49,17 +49,16 @@ if test -z "$RELEASE_RPM_EXTRALEVEL"; then
     fi
 fi
 
+PACKAGE=$RELEASE_NAME
 PACKAGE_VERSION=[`echo ${RELEASE_MAJOR}.${RELEASE_MINOR}.${RELEASE_SUBLEVEL}${RELEASE_EXTRALEVEL}`]
 PACKAGE_STRING=[`echo ${RELEASE_NAME} ${RELEASE_MAJOR}.${RELEASE_MINOR}.${RELEASE_SUBLEVEL}${RELEASE_EXTRALEVEL}`]
 VERSION=$PACKAGE_VERSION
 
 cat confdefs.h |
-    grep -v 'define VERSION ' |
     grep -v 'define PACKAGE_VERSION ' |
     grep -v 'define PACKAGE_STRING '  > confdefs.new
 mv confdefs.new confdefs.h
 cat >>confdefs.h <<_ACEOF 
-#define VERSION "$VERSION"
 #define PACKAGE_VERSION "$PACKAGE_VERSION"
 #define PACKAGE_STRING "$PACKAGE_STRING"
 _ACEOF

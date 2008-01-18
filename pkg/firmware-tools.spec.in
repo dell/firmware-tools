@@ -32,7 +32,7 @@ Source0:        http://linux.dell.com/libsmbios/download/%{name}/%{name}-%{versi
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch:      noarch
 
-BuildRequires:  python-devel
+BuildRequires:  python-devel, python-decoratortools, rpm-python
 Requires: rpm-python
 Provides: firmware_inventory(pci) = 0:%{release_version}
 
@@ -62,9 +62,12 @@ make install DESTDIR=%{buildroot} INSTALL="%{__install} -p"
 mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/firmware/firmware.d/
 mkdir -p $RPM_BUILD_ROOT/%{_datadir}/firmware
 
-ln $RPM_BUILD_ROOT/usr/sbin/firmwaretool $RPM_BUILD_ROOT/usr/sbin/inventory_firmware
-ln $RPM_BUILD_ROOT/usr/sbin/firmwaretool $RPM_BUILD_ROOT/usr/sbin/bootstrap_firmware
-ln $RPM_BUILD_ROOT/usr/sbin/firmwaretool $RPM_BUILD_ROOT/usr/sbin/update_firmware
+# backwards compatibility symlinks
+mkdir -p $RPM_BUILD_ROOT/%{_bindir}
+ln -s firmwaretool $RPM_BUILD_ROOT/%{_sbindir}/inventory_firmware
+ln -s firmwaretool $RPM_BUILD_ROOT/%{_sbindir}/bootstrap_firmware
+ln -s firmwaretool $RPM_BUILD_ROOT/%{_sbindir}/update_firmware
+ln -s %{_sbindir}/firmwaretool $RPM_BUILD_ROOT/%{_bindir}/update_firmware
 
 %if "%{enable_yum_plugins}" != "1"
 rm -rf $RPM_BUILD_ROOT/usr/lib/yum-plugins
@@ -81,6 +84,7 @@ rm -rf $RPM_BUILD_ROOT
 %doc COPYING-GPL COPYING-OSL COPYING.LIB README
 %{python_sitelib}/*
 %attr(0755,root,root) %{_sbindir}/*
+%attr(0755,root,root) %{_bindir}/*
 %{_datadir}/firmware-tools/
 %dir %{_sysconfdir}/firmware
 %dir %{_sysconfdir}/firmware/firmware.d

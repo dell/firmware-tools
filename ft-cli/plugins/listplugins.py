@@ -43,13 +43,13 @@ class ListPluginsCommand(ftcommands.YumCommand):
 
     decorate(traceLog())
     def doCommand(self, base, mode, cmdline, processedArgs):
-        moduleLog.info("Available Plugins:")
+        print("Available Plugins:")
         for p in base.listPluginsFromIni():
-            moduleLog.info("\t%s" % p)
+            print("\t%s" % p)
 
-        moduleLog.info("Loaded Plugins:")
+        print("Loaded Plugins:")
         for p in base.plugins.listLoaded():
-            moduleLog.info("\t%s" % p)
+            print("\t%s" % p)
 
         return [0, "Done"]
 

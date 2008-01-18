@@ -268,7 +268,7 @@ class FtOptionParser(OptionParser):
         opts, args = self.parse_args(args=args)
 
         if not opts.configFiles:
-            opts.configFiles = [os.path.join(firmwaretools.CONFDIR, "firmware.conf"), ]
+            opts.configFiles = [os.path.join(firmwaretools.PKGCONFDIR, "firmware.conf"), ]
 
         opts.configFiles = opts.configFiles + opts.extraConfigs
 

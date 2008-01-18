@@ -21,6 +21,7 @@ Firmware-tools: update infrastructure for firmware
 
 import ConfigParser
 import fcntl
+import glob
 import logging
 import logging.config
 import os
@@ -33,14 +34,17 @@ import repository
 #import config
 import plugins
 
+def mkselfrelpath(*args):
+    return os.path.normpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), *args))
+    
 # these are replaced by autotools when installed.
 __VERSION__="unreleased_version"
-SYSCONFDIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","etc")
-PYTHONDIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..")
-PKGPYTHONDIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","firmwaretools")
-PKGDATADIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","ft-cli")
-DATADIR=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),"..","ft-cli")
-CONFDIR=os.path.join(SYSCONFDIR,"firmware")
+SYSCONFDIR=mkselfrelpath("..", "etc")
+PYTHONDIR=mkselfrelpath("..")
+PKGPYTHONDIR=mkselfrelpath("..", "firmwaretools")
+PKGDATADIR=mkselfrelpath("..", "ft-cli")
+DATADIR=mkselfrelpath("..", "ft-cli")
+PKGCONFDIR=os.path.join(SYSCONFDIR,"firmware")
 # end build system subs
 
 PID_FILE = '/var/run/ft.pid'
@@ -62,7 +66,7 @@ class FtBase(object):
 
         self.verbosity = 0
         self.trace = 0
-        self.loggingConfig = os.path.join(CONFDIR, "firmware.conf")
+        self.loggingConfig = os.path.join(PKGCONFDIR, "firmware.conf")
 
         self._bootstrapFuncs = {}
         self._inventoryFuncs = {}
@@ -84,7 +88,7 @@ class FtBase(object):
             return self._conf
 
         if cfgFiles is None:
-            cfgFiles = [os.path.join(CONFDIR, "firmware.conf"),]
+            cfgFiles = [os.path.join(PKGCONFDIR, "firmware.conf"),]
 
         if disabledPlugins is None:
             disabledPlugins = []
@@ -133,7 +137,7 @@ class FtBase(object):
             "datadir": DATADIR, 
             "pkgpythondir": PKGPYTHONDIR, 
             "pkgdatadir": PKGDATADIR, 
-            "confdir": CONFDIR, 
+            "pkgconfdir": PKGCONFDIR, 
         } 
         self._ini = ConfigParser.SafeConfigParser(defaults) 
         for i in cfgFiles:
@@ -142,7 +146,7 @@ class FtBase(object):
         mapping = {
             # conf.WHAT    : (iniSection, iniOption, default)
             "storageTopdir": ('main', 'storage_topdir', "%s/firmware" % DATADIR),
-            "pluginConfDir": ('main', 'plugin_config_dir', os.path.join(CONFDIR, "firmware.d")),
+            "pluginConfDir": ('main', 'plugin_config_dir', os.path.join(PKGCONFDIR, "firmware.d")),
             "rpmMode": ('main', 'rpm_mode', "manual"),
         }
         for key, val in mapping.items():
@@ -150,6 +154,10 @@ class FtBase(object):
                 setattr(self.conf, key, self._ini.get(val[0], val[1]))
             else:
                 setattr(self.conf, key, val[2])
+
+        # read plugin configs
+        for i in glob.glob( "%s/*.conf" % self.conf.pluginConfDir ):
+            self._ini.read(i)
 
     decorate(traceLog())
     def listPluginsFromIni(self):

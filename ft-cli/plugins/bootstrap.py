@@ -58,12 +58,12 @@ class BootstrapCommand(ftcommands.YumCommand):
             if base.opts.comma_separated:
                 out = out + ",%s" % parse(pkg.name)
             else:
-                moduleLog.info("%s" % parse(pkg.name))
+                print("%s" % parse(pkg.name))
         
         # strip leading comma:
         out = out[1:]
         if out:
-            moduleLog.info(out) 
+            print(out) 
 
         return [0, "Done"]
 
