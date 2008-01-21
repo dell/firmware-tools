@@ -41,10 +41,10 @@ cli_PYTHON = \
 
 plugindir = $(clidir)/plugins
 plugin_PYTHON = \
-	ft-cli/plugins/bootstrap.py	\
-	ft-cli/plugins/inventory.py	\
-	ft-cli/plugins/listplugins.py	\
-	ft-cli/plugins/update.py
+	ft-cli/plugins/bootstrap_cmd.py	\
+	ft-cli/plugins/inventory_cmd.py	\
+	ft-cli/plugins/listplugins_cmd.py	\
+	ft-cli/plugins/update_cmd.py
 
 REPLACE_VARS_ON_INSTALL= 		   \
 	$(sbindir)/firmwaretool  	   \
