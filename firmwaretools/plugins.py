@@ -111,7 +111,7 @@ class Plugins:
                 sys.path.insert(0, conf.search)
             module = __import__(conf.module, globals(),  locals(), [])
             sys.path = savePath
-        except:
+        except ImportError:
             sys.path = savePath
             raise errors.ConfigError(
                 'Plugin "%s" cannot be found.' % conf.module)
