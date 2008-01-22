@@ -12,7 +12,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-# Copyright 2005 Duke University 
+# Copyright 2005 Duke University
 # Written by Seth Vidal
 
 """
@@ -49,7 +49,7 @@ class CliError(errors.BaseError): pass
 class BaseCli(firmwaretools.FtBase):
     """This is the base class for cli.
        Inherits from FtBase """
-       
+
     def __init__(self):
         # handle sigquit early on
         signal.signal(signal.SIGQUIT, sigquit)
@@ -67,16 +67,16 @@ class BaseCli(firmwaretools.FtBase):
             if self.cli_commands.has_key(name):
                 raise errors.ConfigError('Command "%s" already defined' % name)
             self.cli_commands[name] = command
-            
+
     def getOptionsConfig(self, args):
         """parses command line arguments, takes cli args:
-        sets up self.conf and self.cmds as well as logger objects 
+        sets up self.conf and self.cmds as well as logger objects
         in base instance"""
 
         self.fullCmdLine = args
 
-        self.optparser = FtOptionParser( usage='ft [options]', version=__VERSION__)
-        
+        self.optparser = FtOptionParser( usage='%prog [options]', version=__VERSION__)
+
         # Parse only command line options that affect basic yum setup
         self.args = []
         self.opts = self.optparser.firstParse(args)
@@ -93,11 +93,11 @@ class BaseCli(firmwaretools.FtBase):
 
         # Read up configuration options and initialise plugins
         try:
-            self._getConfig(self.opts.configFiles, 
+            self._getConfig(self.opts.configFiles,
                     pluginTypes,
                     optparser=self.optparser,
                     disabledPlugins=self.opts.disabledPlugins)
-                    
+
         except errors.ConfigError, e:
             self.logger.critical(_('Config Error: %s'), e)
             sys.exit(1)
@@ -111,12 +111,12 @@ class BaseCli(firmwaretools.FtBase):
         # subcommands can add new optparser stuff in addSubOptions()
         self.doCommands("addSubOptions")
 
-        # Now parse the command line for real and 
+        # Now parse the command line for real and
         self.opts, self.args = self.optparser.parse_args(args)
 
         # check fully-processed cmdline options
         self.doCommands("doCheck")
- 
+
     decorate(traceLog())
     def doCommands(self, funcName="doCommand"):
         if not self.cli_commands.has_key(self.opts.mode):
@@ -232,7 +232,7 @@ class BaseCli(firmwaretools.FtBase):
                 print
                 print e
                 break
-    
+
 
 class FtOptionParser(OptionParser):
     """Unified cmdline option parsing and config file handling."""
@@ -247,9 +247,9 @@ class FtOptionParser(OptionParser):
         self.add_option("--fake-mode", action="store_true", dest="fake_mode", default=False, help="Display fake data for unit-testing.")
         self.add_option("--disableplugin", action="append", dest="disabledPlugins", default=[], help="Disable single named plugin.")
 
-        # put all 'mode' arguments here so we know early what mode we are in. 
+        # put all 'mode' arguments here so we know early what mode we are in.
         self.parseOptionsFirst_novalopts = [
-            "--version", "--help", "-q", "-v", "--quiet", "--verbose", 
+            "--version", "-q", "-v", "--quiet", "--verbose",
             "--trace", "--fake-mode", ]
         self.parseOptionsFirst_valopts = [
             "-c", "--config", "--disableplugin", "--extra-plugin-config"]
