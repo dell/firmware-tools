@@ -39,6 +39,8 @@ def main(args):
     def exIOError(e):
         if e.errno == 32:
             logger.critical('Exiting on Broken Pipe')
+        else:
+            logger.critical(str(e))
         sys.exit(1)
 
     decorate(traceLog())
