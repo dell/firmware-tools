@@ -131,7 +131,11 @@ def lspciGenerator():
             name = "device%s" % deviceNum
             deviceNum = deviceNum + 1
         oneDevData[name] = value
-    err = fd.close()
+
+    try:
+        err = fd.close()
+    except AttributeError:
+        err = False
 
     if err:
         # Do it the hard way
