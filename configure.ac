@@ -4,12 +4,12 @@
 
 ####################################
 # change version here.
-AC_INIT([firmware-tools],[2.0.0])
+AC_INIT([firmware-tools],[2.0.1])
 
 temp_RELEASE_NAME=firmware-tools
 temp_RELEASE_MAJOR=2
 temp_RELEASE_MINOR=0
-temp_RELEASE_SUBLEVEL=0
+temp_RELEASE_SUBLEVEL=1
 temp_RELEASE_EXTRALEVEL=
 ####################################
 
