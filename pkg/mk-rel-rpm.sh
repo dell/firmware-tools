@@ -1,5 +1,5 @@
 #!/bin/sh
-# vim:et:ai:ts=4:sw=4:filetype=sh:tw=0
+# vim:et:ai:ts=4:sw=4:filetype=sh:tw=0:
 
 set -x
 
@@ -11,24 +11,31 @@ umask 002
 [ -n "$LIBSMBIOS_TOPDIR" ] ||
     LIBSMBIOS_TOPDIR=/var/ftp/pub/Applications/libsmbios/
 
-. version.mk
-RELEASE_VERSION=${RELEASE_MAJOR}.${RELEASE_MINOR}.${RELEASE_SUBLEVEL}${RELEASE_EXTRALEVEL}
-RELEASE_STRING=${RELEASE_NAME}-${RELEASE_VERSION}
-DEST=$LIBSMBIOS_TOPDIR/download/${RELEASE_NAME}/$RELEASE_STRING/
-
 set -e
 
-git tag -u libsmbios -m "tag for official release: $RELEASE_STRING" v${RELEASE_VERSION}
+chmod -R +w _builddir ||:
+rm -rf _builddir
 
-make clean tarball srpm
+./autogen.sh
 
+mkdir _builddir
+pushd _builddir
+../configure
+make -e distcheck
+make -e srpm
+
+. version
+
+git tag -u libsmbios -m "tag for official release: $PACKAGE_STRING" v${PACKAGE_VERSION}
+
+DEST=$LIBSMBIOS_TOPDIR/download/${PACKAGE_NAME}/$PACKAGE_NAME-$PACKAGE_VERSION/
 mkdir -p $DEST
-for i in dist/*.tar.{gz,bz2} dist/*.zip dist/*.src.rpm; do
+for i in *.tar.{gz,bz2} *.zip *.src.rpm; do
     [ -e $i ] || continue
     [ ! -e $DEST/$(basename $i) ] || continue
     cp $i $DEST
 done
 
-/var/ftp/pub/yum/dell-repo/software/_tools/upload_rpm.sh dist/${RELEASE_STRING}-${RPM_RELEASE}*.src.rpm
+/var/ftp/pub/yum/dell-repo/software/_tools/upload_rpm.sh ${PACKAGE_NAME}-${PACKAGE_VERSION}-1*.src.rpm
 
 git push --tags origin master:master
