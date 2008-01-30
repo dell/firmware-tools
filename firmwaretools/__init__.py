@@ -227,6 +227,7 @@ class FtBase(object):
     def yieldBootstrap(self):
         self.plugins.run("prebootstrap")
         for name, func in self._bootstrapFuncs.items():
+            self.verbose_logger.info("running bootstrap for module: %s" % name)
             for i in func():
                 yield i
 
@@ -239,6 +240,7 @@ class FtBase(object):
     def yieldInventory(self):
         self.plugins.run("preinventory")
         for name, func in self._inventoryFuncs.items():
+            self.verbose_logger.info("running inventory for module: %s" % name)
             for i in func():
                 yield i
 

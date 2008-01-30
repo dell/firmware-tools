@@ -7,6 +7,11 @@ import logging
 import os
 import sys
 import types
+
+
+import warnings
+warnings.filterwarnings('ignore', category=FutureWarning)
+
 from peak.util.decorators import rewrap, decorate
 
 # defaults to module verbose log

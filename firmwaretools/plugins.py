@@ -22,6 +22,9 @@ import errors
 
 API_VERSION = '2.0'
 
+# plugin can raise this to disable plugin during load
+class DisablePlugin(Exception): pass
+
 NEXT_AVAIL_TYPE_NUM = 0
 def registerPluginType(name):
     global NEXT_AVAIL_TYPE_NUM
@@ -111,6 +114,8 @@ class Plugins:
                 sys.path.insert(0, conf.search)
             module = __import__(conf.module, globals(),  locals(), [])
             sys.path = savePath
+        except DisablePlugin:
+            return
         except ImportError:
             sys.path = savePath
             raise errors.ConfigError(

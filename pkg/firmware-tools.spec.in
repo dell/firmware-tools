@@ -25,7 +25,7 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch:      noarch
 
 BuildRequires:  python-devel, python-decoratortools, rpm-python
-Requires: rpm-python
+Requires: rpm-python, python-decoratortools
 Provides: firmware_inventory(pci) = 0:%{release_version}
 
 %description
