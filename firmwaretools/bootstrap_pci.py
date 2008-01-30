@@ -160,11 +160,9 @@ def supplementOldLspciFormat(oneDevData):
     deviceNum=0
     for line in fd:
         if not line.strip(): continue
-        dprint("line: %s" % line)
         name,value = line.split(":", 1)
         name = name.strip().lower()
         value = value.strip()
-        dprint("  name: %s\n  value: %s"% (name,value))
         if name == ("device"):
             name = "device%s" % deviceNum
             deviceNum = deviceNum + 1
