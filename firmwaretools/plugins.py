@@ -110,17 +110,18 @@ class Plugins:
         # load plugin
         try:
             savePath = sys.path
+            sys.path.insert(0,self.base.conf.pluginSearchPath)
             if conf.search is not None:
                 sys.path.insert(0, conf.search)
             module = __import__(conf.module, globals(),  locals(), [])
             sys.path = savePath
         except DisablePlugin:
+            moduleLogVerbose.info("\tPlugin raised DisablePlugin exception. skipping.")
             return
         except ImportError:
             sys.path = savePath
             raise errors.ConfigError(
                 'Plugin "%s" cannot be found.' % conf.module)
-
 
         for i in conf.module.split(".")[1:]:
             module = getattr(module, i)
@@ -153,7 +154,7 @@ class Plugins:
                 return
         # Check if this plugin has been temporary disabled
         if self.disabledPlugins:
-            if modname in self.disabledPlugins:
+            if pluginName in self.disabledPlugins:
                 moduleLogVerbose.info("\tPlugin %s not loaded: disabled" % pluginName)
                 return
 
