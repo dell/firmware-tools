@@ -115,6 +115,7 @@ class Plugins:
             module = __import__(conf.module, globals(),  locals(), [])
             sys.path = savePath
         except DisablePlugin:
+            moduleLogVerbose.info("\tPlugin raised DisablePlugin exception. skipping.")
             return
         except ImportError:
             sys.path = savePath
