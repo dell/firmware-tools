@@ -153,7 +153,7 @@ class Plugins:
                 return
         # Check if this plugin has been temporary disabled
         if self.disabledPlugins:
-            if modname in self.disabledPlugins:
+            if pluginName in self.disabledPlugins:
                 moduleLogVerbose.info("\tPlugin %s not loaded: disabled" % pluginName)
                 return
 
