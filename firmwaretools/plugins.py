@@ -118,10 +118,10 @@ class Plugins:
         except DisablePlugin:
             moduleLogVerbose.info("\tPlugin raised DisablePlugin exception. skipping.")
             return
-        except ImportError:
+        except ImportError, e:
             sys.path = savePath
             raise errors.ConfigError(
-                'Plugin "%s" cannot be found.' % conf.module)
+                'Plugin "%s" cannot be loaded: %s' % (conf.module, e))
 
         for i in conf.module.split(".")[1:]:
             module = getattr(module, i)
