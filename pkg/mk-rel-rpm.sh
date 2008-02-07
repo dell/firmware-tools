@@ -16,6 +16,7 @@ set -e
 chmod -R +w _builddir ||:
 rm -rf _builddir
 
+git clean -d
 ./autogen.sh
 
 mkdir _builddir

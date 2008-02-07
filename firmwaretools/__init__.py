@@ -48,6 +48,13 @@ PKGCONFDIR=os.path.join(SYSCONFDIR,"firmware")
 
 PID_FILE = '/var/run/ft.pid'
 
+class confObj(object):
+    def __getattribute__(self, name):
+        return object.__getattribute__(self, name.lower())
+    def __setattr__(self, name, value):
+        object.__setattr__(self, name.lower(), value)
+
+
 class FtBase(object):
     """This is a primary structure and base class. It houses the objects and
        methods needed to perform most things . It is almost an abstract
@@ -92,8 +99,7 @@ class FtBase(object):
         if disabledPlugins is None:
             disabledPlugins = []
 
-        class foo: pass
-        self.conf = foo()
+        self.conf = confObj()
 
         self.setupLogging(self.loggingConfig, self.verbosity, self.trace)
 
@@ -145,6 +151,7 @@ class FtBase(object):
         mapping = {
             # conf.WHAT    : (iniSection, iniOption, default)
             "storageTopdir": ('main', 'storage_topdir', "%s/firmware" % DATADIR),
+            "pluginSearchPath": ('main', 'plugin_search_path', os.path.join(PKGDATADIR, "plugins")),
             "pluginConfDir": ('main', 'plugin_config_dir', os.path.join(PKGCONFDIR, "firmware.d")),
             "rpmMode": ('main', 'rpm_mode', "manual"),
         }
@@ -165,8 +172,7 @@ class FtBase(object):
     decorate(traceLog())
     def getPluginConfFromIni(self, plugin):
         section = "plugin:%s" % plugin
-        class foo(object): pass
-        conf = foo()
+        conf = confObj()
 
         conf.module = None
         conf.enabled = False
@@ -226,6 +232,7 @@ class FtBase(object):
     def yieldBootstrap(self):
         self.plugins.run("prebootstrap")
         for name, func in self._bootstrapFuncs.items():
+            self.verbose_logger.info("running bootstrap for module: %s" % name)
             for i in func():
                 yield i
 
@@ -238,6 +245,7 @@ class FtBase(object):
     def yieldInventory(self):
         self.plugins.run("preinventory")
         for name, func in self._inventoryFuncs.items():
+            self.verbose_logger.info("running inventory for module: %s" % name)
             for i in func():
                 yield i
 

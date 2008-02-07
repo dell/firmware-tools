@@ -33,25 +33,12 @@ requires_api_version = "2.0"
 
 def config_hook(conduit, *args, **kargs):
     conduit.getBase().registerBootstrapFunction( "bootstrap_pci", BootstrapGenerator )
-    conduit.getBase().registerInventoryFunction( "bootstrap_pci", InventoryGenerator )
-
 
 
 decorate(traceLog())
 def BootstrapGenerator():
     for i in lspciGenerator():
         yield(makePciDevice(i))
-
-decorate(traceLog())
-def InventoryGenerator():
-    # this module cannot really inventory anything
-    # but this function is overridden in fake mode, so leave it here
-    # so that we dont get
-    #   "AttributeError: 'module' object has no attribute 'InventoryGenerator'"
-    # errors when running in regular mode.
-
-    # This needs to return something that is iterable, so return an empty array
-    return []
 
 # ======
 # private stuff from here down
@@ -173,11 +160,9 @@ def supplementOldLspciFormat(oneDevData):
     deviceNum=0
     for line in fd:
         if not line.strip(): continue
-        dprint("line: %s" % line)
         name,value = line.split(":", 1)
         name = name.strip().lower()
         value = value.strip()
-        dprint("  name: %s\n  value: %s"% (name,value))
         if name == ("device"):
             name = "device%s" % deviceNum
             deviceNum = deviceNum + 1
