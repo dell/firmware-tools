@@ -68,6 +68,7 @@ class MockRepositoryPackage(package.RepositoryPackage):
         self.capabilities['can_downgrade'] = True
         self.capabilities['can_reflash'] = True
         self.capabilities['accurate_update_percentage'] = True
+        self.uniqueInstance = self.name
 
     decorate(traceLog())
     def install(self):
