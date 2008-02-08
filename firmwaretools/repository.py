@@ -91,56 +91,56 @@ class SystemInventory(object):
 
     decorate(traceLog())
     def addDevice(self, device):
-        self.deviceList[device.name] = { "device": device, "update": None, "available_updates": []}
+        self.deviceList[device.uniqueInstance] = { "device": device, "update": None, "available_updates": []}
+
+    decorate(traceLog())
+    def iterDevices(self, name=None):
+        for device, details in self.deviceList.items():
+            if name is None:
+                yield details["device"]
+            else:
+                if details["device"].name == name:
+                    yield details["device"]
 
     decorate(traceLog())
     def addAvailablePackage(self, package):
-        if self.deviceList.has_key(package.name):
-            available_updates = self.deviceList[package.name]["available_updates"]
+        for myDev in self.iterDevices(name=package.name):
+            available_updates = self.deviceList[myDev.uniqueInstance]["available_updates"]
             available_updates.append(package)
-            self.deviceList[package.name]["available_updates"] = available_updates
-            package.attachToDevice(self.deviceList[package.name]['device'])
-
-    decorate(traceLog())
-    def hasDevice(self, device):
-        return self.deviceList.has_key(device.name)
-
-    decorate(traceLog())
-    def iterDevices(self):
-        for device, details in self.deviceList.items():
-            yield details["device"]
+            self.deviceList[myDev.uniqueInstance]["available_updates"] = available_updates
+            package.attachToDevice(myDev)
 
     decorate(traceLog())
     def iterAvailableUpdates(self, device):
-        for pkg in self.deviceList[device.name]["available_updates"]:
+        for pkg in self.deviceList[device.uniqueInstance]["available_updates"]:
             yield pkg
 
     decorate(traceLog())
     def getSuggestedUpdatePackageForDevice(self, device):
         ret = None
-        if self.deviceList.has_key(device.name):
-            ret = self.deviceList[device.name]["update"]
+        if self.deviceList.has_key(device.uniqueInstance):
+            ret = self.deviceList[device.uniqueInstance]["update"]
         return ret
 
     decorate(traceLog())
     def getUpdatePackageForDevice(self, device):
         ret = None
-        if self.deviceList.has_key(device.name):
-            if self.deviceList[device.name].has_key("pinned_update"):
-                ret = self.deviceList[device.name]["pinned_update"]
+        if self.deviceList.has_key(device.uniqueInstance):
+            if self.deviceList[device.uniqueInstance].has_key("pinned_update"):
+                ret = self.deviceList[device.uniqueInstance]["pinned_update"]
             else:
-                ret = self.deviceList[device.name]["update"]
+                ret = self.deviceList[device.uniqueInstance]["update"]
         return ret
 
     decorate(traceLog())
     def pinUpdatePackage(self, device, pkg):
         #TODO: ensure that pkg is in 'available_pkgs'
         hasOldPin = False
-        if self.deviceList[device.name].has_key("pinned_update"):
+        if self.deviceList[device.uniqueInstance].has_key("pinned_update"):
             hasOldPin = True
-            oldPin = self.deviceList[device.name]["pinned_update"]
+            oldPin = self.deviceList[device.uniqueInstance]["pinned_update"]
 
-        self.deviceList[device.name]["pinned_update"] = pkg
+        self.deviceList[device.uniqueInstance]["pinned_update"] = pkg
 
         # just check the rules... not actually installing
         try:
@@ -148,16 +148,16 @@ class SystemInventory(object):
         except CircularDependencyError, e:
             # roll back
             if hasOldPin:
-                self.deviceList[device.name]["pinned_update"] = oldPin
+                self.deviceList[device.uniqueInstance]["pinned_update"] = oldPin
             else:
-                del(self.deviceList[device.name]["pinned_update"])
+                del(self.deviceList[device.uniqueInstance]["pinned_update"])
             raise
 
 
     decorate(traceLog())
     def unPinDevice(self, device):
-        if self.deviceList[device.name].has_key("pinned_update"):
-            del(self.deviceList[device.name]["pinned_update"])
+        if self.deviceList[device.uniqueInstance].has_key("pinned_update"):
+            del(self.deviceList[device.uniqueInstance]["pinned_update"])
 
     decorate(traceLog())
     def reset(self):
@@ -168,14 +168,14 @@ class SystemInventory(object):
     def getMemento(self, deviceHint=None):
         memento = {}
         memento['savePin'] = {}
-        for deviceName, details in self.deviceList.items():
+        for deviceUniqueInstance, details in self.deviceList.items():
             if deviceHint:
-                if deviceHint.name != deviceName:
+                if deviceHint.uniqueInstance != deviceUniqueInstance:
                     continue
             if details.has_key("pinned_update"):
-                memento['savePin'][deviceName] = { 'device': details["device"], 'hasPin': 1, 'oldPin': details["pinned_update"] }
+                memento['savePin'][deviceUniqueInstance] = { 'device': details["device"], 'hasPin': 1, 'oldPin': details["pinned_update"] }
             else:
-                memento['savePin'][deviceName] = { 'device': details["device"], 'hasPin': 0, 'oldPin': None }
+                memento['savePin'][deviceUniqueInstance] = { 'device': details["device"], 'hasPin': 0, 'oldPin': None }
 
         memento["internal.allowReflash"] = self.allowReflash
         memento["internal.allowDowngrade"] = self.allowDowngrade
@@ -185,7 +185,7 @@ class SystemInventory(object):
     def setMemento(self, memento):
         self.allowReflash = memento["internal.allowReflash"]
         self.allowDowngrade = memento["internal.allowDowngrade"]
-        for deviceName, details in memento['savePin'].items():
+        for deviceUniqueInstance, details in memento['savePin'].items():
             if details['hasPin']:
                 self.pinUpdatePackage(details["device"], details["oldPin"])
             else:
@@ -208,20 +208,21 @@ class SystemInventory(object):
         return self.allowReflash
 
     decorate(traceLog())
-    def checkRules(self, candidate, unionInventory, cb=(nullFunc, None)):
-        # check if candidate update even applies to this system
-        if not self.deviceList.get(candidate.name):
-            cb[0]( who="checkRules", what="package_not_present_on_system", package=candidate, cb=cb)
+    def checkRules(self, device, candidate, unionInventory, cb=(nullFunc, None)):
+        # no way this can fail, disable
+        ## check if candidate update even applies to this system
+        #if not self.has_device(device):
+        #    cb[0]( who="checkRules", what="package_not_present_on_system", package=candidate, cb=cb)
+        #    return 0
+
+        # is candidate newer than what is either installed or scheduled for install
+        if not self.allowDowngrade and device.compareVersion(candidate) > 0:
+            cb[0]( who="checkRules", what="package_not_newer", package=candidate, systemPackage=device, cb=cb)
             return 0
 
         # is candidate newer than what is either installed or scheduled for install
-        if not self.allowDowngrade and unionInventory[candidate.name].compareVersion(candidate) > 0:
-            cb[0]( who="checkRules", what="package_not_newer", package=candidate, systemPackage=unionInventory[candidate.name], cb=cb)
-            return 0
-
-        # is candidate newer than what is either installed or scheduled for install
-        if not self.allowReflash and unionInventory[candidate.name].compareVersion(candidate) == 0:
-            cb[0]( who="checkRules", what="package_same_version", package=candidate, systemPackage=unionInventory[candidate.name], cb=cb)
+        if not self.allowReflash and device.compareVersion(candidate) == 0:
+            cb[0]( who="checkRules", what="package_same_version", package=candidate, systemPackage=device, cb=cb)
             return 0
 
         #check to see if this package has specific system requirements
@@ -248,28 +249,32 @@ class SystemInventory(object):
     decorate(traceLog())
     def calculateUpgradeList(self, cb=(nullFunc, None)):
         unionInventory = {}
-        for deviceName, details in self.deviceList.items():
-            unionInventory[deviceName] = details["device"]
+        for deviceUniqueInstance, details in self.deviceList.items():
+            unionInventory[deviceUniqueInstance] = details["device"]
 
         # for every device, look at the available updates to see if one can be applied.
         # if we do any work, start over so that dependencies work themselves out over multiple iterations.
         workToDo = 1
         while workToDo:
             workToDo = 0
-            for pkgName, details in self.deviceList.items():
+            for deviceUniqueInstance, details in self.deviceList.items():
                 for candidate in details["available_updates"]:
-                    if self.checkRules(candidate, unionInventory, cb=cb):
-                        self.deviceList[candidate.name]["update"] = candidate
+                    # check if this package is better than the current best
+                    if unionInventory[deviceUniqueInstance].compareVersion(candidate) >= 0:
+                        continue
+
+                    if self.checkRules(details["device"], candidate, unionInventory, cb=cb):
+                        self.deviceList[deviceUniqueInstance]["update"] = candidate
                         # update union inventory
-                        unionInventory[candidate.name] = candidate
+                        unionInventory[deviceUniqueInstance] = candidate
                         # need another run-through in case this fixes deps for another package
                         workToDo = 1
 
     decorate(traceLog())
     def generateInstallationOrder(self, returnDeviceToo=0, cb=(nullFunc, None)):
         unionInventory = {}
-        for deviceName, details in self.deviceList.items():
-            unionInventory[deviceName] = details["device"]
+        for deviceUniqueInstance, details in self.deviceList.items():
+            unionInventory[deviceUniqueInstance] = details["device"]
 
         # generate initial union inventory
         # we will start with no update packages and add them in one at a time
@@ -284,7 +289,7 @@ class SystemInventory(object):
         while workToDo:
             workToDo = 0
             for device, candidate in updateDeviceList:
-                if self.checkRules(candidate, unionInventory, cb=cb):
+                if self.checkRules(device, candidate, unionInventory, cb=cb):
                     candidate.setCurrentInstallDevice(device)
                     if returnDeviceToo:
                         yield (device, candidate)
@@ -293,7 +298,7 @@ class SystemInventory(object):
 
                     # move pkg from to-install list to inventory list
                     updateDeviceList.remove((device,candidate))
-                    unionInventory[candidate.name] = candidate
+                    unionInventory[device.uniqueInstance] = candidate
 
                     # need another run-through in case this fixes deps for another package
                     workToDo = 1
