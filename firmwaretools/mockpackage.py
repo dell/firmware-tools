@@ -81,7 +81,7 @@ class MockRepositoryPackage(package.RepositoryPackage):
 
 # standard entry point -- Bootstrap
 decorate(traceLog())
-def BootstrapGenerator():
+def BootstrapGenerator(*args, **kargs):
     import bootstrap_pci
     bootstrap_pci.mockReadLspciWithDomain = mockReadLspciWithDomain
     for i in bootstrap_pci.lspciGenerator():
@@ -111,7 +111,7 @@ mockExpectedOutput_bootstrap = """mock_package(ven_0x1028_dev_0x1234)"""
 # this is a TEST generator. It only is active if you set the environment
 # variable DEBUG_INVENTORY=1
 decorate(traceLog())
-def InventoryGenerator():
+def InventoryGenerator(*args, **kargs):
     yield package.Device(
             name = "debug_system_bios",
             displayname = "System BIOS for Imaginary Server 1234",
