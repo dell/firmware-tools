@@ -210,7 +210,7 @@ class FtBase(object):
         self.plugins.run("preinventory")
         for name, func in self._inventoryFuncs.items():
             self.verbose_logger.info("running inventory for module: %s" % name)
-            for dev in func():
+            for dev in func(self):
                 self._systemInventory.addDevice(dev)
 
         return self._systemInventory
