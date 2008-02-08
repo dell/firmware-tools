@@ -166,6 +166,7 @@ def runLongProcess(function, args=None, kargs=None, waitLoopFunction=None):
         waitLoopFunction()
 
     if thread.exception:
+        getLog(prefix="verbose.").exception(thread.exception)        
         raise thread.exception
     return thread.returnCode
 

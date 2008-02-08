@@ -159,7 +159,8 @@ class BaseCli(firmwaretools.FtBase):
                     pkgName = pkgName + "-" + pkg.conf.get("package", "limit_system_support")
                 kargs.get("cb")[1][pkgName] = (kargs.get("package"), kargs.get("reason"))
 
-        updateSet = firmwaretools.repository.generateUpdateSet(self.repo, self.yieldInventory(), cb=(show_work, depFailures) )
+        updateSet = self.calculateUpgradeList(cb=(show_work, depFailures) )
+
         print "\033[2K\033[0G"  # clear line
         needUpdate = 0
         for device in updateSet.iterDevices():

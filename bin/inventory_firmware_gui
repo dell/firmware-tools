@@ -128,10 +128,10 @@ class InventoryFirmware:
 
         # the following two lines are equivalent, but runLongProcess() does the
         # action in a background thread so the GUI will update while it works.
-        #self.updateSet = repository.generateUpdateSet(base.repo, base.yieldInventory(), cb=(myYield, None))
+        #self.updateSet = base.calculateUpgradeList(cb=(myYield, None))
         self.updateSet = guihelpers.runLongProcessGtk(
-            repository.generateUpdateSet, 
-            args=(base.repo, base.yieldInventory()), 
+            base.calculateUpgradeList, 
+            args=(), 
             kargs={'cb':(myYield, None)})
 
         self._populateInventoryTree()

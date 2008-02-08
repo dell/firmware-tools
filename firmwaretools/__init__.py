@@ -54,6 +54,7 @@ class confObj(object):
     def __setattr__(self, name, value):
         object.__setattr__(self, name.lower(), value)
 
+def nullFunc(*args, **kargs): pass
 
 class FtBase(object):
     """This is a primary structure and base class. It houses the objects and
@@ -69,6 +70,7 @@ class FtBase(object):
 
         self._conf = None
         self._repo = None
+        self._systemInventory = None
 
         self.verbosity = 0
         self.trace = 0
@@ -79,15 +81,6 @@ class FtBase(object):
 
         # Start with plugins disabled
         self.disablePlugins()
-
-    decorate(traceLog())
-    def _getRepo(self):
-        if self._repo is not None:
-            return self._repo
-
-        self._repo = repository.Repository( self.conf.storageTopdir )
-        return self._repo
-
 
     def _getConfig(self, cfgFiles=None, pluginTypes=(plugins.TYPE_CORE, plugins.TYPE_INVENTORY, plugins.TYPE_BOOTSTRAP), optparser=None, disabledPlugins=None):
         if self._conf is not None:
@@ -200,14 +193,47 @@ class FtBase(object):
 
         self.plugins = plugins.Plugins(self, optparser, pluginTypes, disabledPlugins)
 
+    decorate(traceLog())
+    def _getRepo(self):
+        if self._repo is not None:
+            return self._repo
+
+        self._repo = repository.Repository( self.conf.storageTopdir )
+        return self._repo
+
+    decorate(traceLog())
+    def _getInventory(self):
+        if self._systemInventory is not None:
+            return self._systemInventory
+
+        self._systemInventory = repository.SystemInventory()
+        self.plugins.run("preinventory")
+        for name, func in self._inventoryFuncs.items():
+            self.verbose_logger.info("running inventory for module: %s" % name)
+            for dev in func():
+                self._systemInventory.addDevice(dev)
+
+        return self._systemInventory
+
+    decorate(traceLog())
+    def calculateUpgradeList(self, cb=(nullFunc, None)):
+        for candidate in self.repo.iterPackages(cb=cb):
+            self.systemInventory.addAvailablePackage(candidate)
+
+        self.systemInventory.calculateUpgradeList(cb)
+        return self.systemInventory
+
     # properties so they auto-create themselves with defaults
     repo = property(fget=lambda self: self._getRepo(),
-                     fset=lambda self, value: setattr(self, "_repo", value),
-                     fdel=lambda self: self._delRepos())
+                     fset=lambda self, value: setattr(self, "_repo", value))
     conf = property(fget=lambda self: self._getConfig(),
                     fset=lambda self, value: setattr(self, "_conf", value),
                     fdel=lambda self: setattr(self, "_conf", None))
-    
+    systemInventory = property(
+                    fget=lambda self: self._getInventory(),
+                     fset=lambda self, value: setattr(self, "_systemInventory", value),
+                    fdel=lambda self: setattr(self, "_systemInventory", None))
+
     decorate(traceLog())
     def lock(self):
         if self.conf.uid == 0:
@@ -236,19 +262,12 @@ class FtBase(object):
             for i in func():
                 yield i
 
-
     decorate(traceLog())
     def registerInventoryFunction(self, name, function):
         self._inventoryFuncs[name] = function
 
     decorate(traceLog())
     def yieldInventory(self):
-        self.plugins.run("preinventory")
-        for name, func in self._inventoryFuncs.items():
-            self.verbose_logger.info("running inventory for module: %s" % name)
-            for i in func():
-                yield i
-
-
-
+        for dev in self.systemInventory.iterDevices():
+            yield dev
 

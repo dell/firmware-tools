@@ -82,22 +82,7 @@ def makePackage(configFile):
 # a null function that just eats args. Default callback
 def nullFunc(*args, **kargs): pass
 
-decorate(traceLog())
-def generateUpdateSet(repo, systemInventory, cb=(nullFunc, None)):
-    set = UpdateSet()
-    for device in systemInventory:
-        set.addDevice(device)
-
-    # for every device on system, attach a list of available updates for that device.
-    for candidate in repo.iterPackages(cb=cb):
-        set.addAvailablePackage(candidate)
-
-    set.calculateUpgradeList(cb)
-
-    return set
-
-
-class UpdateSet(object):
+class SystemInventory(object):
     decorate(traceLog())
     def __init__(self, *args, **kargs):
         self.deviceList = {}
