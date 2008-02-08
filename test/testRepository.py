@@ -16,6 +16,18 @@ except KeyError:
 
 datafiles = os.path.join( test_path, "datafiles" )
 
+def generateUpdateSet(repo, inv):
+    import firmwaretools.repository as repository
+    _systemInventory = repository.SystemInventory()
+    for dev in inv:
+        _systemInventory.addDevice(dev)
+
+    for candidate in repo.iterPackages():
+        _systemInventory.addAvailablePackage(candidate)
+
+    _systemInventory.calculateUpgradeList()
+    return _systemInventory
+
 
 class TestCase(unittest.TestCase):
     def setUp(self):
@@ -83,7 +95,7 @@ class TestCase(unittest.TestCase):
             )
         systemInventory = [p,]
         r = repository.Repository(datafiles)
-        updateSet = repository.generateUpdateSet(r, systemInventory)
+        updateSet = generateUpdateSet(r, systemInventory)
 
         self.assertEqual( updateSet.getUpdatePackageForDevice(p).name, "testpack" )
         self.assertEqual( updateSet.getUpdatePackageForDevice(p).version, "a06" )
@@ -98,7 +110,7 @@ class TestCase(unittest.TestCase):
             )
         systemInventory = [p,]
         r = repository.Repository(datafiles)
-        updateSet = repository.generateUpdateSet(r, systemInventory)
+        updateSet = generateUpdateSet(r, systemInventory)
 
         self.assertEqual( updateSet.getUpdatePackageForDevice(p).name, "testpack_different" )
         self.assertEqual( updateSet.getUpdatePackageForDevice(p).version, "a07" )
@@ -113,7 +125,7 @@ class TestCase(unittest.TestCase):
             )
         systemInventory = [p,]
         r = repository.Repository(datafiles)
-        updateSet = repository.generateUpdateSet(r, systemInventory)
+        updateSet = generateUpdateSet(r, systemInventory)
 
         self.failUnless( updateSet.getUpdatePackageForDevice(p) is None )
 
@@ -127,7 +139,7 @@ class TestCase(unittest.TestCase):
             )
         systemInventory = [p,]
         r = repository.Repository(datafiles)
-        updateSet = repository.generateUpdateSet(r, systemInventory)
+        updateSet = generateUpdateSet(r, systemInventory)
 
         self.assertEqual( updateSet.getUpdatePackageForDevice(p).name, "testpack_newpkgstrat" )
         self.assertEqual( updateSet.getUpdatePackageForDevice(p).version, "a08")
@@ -158,7 +170,7 @@ class TestCase(unittest.TestCase):
 
         systemInventory = [p,q,r]
         repo = repository.Repository(datafiles)
-        updateSet = repository.generateUpdateSet(repo, systemInventory)
+        updateSet = generateUpdateSet(repo, systemInventory)
 
         self.assertEqual( updateSet.getUpdatePackageForDevice(p).name, "testpack" )
         self.assertEqual( updateSet.getUpdatePackageForDevice(p).version, "a06" )
@@ -176,7 +188,7 @@ class TestCase(unittest.TestCase):
             )
         systemInventory = [p,]
         r = repository.Repository(datafiles)
-        updateSet = repository.generateUpdateSet(r, systemInventory)
+        updateSet = generateUpdateSet(r, systemInventory)
         self.assertRaises(package.NoInstaller, updateSet.getUpdatePackageForDevice(p).install)
 
     def testGenerateUpdateSetInstall(self):
@@ -189,7 +201,7 @@ class TestCase(unittest.TestCase):
             )
         systemInventory = [p,]
         r = repository.Repository(datafiles)
-        updateSet = repository.generateUpdateSet(r, systemInventory)
+        updateSet = generateUpdateSet(r, systemInventory)
         res = updateSet.getUpdatePackageForDevice(p).install()
         self.assertEqual( res, "SUCCESS" )
 
@@ -206,7 +218,7 @@ class TestCase(unittest.TestCase):
             )
         systemInventory = [p,]
         r = repository.Repository(datafiles)
-        updateSet = repository.generateUpdateSet(r, systemInventory)
+        updateSet = generateUpdateSet(r, systemInventory)
 
         self.failUnless( updateSet.getUpdatePackageForDevice(p) is None )
 
@@ -230,7 +242,7 @@ class TestCase(unittest.TestCase):
 
         systemInventory = [p,q]
         r = repository.Repository(datafiles)
-        updateSet = repository.generateUpdateSet(r, systemInventory)
+        updateSet = generateUpdateSet(r, systemInventory)
 
         self.assertEqual( updateSet.getUpdatePackageForDevice(p).name, "system_specific" )
         self.assertEqual( updateSet.getUpdatePackageForDevice(p).version, "a04" )
@@ -255,7 +267,7 @@ class TestCase(unittest.TestCase):
 
         systemInventory = [p,q]
         r = repository.Repository(datafiles)
-        updateSet = repository.generateUpdateSet(r, systemInventory)
+        updateSet = generateUpdateSet(r, systemInventory)
 
         self.assertEqual( updateSet.getUpdatePackageForDevice(p).name, "system_specific" )
         self.assertEqual( updateSet.getUpdatePackageForDevice(p).version, "a09" )
@@ -275,7 +287,7 @@ class TestCase(unittest.TestCase):
 
         systemInventory = [p,]
         r = repository.Repository(datafiles)
-        updateSet = repository.generateUpdateSet(r, systemInventory)
+        updateSet = generateUpdateSet(r, systemInventory)
 
         self.failUnless( updateSet.getUpdatePackageForDevice(p) is None )
 
@@ -305,7 +317,7 @@ class TestCase(unittest.TestCase):
 
         systemInventory = [p,q,r]
         r = repository.Repository(datafiles)
-        updateSet = repository.generateUpdateSet(r, systemInventory)
+        updateSet = generateUpdateSet(r, systemInventory)
 
         self.assertEqual( updateSet.getUpdatePackageForDevice(p).name, "test_requires" )
         self.assertEqual( updateSet.getUpdatePackageForDevice(p).version, "a09" )
@@ -336,7 +348,7 @@ class TestCase(unittest.TestCase):
         r = repository.Repository(datafiles)
 
         installationOrder = ["testorder1", "testorder2", "testorder3" ]
-        updateSet = repository.generateUpdateSet(r, systemInventory)
+        updateSet = generateUpdateSet(r, systemInventory)
         for pkg in updateSet.generateInstallationOrder():
             n = installationOrder[0]
             if len(installationOrder) > 1:
@@ -370,7 +382,7 @@ class TestCase(unittest.TestCase):
         r = repository.Repository(datafiles)
 
         installationOrder = ["testorder1", "testorder3" ]
-        updateSet = repository.generateUpdateSet(r, systemInventory)
+        updateSet = generateUpdateSet(r, systemInventory)
         for pkg in updateSet.generateInstallationOrder():
             n = installationOrder[0]
             if len(installationOrder) > 1:
