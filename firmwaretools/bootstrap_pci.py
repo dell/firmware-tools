@@ -36,7 +36,7 @@ def config_hook(conduit, *args, **kargs):
 
 
 decorate(traceLog())
-def BootstrapGenerator():
+def BootstrapGenerator(*args, **kargs):
     for i in lspciGenerator():
         yield(makePciDevice(i))
 
