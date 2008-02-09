@@ -217,7 +217,7 @@ class FtBase(object):
         return self._systemInventory
 
     decorate(traceLog())
-    def calculateUpgradeList(self, cb=None)):
+    def calculateUpgradeList(self, cb=None):
         saveCb = self.cb
         self.cb = cb
         try:
