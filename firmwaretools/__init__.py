@@ -209,9 +209,9 @@ class FtBase(object):
         self.plugins.run("preinventory")
         for name, func in self._inventoryFuncs.items():
             self.verbose_logger.info("running inventory for module: %s" % name)
-            repositroy.callCB(who="populateInventory", what="call_func", func=func)
+            repository.callCB(who="populateInventory", what="call_func", func=func)
             for dev in func(self, cb=self.cb):
-                repositroy.callCB(who="populateInventory", what="got_device", device=dev)
+                repository.callCB(who="populateInventory", what="got_device", device=dev)
                 self._systemInventory.addDevice(dev)
 
         return self._systemInventory
@@ -275,11 +275,12 @@ class FtBase(object):
 
     decorate(traceLog())
     def yieldInventory(self, cb=None):
+        saveCb = self.cb
         try:
-            saveCb = self.cb
             self.cb = cb
             for dev in self.systemInventory.iterDevices():
                 yield dev
-        finally:
+        except:
             self.cb = saveCb
+            raise
 
