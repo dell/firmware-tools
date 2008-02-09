@@ -69,8 +69,9 @@ def makePackage(configFile):
 
 decorate(traceLog())
 def callCB(cb, *args, **kargs):
+    if cb is None: return
     try:
-        cb(*args, **kargs)
+        return cb(*args, **kargs)
     except TypeError:
         pass
 
