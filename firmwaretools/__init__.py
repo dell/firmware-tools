@@ -35,7 +35,7 @@ import plugins
 
 def mkselfrelpath(*args):
     return os.path.normpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), *args))
-    
+
 # these are replaced by autotools when installed.
 __VERSION__="unreleased_version"
 SYSCONFDIR=mkselfrelpath("..", "etc")
@@ -54,19 +54,18 @@ class confObj(object):
     def __setattr__(self, name, value):
         object.__setattr__(self, name.lower(), value)
 
-def nullFunc(*args, **kargs): pass
-
 class FtBase(object):
     """This is a primary structure and base class. It houses the objects and
        methods needed to perform most things . It is almost an abstract
        class in that you will need to add your own class above it for most
        real use."""
-    
+
     def __init__(self):
         self.logger = getLog()
         self.verbose_logger = getLog(prefix="verbose.")
 
         self.cmdargs = []
+        self.cb = None
 
         self._conf = None
         self._repo = None
@@ -129,15 +128,15 @@ class FtBase(object):
 
     decorate(traceLog())
     def setConfFromIni(self, cfgFiles):
-        defaults = { 
-            "sysconfdir": SYSCONFDIR, 
-            "pythondir": PYTHONDIR, 
-            "datadir": DATADIR, 
-            "pkgpythondir": PKGPYTHONDIR, 
-            "pkgdatadir": PKGDATADIR, 
-            "pkgconfdir": PKGCONFDIR, 
-        } 
-        self._ini = ConfigParser.SafeConfigParser(defaults) 
+        defaults = {
+            "sysconfdir": SYSCONFDIR,
+            "pythondir": PYTHONDIR,
+            "datadir": DATADIR,
+            "pkgpythondir": PKGPYTHONDIR,
+            "pkgdatadir": PKGDATADIR,
+            "pkgconfdir": PKGCONFDIR,
+        }
+        self._ini = ConfigParser.SafeConfigParser(defaults)
         for i in cfgFiles:
             self._ini.read(i)
 
@@ -185,7 +184,7 @@ class FtBase(object):
         '''Disable plugins
         '''
         self.plugins = plugins.DummyPlugins()
-    
+
     decorate(traceLog())
     def doPluginSetup(self, optparser=None, pluginTypes=None, disabledPlugins=None):
         if isinstance(self.plugins, plugins.Plugins):
@@ -210,17 +209,25 @@ class FtBase(object):
         self.plugins.run("preinventory")
         for name, func in self._inventoryFuncs.items():
             self.verbose_logger.info("running inventory for module: %s" % name)
-            for dev in func(self):
+            repositroy.callCB(who="populateInventory", what="call_func", func=func)
+            for dev in func(self, cb=self.cb):
+                repositroy.callCB(who="populateInventory", what="got_device", device=dev)
                 self._systemInventory.addDevice(dev)
 
         return self._systemInventory
 
     decorate(traceLog())
-    def calculateUpgradeList(self, cb=(nullFunc, None)):
-        for candidate in self.repo.iterPackages(cb=cb):
-            self.systemInventory.addAvailablePackage(candidate)
+    def calculateUpgradeList(self, cb=None)):
+        saveCb = self.cb
+        self.cb = cb
+        try:
+            for candidate in self.repo.iterPackages(cb=cb):
+                self.systemInventory.addAvailablePackage(candidate)
 
-        self.systemInventory.calculateUpgradeList(cb)
+            self.systemInventory.calculateUpgradeList(cb)
+        finally:
+            self.cb = saveCb
+
         return self.systemInventory
 
     # properties so they auto-create themselves with defaults
@@ -242,7 +249,7 @@ class FtBase(object):
                 fcntl.lockf(self.runLock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
             except IOError, e:
                 raise errors.LockError, "unable to obtain exclusive lock."
-            
+
     decorate(traceLog())
     def unlock(self):
         if self.conf.uid == 0:
@@ -267,7 +274,12 @@ class FtBase(object):
         self._inventoryFuncs[name] = function
 
     decorate(traceLog())
-    def yieldInventory(self):
-        for dev in self.systemInventory.iterDevices():
-            yield dev
+    def yieldInventory(self, cb=None):
+        try:
+            saveCb = self.cb
+            self.cb = cb
+            for dev in self.systemInventory.iterDevices():
+                yield dev
+        finally:
+            self.cb = saveCb
 

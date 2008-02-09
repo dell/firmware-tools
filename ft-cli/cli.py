@@ -144,22 +144,28 @@ class BaseCli(firmwaretools.FtBase):
         print "Searching storage directory for available BIOS updates..."
 
         depFailures = {}
-        def show_work(*args, **kargs):
-            #print "Got callback: %s  %s" % (args, kargs)
-            if kargs.get("what") == "found_package_ini":
-                p = kargs.get("path")
-                if len(p) > 50:
-                    p = p[-50:]
-                firmwaretools.pycompat.spinPrint("Checking: %s" % p)
 
-            if kargs.get("what") == "fail_dependency_check":
-                pkg = kargs.get("package")
-                pkgName = "%s-%s" % (pkg.name, pkg.version)
-                if pkg.conf.has_option("package", "limit_system_support"):
-                    pkgName = pkgName + "-" + pkg.conf.get("package", "limit_system_support")
-                kargs.get("cb")[1][pkgName] = (kargs.get("package"), kargs.get("reason"))
+        class callback(object):
+            def __init__(self, depFailures):
+                self.depFailures = depFailures
 
-        updateSet = self.calculateUpgradeList(cb=(show_work, depFailures) )
+            def __call__(*args, **kargs):
+                firmwaretools.pycompat.spinPrint("Got callback: %s  %s" % (args, kargs))
+
+                if kargs.get("what") == "found_package_ini":
+                    p = kargs.get("path")
+                    if len(p) > 50:
+                        p = p[-50:]
+                    firmwaretools.pycompat.spinPrint("Checking: %s" % p)
+
+                if kargs.get("what") == "fail_dependency_check":
+                    pkg = kargs.get("package")
+                    pkgName = "%s-%s" % (pkg.name, pkg.version)
+                    if pkg.conf.has_option("package", "limit_system_support"):
+                        pkgName = pkgName + "-" + pkg.conf.get("package", "limit_system_support")
+                    self.depFailures[pkgName] = (kargs.get("package"), kargs.get("reason"))
+
+        updateSet = self.calculateUpgradeList(cb=callback(depFailures))
 
         print "\033[2K\033[0G"  # clear line
         needUpdate = 0
