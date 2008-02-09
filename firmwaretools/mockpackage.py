@@ -34,20 +34,6 @@ def config_hook(conduit, *args, **kargs):
     conduit.getBase().registerInventoryFunction( "mockpackage", InventoryGenerator )
 
 
-# old style
-class MockPackageWrapper(object):
-    decorate(traceLog())
-    def __init__(self, package):
-        package.installFunction = self.installFunction
-        package.type = self
-
-    decorate(traceLog())
-    def installFunction(self, package):
-        self.status = "in_progress"
-        self.status = "success"
-        return "SUCCESS"
-
-
 #new style -- used by unit tests.
 class MockPackage2(package.RepositoryPackage):
     decorate(traceLog())
