@@ -141,34 +141,14 @@ class BaseCli(firmwaretools.FtBase):
     decorate(traceLog())
     def updateFirmware(self):
         print
-        print "Searching storage directory for available BIOS updates..."
 
+        print "Running system inventory..."
         depFailures = {}
-
-        class callback(object):
-            def __init__(self, depFailures):
-                self.depFailures = depFailures
-
-            def __call__(*args, **kargs):
-                firmwaretools.pycompat.spinPrint("Got callback: %s  %s" % (args, kargs))
-
-                if kargs.get("what") == "found_package_ini":
-                    p = kargs.get("path")
-                    if len(p) > 50:
-                        p = p[-50:]
-                    firmwaretools.pycompat.spinPrint("Checking: %s" % p)
-
-                if kargs.get("what") == "fail_dependency_check":
-                    pkg = kargs.get("package")
-                    pkgName = "%s-%s" % (pkg.name, pkg.version)
-                    if pkg.conf.has_option("package", "limit_system_support"):
-                        pkgName = pkgName + "-" + pkg.conf.get("package", "limit_system_support")
-                    self.depFailures[pkgName] = (kargs.get("package"), kargs.get("reason"))
-
-        updateSet = self.calculateUpgradeList(cb=callback(depFailures))
+        updateSet = self.calculateUpgradeList(cb=mycb(depFailures))
 
         print "\033[2K\033[0G"  # clear line
         needUpdate = 0
+        print "Searching storage directory for available BIOS updates..."
         for device in updateSet.iterDevices():
             print "Checking %s - %s" % (str(device), device.version)
             for availPkg in updateSet.iterAvailableUpdates(device):
@@ -245,6 +225,32 @@ class BaseCli(firmwaretools.FtBase):
                 print
                 print e
                 break
+
+
+class mycb(firmwaretools.Callback):
+    def __init__(self, depFailures):
+        super(mycb, self).__init__()
+        self.depFailures = depFailures
+        self.message = ""
+
+    def UNKNOWN(self):
+        firmwaretools.pycompat.spinPrint(self.message)
+
+    def running_inventory(self, who, what, details, *args, **kargs):
+        self.message = "%s: Running Inventory: %s" % (who, details)
+        firmwaretools.pycompat.spinPrint("%s: Running Inventory: %s" % (who, details))
+
+    def found_package_ini(what, path, *args, **kargs):
+        if len(path) > 50:
+            path = path[-50:]
+        self.message = "Checking: %s" % path
+        firmwaretools.pycompat.spinPrint("Checking: %s" % path)
+
+    def fail_dependency_check(self, what, package, *args, **kargs):
+        pkgName = "%s-%s" % (package.name, package.version)
+        if package.conf.has_option("package", "limit_system_support"):
+            pkgName = pkgName + "-" + package.conf.get("package", "limit_system_support")
+        self.depFailures[pkgName] = (kargs.get("package"), kargs.get("reason"))
 
 
 class FtOptionParser(OptionParser):
