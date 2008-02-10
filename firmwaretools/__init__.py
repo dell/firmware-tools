@@ -54,6 +54,23 @@ class confObj(object):
     def __setattr__(self, name, value):
         object.__setattr__(self, name.lower(), value)
 
+decorate(traceLog())
+def callCB(cb, *args, **kargs):
+    if cb is None: return
+    try:
+        return cb(*args, **kargs)
+    except TypeError:
+        pass
+
+class Callback(object):
+    def __init__(self):
+        pass
+
+    def __call__(self, *args, **kargs):
+        func = getattr(self, kargs.get("what", "UNKNOWN"), None)
+        if func is not None:
+            return func(*args, **kargs)
+
 class FtBase(object):
     """This is a primary structure and base class. It houses the objects and
        methods needed to perform most things . It is almost an abstract
@@ -209,9 +226,9 @@ class FtBase(object):
         self.plugins.run("preinventory")
         for name, func in self._inventoryFuncs.items():
             self.verbose_logger.info("running inventory for module: %s" % name)
-            repository.callCB(who="populateInventory", what="call_func", func=func)
+            callCB(self.cb, who="populateInventory", what="call_func", func=func)
             for dev in func(self, cb=self.cb):
-                repository.callCB(who="populateInventory", what="got_device", device=dev)
+                callCB(self.cb, who="populateInventory", what="got_device", device=dev)
                 self._systemInventory.addDevice(dev)
 
         return self._systemInventory
@@ -283,4 +300,5 @@ class FtBase(object):
         except:
             self.cb = saveCb
             raise
+
 
