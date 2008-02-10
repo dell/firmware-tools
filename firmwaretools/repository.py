@@ -20,6 +20,7 @@ import pycompat
 import dep_parser
 import sys
 import traceback
+import firmwaretools as ft
 from firmwaretools.trace_decorator import decorate, traceLog, getLog
 
 import logging
@@ -66,14 +67,6 @@ def makePackage(configFile):
     )
 
     return p
-
-decorate(traceLog())
-def callCB(cb, *args, **kargs):
-    if cb is None: return
-    try:
-        return cb(*args, **kargs)
-    except TypeError:
-        pass
 
 class SystemInventory(object):
     decorate(traceLog())
@@ -204,12 +197,12 @@ class SystemInventory(object):
     def checkRules(self, device, candidate, unionInventory, cb=None):
         # is candidate newer than what is installed
         if not self.allowDowngrade and device.compareVersion(candidate) > 0:
-            callCB(cb, who="checkRules", what="package_not_newer", package=candidate, device=device)
+            ft.callCB(cb, who="checkRules", what="package_not_newer", package=candidate, device=device)
             return 0
 
         # is candidate newer than what is installed
         if not self.allowReflash and device.compareVersion(candidate) == 0:
-            callCB(cb, who="checkRules", what="package_same_version", package=candidate, device=device)
+            ft.callCB(cb, who="checkRules", what="package_same_version", package=candidate, device=device)
             return 0
 
         #check to see if this package has specific system requirements
@@ -219,7 +212,7 @@ class SystemInventory(object):
         if hasattr(candidate,"conf") and candidate.conf.has_option("package", "limit_system_support"):
             systemVenDev = candidate.conf.get("package", "limit_system_support")
             if not unionInventory.get( "system_bios(%s)" % systemVenDev ):
-                callCB(cb, who="checkRules", what="fail_limit_system_check", package=candidate)
+                ft.callCB(cb, who="checkRules", what="fail_limit_system_check", package=candidate)
                 return 0
 
         #check generic dependencies
@@ -228,7 +221,7 @@ class SystemInventory(object):
             if len(requires):
                 d = dep_parser.DepParser(requires, unionInventory, self.deviceList)
                 if not d.depPass:
-                    callCB(cb, who="checkRules", what="fail_dependency_check", package=candidate, reason=d.reason)
+                    ft.callCB(cb, who="checkRules", what="fail_dependency_check", package=candidate, reason=d.reason)
                     return 0
         return 1
 
@@ -308,10 +301,10 @@ class Repository(object):
             try:
                 for (path, dirs, files) in pycompat.walkPath(dir):
                     if "package.ini" in files:
-                        callCB(cb, who="iterPackages", what="found_package_ini", path=os.path.join(path, "package.ini" ))
+                        ft.callCB(cb, who="iterPackages", what="found_package_ini", path=os.path.join(path, "package.ini" ))
                         try:
                             p = makePackage( os.path.join(path, "package.ini" ))
-                            callCB(cb, who="iterPackages", what="made_package", package=p)
+                            ft.callCB(cb, who="iterPackages", what="made_package", package=p)
                             yield p
                         except:
                             moduleLog.debug(''.join(traceback.format_exception(sys.exc_type, sys.exc_value, sys.exc_traceback)))
@@ -333,11 +326,11 @@ class Repository(object):
             elif p.compareVersion(candidate) < 0:
                 latest[pkgName] = candidate
 
-        callCB(cb, who="iterLatestPackages", what="done_generating_list")
+        ft.callCB(cb, who="iterLatestPackages", what="done_generating_list")
         keys = latest.keys()
         keys.sort()
         for package in keys:
-            callCB(cb, who="iterLatestPackages", what="made_package", package=latest[package])
+            ft.callCB(cb, who="iterLatestPackages", what="made_package", package=latest[package])
             yield latest[package]
 
 
