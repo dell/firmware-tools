@@ -227,7 +227,7 @@ class FtBase(object):
         for name, func in self._inventoryFuncs.items():
             self.verbose_logger.info("running inventory for module: %s" % name)
             callCB(self.cb, who="populateInventory", what="call_func", func=func)
-            for dev in func(self, cb=self.cb):
+            for dev in func(base=self, cb=self.cb):
                 callCB(self.cb, who="populateInventory", what="got_device", device=dev)
                 self._systemInventory.addDevice(dev)
 
