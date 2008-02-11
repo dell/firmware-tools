@@ -20,10 +20,14 @@
 Classes for subcommands of the yum command line interface.
 """
 
+import sys
+
+import firmwaretools.pycompat
 from firmwaretools.trace_decorator import decorate, traceLog, getLog
 import firmwaretools.plugins as plugins
 
 import ftcommands
+import cli
 
 plugin_type = (plugins.TYPE_CLI,)
 requires_api_version = "2.0"
@@ -45,8 +49,16 @@ class InventoryCommand(ftcommands.YumCommand):
 
     decorate(traceLog())
     def doCommand(self, base, mode, cmdline, processedArgs):
-        for pkg in base.yieldInventory():
-            print("%s = %s" % (str(pkg), pkg.version))
+        sys.stderr.write("Wait while we inventory system:\n")
+
+        headerWasPrinted=False
+        for pkg in base.yieldInventory(cb=cli.mycb({})):
+            if not headerWasPrinted:
+                sys.stderr.write(firmwaretools.pycompat.clearLine())
+                sys.stderr.write("System inventory:\n")
+                sys.stderr.flush()
+                headerWasPrinted = True
+            print("\t%s = %s" % (str(pkg), pkg.version))
 
         return [0, "Done"]
 
