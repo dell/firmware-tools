@@ -233,7 +233,10 @@ class mycb(firmwaretools.Callback):
         self.depFailures = depFailures
         self.message = ""
 
-    def UNKNOWN(self):
+    def __call__(self, *args, **kargs):
+        return super(mycb, self).__call__(*args, **kargs)
+
+    def UNKNOWN(self, *args, **kargs):
         firmwaretools.pycompat.spinPrint(self.message)
 
     def running_inventory(self, who, what, details, *args, **kargs):
