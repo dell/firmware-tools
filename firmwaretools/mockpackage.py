@@ -90,31 +90,39 @@ mockExpectedOutput_bootstrap = """mock_package(ven_0x1028_dev_0x1234)"""
 # this is a TEST generator. It only is active if you set the environment
 # variable DEBUG_INVENTORY=1
 decorate(traceLog())
-def InventoryGenerator(*args, **kargs):
+def InventoryGenerator(base=None, cb=None, *args, **kargs):
+    import firmwaretools as ft
+    ft.callCB(cb, who="mock_inventory", what="running_inventory", details="fake cmd")
     yield package.Device(
             name = "debug_system_bios",
             displayname = "System BIOS for Imaginary Server 1234",
             version = "A02")
+    ft.callCB(cb, who="mock_inventory", what="running_inventory", details="fake cmd 2")
     yield package.Device(
             name = "debug_system_bmc",
             displayname = "Baseboard Management Controller for Imaginary Server 1234",
             version = "1.0")
+    ft.callCB(cb, who="mock_inventory", what="running_inventory", details="fake cmd 3")
     yield package.Device(
             name = "debug_pci_firmware_ven_crappy_dev_slow",
             displayname = "ReallyFast Network Controller",
             version = "1.0")
+    ft.callCB(cb, who="mock_inventory", what="running_inventory", details="fake cmd 4")
     yield package.Device(
             name = "debug_pci_firmware_ven_0x0c64_dev_0xrocked",
             displayname = "Pokey Modem -- Enhanced 1200baud",
             version = "2.0")
+    ft.callCB(cb, who="mock_inventory", what="running_inventory", details="fake cmd 5")
     yield package.Device(
             name = "debug_pci_firmware_ven_corrupt_dev_yourdata",
             displayname = "SafeData RAID Controller v2i",
             version = "2.0")
+    ft.callCB(cb, who="mock_inventory", what="running_inventory", details="fake cmd 6")
     yield package.Device(
             name = "debug_pci_firmware_ven_violates_dev_scsistandard",
             displayname = "AdapFirm SloTek AHA-1501",
             version = "3.0")
+    ft.callCB(cb, who="mock_inventory", what="running_inventory", details="fake cmd 7")
     yield package.Device(
             name = "debug_pci_firmware_ven_draws_dev_polygons",
             displayname = "PixelPusher 2000 Video Adapter",
