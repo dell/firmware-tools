@@ -32,13 +32,12 @@ requires_api_version = "2.0"
 # ======
 
 def config_hook(conduit, *args, **kargs):
-    conduit.getBase().registerBootstrapFunction( "bootstrap_pci", getPciDevs )
-
+    conduit.getBase().registerBootstrapFunction( "bootstrap_pci", BootstrapGenerator )
 
 sysfs_pcidevdir="/sys/bus/pci/devices"
 
 decorate(traceLog())
-def getPciDevs(devdir=sysfs_pcidevdir, *args, **kargs):
+def BootstrapGenerator(devdir=sysfs_pcidevdir, *args, **kargs):
     for d in os.listdir(devdir):
         yield makePciDevice(os.path.join(devdir, d))
 
@@ -59,9 +58,9 @@ def makePciDevice(devDir):
     kargs["pciSubDevice"] = int(getFile(os.path.join(devDir, "subsystem_device")),16)
     kargs["pciClass"] = int(getFile(os.path.join(devDir, "class")),16)
 
-    name = "pci_firmware(ven_0x%x_dev_0x%x" % (kargs["pciVendor"], kargs["pciDevice"])
+    name = "pci_firmware(ven_0x%04x_dev_0x%04x" % (kargs["pciVendor"], kargs["pciDevice"])
     if kargs["pciSubVendor"] and kargs["pciSubDevice"]:
-        name = name + "_subven_0x%x_subdev_0x%x" % (kargs["pciSubVendor"], kargs["pciSubDevice"])
+        name = name + "_subven_0x%04x_subdev_0x%04x" % (kargs["pciSubVendor"], kargs["pciSubDevice"])
     name = name + ")"
 
     dirname = os.path.basename(devDir)
