@@ -40,10 +40,10 @@ def spinner(cycle=['/', '-', '\\', '|']):
     # ESC codes for clear line and position cursor at horizontal pos 0
     return step
 
-def spinPrint( strn ):
-    print clearLine(),
-    print "%s\t%s" % (spinner(), strn),
-    sys.stdout.flush()
+def spinPrint(strn, outFd=sys.stderr):
+    outFd.write(clearLine())
+    outFd.write("%s\t%s" % (spinner(), strn))
+    outFd.flush()
 
 def timedSpinPrint( strn, start ):
     now = time.time()
