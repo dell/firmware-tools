@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python
 # vim:tw=0:expandtab:autoindent:tabstop=4:shiftwidth=4:filetype=python:
 """
 """
