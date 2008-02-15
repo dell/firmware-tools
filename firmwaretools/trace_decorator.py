@@ -12,7 +12,13 @@ import types
 import warnings
 warnings.filterwarnings('ignore', category=FutureWarning)
 
-from peak.util.decorators import rewrap, decorate
+# use python-decoratortools if it is installed, otherwise use our own local
+# copy. Imported this locally because it doesnt appear to be available on SUSE
+# and the fedora RPM doesnt appear to compile cleanly on SUSE
+try:
+    from peak.util.decorators import rewrap, decorate
+except ImportError:
+    from peak_util_decorators import rewrap, decorate
 
 # defaults to module verbose log
 # does a late binding on log. Forwards all attributes to logger.
