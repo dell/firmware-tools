@@ -9,4 +9,6 @@ upload_rpm_args="-n \
     -l rhel4-x86_64 \
     -l rhel5-i386 \
     -l rhel5-x86_64 \
+    -l sles10-x86_64 \
+    -l sles10-i386 \
     "
