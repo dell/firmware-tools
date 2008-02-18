@@ -84,7 +84,7 @@ def traceLog(log = None):
                     doLog(l2, logging.INFO, filename, lineno, "EXCEPTION: %s\n" % e, args=[], exc_info=sys.exc_info(), func=func_name)
                     raise
             finally:
-                doLog(l2, logging.INFO, filename, lineno, "LEAVE %s --> %s\n" % (func_name, result), args=[], exc_info=None, func=func_name)
+                doLog(l2, logging.INFO, filename, lineno, "LEAVE %s --> %s\n" % (func_name, repr(result)), args=[], exc_info=None, func=func_name)
 
             return result
         return rewrap(func, trace)
