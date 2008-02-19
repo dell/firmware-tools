@@ -279,11 +279,11 @@ class FtBase(object):
         self._bootstrapFuncs[name] = function
 
     decorate(traceLog())
-    def yieldBootstrap(self):
+    def yieldBootstrap(self, cb=None):
         self.plugins.run("prebootstrap")
         for name, func in self._bootstrapFuncs.items():
             self.verbose_logger.info("running bootstrap for module: %s" % name)
-            for i in func():
+            for i in func(base=self, cb=cb):
                 yield i
 
     decorate(traceLog())

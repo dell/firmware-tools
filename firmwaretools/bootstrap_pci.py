@@ -37,7 +37,7 @@ def config_hook(conduit, *args, **kargs):
 sysfs_pcidevdir="/sys/bus/pci/devices"
 
 decorate(traceLog())
-def BootstrapGenerator(devdir=sysfs_pcidevdir, *args, **kargs):
+def BootstrapGenerator(base=None, cb=None, devdir=sysfs_pcidevdir, *args, **kargs):
     for d in os.listdir(devdir):
         yield makePciDevice(os.path.join(devdir, d))
 

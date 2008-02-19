@@ -130,7 +130,7 @@ def InventoryGenerator(base=None, cb=None, *args, **kargs):
 
 # standard entry point -- Bootstrap
 decorate(traceLog())
-def BootstrapGenerator(*args, **kargs):
+def BootstrapGenerator(base=None, cb=None, *args, **kargs):
     yield package.PciDevice(name="pci_firmware(ven_0x10de_dev_0x00e1)", displayname="unknown", version="unknown", pciDbdf=())
     yield package.PciDevice(name="pci_firmware(ven_0x10de_dev_0x00e0_subven_0x10de_subdev_0x0c11)", displayname="unknown", version="unknown", pciDbdf=())
     yield package.PciDevice(name="pci_firmware(ven_0x10de_dev_0x00e4_subven_0x10de_subdev_0x0c11)", displayname="unknown", version="unknown", pciDbdf=())
