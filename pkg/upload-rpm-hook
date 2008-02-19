@@ -1,6 +1,6 @@
 upload_rpm_args="-n \
     -l fedora-7-i386 \
-    -l fedora-7-x86_64 
+    -l fedora-7-x86_64 \
     -l fedora-8-i386 \
     -l fedora-8-x86_64 \
     -l fedora-devel-i386 \
