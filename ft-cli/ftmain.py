@@ -21,6 +21,7 @@ Entrance point for the command line interface.
 import sys
 import locale
 import logging
+import signal
 import time # test purposes only
 
 from firmwaretools.trace_decorator import decorate, traceLog, getLog
@@ -30,6 +31,11 @@ import cli
 
 def main(args):
     """This does all the real work"""
+    def setDebug():
+        import pdb
+        pdb.set_trace()
+
+    signal.signal(signal.SIGUSR1,setDebug)
 
     def exUserCancel():
         logger.critical('Exiting on user cancel')
