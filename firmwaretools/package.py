@@ -48,6 +48,9 @@ class Package(object):
         assert(hasattr(self, "name"))
         assert(hasattr(self, "version"))
         assert(hasattr(self, "displayname"))
+        assert(len(self.name))
+        assert(len(self.version))
+        assert(len(self.displayname))
 
         status = "unknown"
 
