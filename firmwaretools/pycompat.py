@@ -90,7 +90,7 @@ def executeCommand(cmd, timeout=0):
             signal.signal(signal.SIGALRM,oldhandler)
             if prevTimeout:
                 passed = time.time() - starttime
-                signal.alarm(max(math.ceil(prevTimeout - passed), 1))
+                signal.alarm(int(max(math.ceil(prevTimeout - passed), 1)))
             raise commandTimeoutExpired( "Specified timeout of %s seconds expired before command finished. Command was: %s"
                     % (timeout, cmd)
                     )
