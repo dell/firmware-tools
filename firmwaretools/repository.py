@@ -40,7 +40,7 @@ def makePackage(configFile):
     # make a standard package
     displayname = "unknown"
     if conf.has_option("package", "displayname"):
-        displayname = conf.has_option("package", "displayname")
+        displayname = conf.get("package", "displayname")
 
     type = package.RepositoryPackage
 
