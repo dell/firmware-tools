@@ -24,6 +24,9 @@ import logging
 import signal
 import time # test purposes only
 
+# fixup 'no handlers could be found for...' message
+logging.raiseExceptions = 0
+
 from firmwaretools.trace_decorator import decorate, traceLog, getLog
 from firmwaretools import errors
 from firmwaretools import plugins
