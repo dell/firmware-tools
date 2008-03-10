@@ -224,12 +224,10 @@ class FtBase(object):
 
         self._systemInventory = repository.SystemInventory()
         self.plugins.run("preinventory")
-        for name, func in self._inventoryFuncs.items():
+        for name, func in self_inventoryFuncs2.items():
             self.verbose_logger.info("running inventory for module: %s" % name)
             callCB(self.cb, who="populateInventory", what="call_func", func=func)
-            for dev in func(base=self, cb=self.cb):
-                callCB(self.cb, who="populateInventory", what="got_device", device=dev)
-                self._systemInventory.addDevice(dev)
+            func(base=self, cb=self.cb, inventory=self._systemInventory)
 
         return self._systemInventory
 
@@ -273,18 +271,6 @@ class FtBase(object):
             fcntl.lockf(self.runLock.fileno(), fcntl.LOCK_UN)
             os.unlink(PID_FILE)
 
-
-    decorate(traceLog())
-    def registerBootstrapFunction(self, name, function):
-        self._bootstrapFuncs[name] = function
-
-    decorate(traceLog())
-    def yieldBootstrap(self, cb=None):
-        self.plugins.run("prebootstrap")
-        for name, func in self._bootstrapFuncs.items():
-            self.verbose_logger.info("running bootstrap for module: %s" % name)
-            for i in func(base=self, cb=cb):
-                yield i
 
     decorate(traceLog())
     def registerInventoryFunction(self, name, function):

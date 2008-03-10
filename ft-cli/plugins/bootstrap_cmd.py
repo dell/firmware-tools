@@ -55,7 +55,7 @@ class BootstrapCommand(ftcommands.YumCommand):
             parse = debianCleanName
 
         out = ""
-        for pkg in base.yieldBootstrap():
+        for pkg in base.yieldInventory():
             if base.opts.comma_separated:
                 out = out + ",%s" % parse(pkg.name)
             else:

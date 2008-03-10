@@ -93,9 +93,9 @@ class BaseCli(firmwaretools.FtBase):
 
         pluginTypes = [plugins.TYPE_CLI, plugins.TYPE_CORE]
         if not self.opts.fake_mode:
-            pluginTypes.extend([plugins.TYPE_INVENTORY, plugins.TYPE_BOOTSTRAP])
+            pluginTypes.extend([plugins.TYPE_INVENTORY,])
         else:
-            pluginTypes.extend([plugins.TYPE_MOCK_CORE, plugins.TYPE_MOCK_INVENTORY, plugins.TYPE_MOCK_BOOTSTRAP])
+            pluginTypes.extend([plugins.TYPE_MOCK_CORE, plugins.TYPE_MOCK_INVENTORY,])
 
         # Read up configuration options and initialise plugins
         try:
