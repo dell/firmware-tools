@@ -14,10 +14,8 @@ some docs here eventually.
 from __future__ import generators
 
 # import arranged alphabetically
-import logging
 import os
-import re
-import sys
+import subprocess
 
 # my stuff
 import firmwaretools.package as package
@@ -32,14 +30,16 @@ requires_api_version = "2.0"
 # ======
 
 def config_hook(conduit, *args, **kargs):
-    conduit.getBase().registerBootstrapFunction( "bootstrap_pci", BootstrapGenerator )
+    conduit.getBase().registerInventoryFunction( "bootstrap_pci", PciInventory )
 
 sysfs_pcidevdir="/sys/bus/pci/devices"
 
 decorate(traceLog())
-def BootstrapGenerator(base=None, cb=None, devdir=sysfs_pcidevdir, *args, **kargs):
+def PciInventory(base=None, cb=None, inventory=None, devdir=sysfs_pcidevdir, *args, **kargs):
     for d in os.listdir(devdir):
-        yield makePciDevice(os.path.join(devdir, d))
+        d = makePciDevice(os.path.join(devdir, d))
+        if inventory.getDevice(d.uniqueInstance) is None:
+            inventory.addDevice(d)
 
 decorate(traceLog())
 def getFile(f):
@@ -48,6 +48,19 @@ def getFile(f):
     fd.close()
     if ret[-1:] == '\n': ret = ret[:-1]
     return ret
+
+decorate(traceLog())
+def chomp(s):
+    if s.endswith("\n"):
+        return s[:-1]
+    return s
+
+LSPCI = None
+for i in ("/sbin/lspci", "/usr/bin/lspci"):
+    if os.path.exists(i):
+        LSPCI=i
+        break
+
 
 decorate(traceLog())
 def makePciDevice(devDir):
@@ -72,16 +85,21 @@ def makePciDevice(devDir):
 
     kargs["pciDbdf"] = (kargs["pciBDF_Domain"], kargs["pciBDF_Bus"], kargs["pciBDF_Device"], kargs["pciBDF_Function"])
 
-    kargs["pciVendor_txt"] = "unknown vendor"
-    kargs["pciDevice_txt"] = "unknown device"
-    kargs["pciSubVendor_txt"] = ""
-    kargs["pciSubDevice_txt"] = ""
-    displayname = "%s %s" % (kargs["pciVendor_txt"], kargs["pciDevice_txt"])
+    null = open("/dev/null", "w")
+    p = subprocess.Popen([LSPCI, "-s", "%02x:%02x:%02x.%x" % kargs["pciDbdf"]], stdout=subprocess.PIPE, stderr=null, stdin=null)
+    lspciname = chomp(p.communicate()[0])
+    null.close()
+
+    if lspciname is not None and len(lspciname) > 0:
+        displayname = lspciname
+    else:
+        displayname = "unknown device"
 
     return package.PciDevice(
         name=name,
         version='unknown',
         displayname=displayname,
+        lspciname=lspciname,
         **kargs
         )
 
