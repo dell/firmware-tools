@@ -54,6 +54,7 @@ def registerSlotToConduit(slot, conduit):
 registerSlotToConduit('config', 'PluginConduit')
 registerSlotToConduit('prebootstrap', 'PluginConduit')
 registerSlotToConduit('preinventory', 'PluginConduit')
+registerSlotToConduit('postinventory', 'PluginConduit')
 registerSlotToConduit('close', 'PluginConduit')
 
 moduleLog = getLog()
