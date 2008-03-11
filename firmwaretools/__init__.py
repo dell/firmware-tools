@@ -224,10 +224,13 @@ class FtBase(object):
 
         self._systemInventory = repository.SystemInventory()
         self.plugins.run("preinventory")
-        for name, func in self_inventoryFuncs2.items():
+
+        for name, func in self._inventoryFuncs.items():
             self.verbose_logger.info("running inventory for module: %s" % name)
             callCB(self.cb, who="populateInventory", what="call_func", func=func)
             func(base=self, cb=self.cb, inventory=self._systemInventory)
+
+        self.plugins.run("postinventory")
 
         return self._systemInventory
 
