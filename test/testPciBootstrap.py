@@ -30,7 +30,7 @@ class TestCase(unittest.TestCase):
         f = firmwaretools.FtBase()
         pluginTypes = [
             plugins.TYPE_CORE,
-            plugins.TYPE_MOCK_CORE, plugins.TYPE_MOCK_INVENTORY, plugins.TYPE_MOCK_BOOTSTRAP,
+            plugins.TYPE_MOCK_CORE, plugins.TYPE_MOCK_INVENTORY,
             ] 
         f._getConfig(None, pluginTypes, None, [])
 
@@ -38,7 +38,7 @@ class TestCase(unittest.TestCase):
 
         # run bootstrap and compare.
         index = 0
-        for pkg in f.yieldBootstrap():
+        for pkg in f.yieldInventory():
             self.assertEqual( firmwaretools.mockpackage.mockExpectedOutput.split("\n")[index], pkg.name )
             index = index + 1
 
