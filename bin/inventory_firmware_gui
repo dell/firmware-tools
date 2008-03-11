@@ -313,7 +313,7 @@ class InventoryFirmware:
     # should only ever be called once.
     def _populateBootstrapTree(self, base):
         self.bootstrapTreeModel.clear()
-        for dev in base.yieldBootstrap():
+        for dev in base.yieldInventory():
             guihelpers.gtkYield()
             self.bootstrapTreeModel.append(None, [dev.name, dev.displayname, dev.version])
 
