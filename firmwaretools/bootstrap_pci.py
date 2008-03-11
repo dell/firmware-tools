@@ -29,13 +29,14 @@ requires_api_version = "2.0"
 # public API
 # ======
 
-def config_hook(conduit, *args, **kargs):
-    conduit.getBase().registerInventoryFunction( "bootstrap_pci", PciInventory )
-
 sysfs_pcidevdir="/sys/bus/pci/devices"
 
 decorate(traceLog())
-def PciInventory(base=None, cb=None, inventory=None, devdir=sysfs_pcidevdir, *args, **kargs):
+def inventory_hook(conduit, inventory=None, *args, **kargs):
+    base = conduit.getBase()
+    cb = base.cb
+    devdir = sysfs_pcidevdir
+
     for d in os.listdir(devdir):
         d = makePciDevice(os.path.join(devdir, d))
         if inventory.getDevice(d.uniqueInstance) is None:

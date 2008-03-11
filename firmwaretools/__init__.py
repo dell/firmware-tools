@@ -92,9 +92,6 @@ class FtBase(object):
         self.trace = 0
         self.loggingConfig = os.path.join(PKGCONFDIR, "firmware.conf")
 
-        self._bootstrapFuncs = {}
-        self._inventoryFuncs = {}
-
         # Start with plugins disabled
         self.disablePlugins()
 
@@ -223,15 +220,9 @@ class FtBase(object):
             return self._systemInventory
 
         self._systemInventory = repository.SystemInventory()
-        self.plugins.run("preinventory")
-
-        for name, func in self._inventoryFuncs.items():
-            self.verbose_logger.info("running inventory for module: %s" % name)
-            callCB(self.cb, who="populateInventory", what="call_func", func=func)
-            func(base=self, cb=self.cb, inventory=self._systemInventory)
-
-        self.plugins.run("postinventory")
-
+        self.plugins.run("preinventory", inventory=self._systemInventory)
+        self.plugins.run("inventory", inventory=self._systemInventory)
+        self.plugins.run("postinventory", inventory=self._systemInventory)
         return self._systemInventory
 
     decorate(traceLog())
@@ -274,10 +265,6 @@ class FtBase(object):
             fcntl.lockf(self.runLock.fileno(), fcntl.LOCK_UN)
             os.unlink(PID_FILE)
 
-
-    decorate(traceLog())
-    def registerInventoryFunction(self, name, function):
-        self._inventoryFuncs[name] = function
 
     decorate(traceLog())
     def yieldInventory(self, cb=None):

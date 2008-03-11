@@ -54,6 +54,7 @@ def registerSlotToConduit(slot, conduit):
 registerSlotToConduit('config', 'PluginConduit')
 registerSlotToConduit('prebootstrap', 'PluginConduit')
 registerSlotToConduit('preinventory', 'PluginConduit')
+registerSlotToConduit('inventory', 'PluginConduit')
 registerSlotToConduit('postinventory', 'PluginConduit')
 registerSlotToConduit('close', 'PluginConduit')
 
@@ -167,7 +168,7 @@ class Plugins:
         return self._plugins.keys()
 
     decorate(traceLog())
-    def run(self, slotname, **kwargs):
+    def run(self, slotname, *args, **kargs):
         '''Run all plugin functions for the given slot.
         '''
         # Determine handler class to use
@@ -181,7 +182,7 @@ class Plugins:
             conf = dets['conf']
             hook = "%s_hook" % slotname
             if hasattr(module, hook):
-                getattr(module, hook)(conduitcls(self, self.base, conf, **kwargs))
+                getattr(module, hook)(conduitcls(self, self.base, conf), *args, **kargs)
 
 
 class DummyPlugins:
@@ -197,7 +198,7 @@ class DummyPlugins:
     def setCmdLine(self, *args, **kwargs):
         pass
 
-class PluginConduit:
+class PluginConduit(object):
     decorate(traceLog())
     def __init__(self, parent, base, conf):
         self._parent = parent
