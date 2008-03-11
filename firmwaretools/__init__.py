@@ -95,7 +95,7 @@ class FtBase(object):
         # Start with plugins disabled
         self.disablePlugins()
 
-    def _getConfig(self, cfgFiles=None, pluginTypes=(plugins.TYPE_CORE, plugins.TYPE_INVENTORY, plugins.TYPE_BOOTSTRAP), optparser=None, disabledPlugins=None):
+    def _getConfig(self, cfgFiles=None, pluginTypes=(plugins.TYPE_CORE, plugins.TYPE_INVENTORY,), optparser=None, disabledPlugins=None):
         if self._conf is not None:
             return self._conf
 

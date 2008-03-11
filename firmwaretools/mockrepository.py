@@ -20,7 +20,7 @@ import sys
 from firmwaretools.trace_decorator import decorate, traceLog, getLog
 import firmwaretools.plugins as plugins
 
-plugin_type = (plugins.TYPE_MOCK_INVENTORY, plugins.TYPE_MOCK_BOOTSTRAP)
+plugin_type = (plugins.TYPE_MOCK_INVENTORY, )
 requires_api_version = "2.0"
 
 moduleLog = getLog()

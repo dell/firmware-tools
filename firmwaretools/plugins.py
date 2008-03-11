@@ -34,17 +34,15 @@ def registerPluginType(name):
 # Plugin types
 registerPluginType("TYPE_CORE")
 registerPluginType("TYPE_INVENTORY")
-registerPluginType("TYPE_BOOTSTRAP")
 
 registerPluginType("TYPE_CLI")
 
 # testing types
 registerPluginType("TYPE_MOCK_CORE")
 registerPluginType("TYPE_MOCK_INVENTORY")
-registerPluginType("TYPE_MOCK_BOOTSTRAP")
 
 # all the 'normal' types
-ALL_TYPES = (TYPE_CORE, TYPE_BOOTSTRAP, TYPE_INVENTORY)
+ALL_TYPES = (TYPE_CORE, TYPE_INVENTORY)
 
 SLOT_TO_CONDUIT = {}
 def registerSlotToConduit(slot, conduit):
@@ -52,7 +50,6 @@ def registerSlotToConduit(slot, conduit):
     SLOT_TO_CONDUIT[slot] = conduit
 
 registerSlotToConduit('config', 'PluginConduit')
-registerSlotToConduit('prebootstrap', 'PluginConduit')
 registerSlotToConduit('preinventory', 'PluginConduit')
 registerSlotToConduit('inventory', 'PluginConduit')
 registerSlotToConduit('postinventory', 'PluginConduit')
