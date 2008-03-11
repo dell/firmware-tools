@@ -80,6 +80,10 @@ class SystemInventory(object):
         self.deviceList[device.uniqueInstance] = { "device": device, "update": None, "available_updates": []}
 
     decorate(traceLog())
+    def getDevice(self, uniqueInstance, default=None):
+        return self.deviceList.get(uniqueInstance, default)
+
+    decorate(traceLog())
     def iterDevices(self, name=None):
         for device, details in self.deviceList.items():
             if name is None:
