@@ -85,10 +85,13 @@ class InventoryFirmware:
         self.wTree.get_widget("about_dialog").destroy()
 
         # set up toggles
+        self.showUnknown=0
         self.toolbarAllowDowngrade = self.wTree.get_widget("toolbar_allow_downgrade")
         self.toolbarAllowReflash = self.wTree.get_widget("toolbar_allow_reflash")
+        self.toolbarShowUnknown = self.wTree.get_widget("toolbar_show_unknown")
         self.menuAllowDowngrade = self.wTree.get_widget("menu_allow_downgrade")
         self.menuAllowReflash = self.wTree.get_widget("menu_allow_reflash")
+        self.menuShowUnknown = self.wTree.get_widget("menu_show_unknown")
         self.recursiveCallback=0
 
         # internal accounting
@@ -292,6 +295,8 @@ class InventoryFirmware:
         self.inventoryTreeModel.clear()
         for device in self.updateSet.iterDevices():
             guihelpers.gtkYield()
+            if device.version == "unknown" and not self.showUnknown:
+                continue
             flags = 0
             toggle=False
             if self.updateSet.getUpdatePackageForDevice(device) is not None:
@@ -347,8 +352,10 @@ class InventoryFirmware:
         self.recursiveCallback=1
         self.menuAllowDowngrade.set_property("active", self.updateSet.allowDowngrade)
         self.menuAllowReflash.set_property("active", self.updateSet.allowReflash)
+        self.menuShowUnknown.set_property("active", self.showUnknown)
         self.toolbarAllowDowngrade.set_active(self.updateSet.allowDowngrade)
         self.toolbarAllowReflash.set_active(self.updateSet.allowReflash)
+        self.toolbarShowUnknown.set_active(self.showUnknown)
 
         if self.numDowngradeSelected:
             self.menuAllowDowngrade.set_sensitive(0)
@@ -507,6 +514,12 @@ class InventoryFirmware:
             for i in range(self.inventoryTreeModel.iter_n_children(None)):
                 device_path = self.inventoryTreeModel.get_path(self.inventoryTreeModel.iter_nth_child(None, i))
                 self._fixupChildren(self.inventoryTreeModel, self.inventoryTreeModel.get_iter(device_path))
+
+    def on_show_unknown_toggled(self, widget, *args, **kargs):
+        if not self.recursiveCallback:
+            self.showUnknown = widget.get_active()
+            self._refreshAllowToggles()
+            self._populateInventoryTree()
 
     def on_allow_reflash_toggled(self, widget, *args, **kargs):
         # guard against executeCommand being called while we are in a refresh
