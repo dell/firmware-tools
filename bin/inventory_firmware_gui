@@ -313,9 +313,12 @@ class InventoryFirmware:
     # should only ever be called once.
     def _populateBootstrapTree(self, base):
         self.bootstrapTreeModel.clear()
+        venId, sysId = base.getSystemId()
         for dev in base.yieldInventory():
             guihelpers.gtkYield()
             self.bootstrapTreeModel.append(None, [dev.name, dev.displayname, dev.version])
+            if venId and sysId:
+                self.bootstrapTreeModel.append(None, ["%s/system(ven_0x%04x_dev_0x%04x)" % (dev.name, venId, sysId), dev.displayname, dev.version])
 
     def _populateUpdateStatusTree(self):
         self.updateStatusTreeModel.clear()
@@ -742,7 +745,7 @@ def main():
 
         pluginTypes = [plugins.TYPE_CORE, ] 
         if not opts.fake_mode:
-            pluginTypes.extend([plugins.TYPE_INVENTORY, plugins.TYPE_BOOTSTRAP])
+            pluginTypes.extend([plugins.TYPE_INVENTORY,])
         else:
             pluginTypes.extend([plugins.TYPE_MOCK_CORE, plugins.TYPE_MOCK_INVENTORY])
 

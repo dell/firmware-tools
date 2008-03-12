@@ -87,6 +87,8 @@ class FtBase(object):
         self._conf = None
         self._repo = None
         self._systemInventory = None
+        self._vendorId = None
+        self._systemId = None
 
         self.verbosity = 0
         self.trace = 0
@@ -265,6 +267,16 @@ class FtBase(object):
             fcntl.lockf(self.runLock.fileno(), fcntl.LOCK_UN)
             os.unlink(PID_FILE)
 
+    decorate(traceLog())
+    def setSystemId(self, vendorId, systemId):
+        if not (vendorId and systemId):
+            raise RuntimeError("Need non-null, non-zero, id for vendor and system id.")
+        self._vendorId = vendorId
+        self._systemId = systemId
+
+    decorate(traceLog())
+    def getSystemId(self):
+        return (self._vendorId, self._systemId)
 
     decorate(traceLog())
     def yieldInventory(self, cb=None):

@@ -54,11 +54,17 @@ class BootstrapCommand(ftcommands.YumCommand):
         if base.opts.apt_mode:
             parse = debianCleanName
 
+        venId, sysId = base.getSystemId()
+
         out = ""
         for pkg in base.yieldInventory():
             if base.opts.comma_separated:
+                if venId and sysId:
+                    out = out + ",%s" % parse(pkg.name + "/system(ven_0x%04x_dev_0x%04x)" % (venId, sysId))
                 out = out + ",%s" % parse(pkg.name)
             else:
+                if venId and sysId:
+                    print("%s/system(ven_0x%04x_dev_0x%04x)" % (parse(pkg.name), venId, sysId))
                 print("%s" % parse(pkg.name))
 
         # strip leading comma:
