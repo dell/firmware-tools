@@ -15,7 +15,10 @@ from __future__ import generators
 
 # import arranged alphabetically
 import os
-import subprocess
+try:
+    import subprocess
+except ImportError:
+    import compat_subprocess as subprocess
 
 # my stuff
 import firmwaretools.package as package

@@ -31,7 +31,8 @@ pkgpython_PYTHON = \
 	firmwaretools/pycompat.py	\
 	firmwaretools/repository.py	\
 	firmwaretools/trace_decorator.py \
-	firmwaretools/peak_util_decorators.py
+	firmwaretools/peak_util_decorators.py	\
+	firmwaretools/compat_subprocess.py
 
 clidir = $(datadir)/$(PACKAGE)
 cli_PYTHON = \
