@@ -47,6 +47,7 @@ class UpdateCommand(ftcommands.YumCommand):
         base.optparser.add_option("--rpm", action="store_true", dest="rpmMode", default=False, help="Used when running as part of an rpm \%post script.")
         base.optparser.add_option("--yes", "-y", action="store_const", const=0, dest="interactive", default=1, help="Default all answers to 'yes'.")
         base.optparser.add_option("--test", "-t", action="store_const", const=2, dest="interactive", help="Perform test but do not actually update.")
+        base.optparser.add_option( "--show-unknown", help="Show unknown devices.", action="store_true", dest="show_unknown", default=False)
 
     decorate(traceLog())
     def doCommand(self, base, mode, cmdline, processedArgs):
@@ -56,6 +57,6 @@ class UpdateCommand(ftcommands.YumCommand):
                 print "Please run update_firmware manually to install updates."
                 return [0, "Done"]
 
-        base.updateFirmware()
+        base.updateFirmware(base.opts.show_unknown)
         return [0, "Done"]
 
