@@ -31,9 +31,6 @@ Provides: firmware_inventory(pci) = 0:%{release_version}
 # packages that dont conform to latest ABI
 Conflicts: firmware_addon_dell < 0:2.1.0
 Conflicts: dell-dup < 0:1.1.0
-# obsolete packages
-Conflicts: dell-lsiflash
-Conflicts: dell-bmcflash
 
 %description
 The firmware-tools project provides tools to inventory hardware and a plugin
