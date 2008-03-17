@@ -11,4 +11,6 @@ upload_rpm_args="-n \
     -l rhel5-x86_64 \
     -l sles10-x86_64 \
     -l sles10-i386 \
+    -l opensuse10.2-x86_64 \
+    -l opensuse10.2-i386 \
     "
