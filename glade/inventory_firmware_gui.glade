@@ -51,7 +51,7 @@
 		      <signal name="activate" handler="on_update_now_activate" last_modification_time="Sun, 19 Aug 2007 18:15:32 GMT"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image14">
+			<widget class="GtkImage" id="image19">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-jump-to</property>
 			  <property name="icon_size">1</property>
@@ -118,7 +118,7 @@
 		      <signal name="activate" handler="on_reset_activate" last_modification_time="Sun, 19 Aug 2007 18:15:32 GMT"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image15">
+			<widget class="GtkImage" id="image20">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-goto-first</property>
 			  <property name="icon_size">1</property>
@@ -154,6 +154,16 @@
 		      <property name="use_underline">True</property>
 		      <property name="active">False</property>
 		      <signal name="activate" handler="on_allow_reflash_toggled" last_modification_time="Sun, 19 Aug 2007 05:15:14 GMT"/>
+		    </widget>
+		  </child>
+
+		  <child>
+		    <widget class="GtkCheckMenuItem" id="menu_show_unknown">
+		      <property name="visible">True</property>
+		      <property name="label" translatable="yes">_Show Unknown</property>
+		      <property name="use_underline">True</property>
+		      <property name="active">False</property>
+		      <signal name="activate" handler="on_menu_show_unknown_toggled" last_modification_time="Wed, 12 Mar 2008 20:20:22 GMT"/>
 		    </widget>
 		  </child>
 		</widget>
@@ -342,6 +352,24 @@ Reflash</property>
 		      <property name="is_important">False</property>
 		      <property name="active">False</property>
 		      <signal name="toggled" handler="on_allow_reflash_toggled" last_modification_time="Sun, 19 Aug 2007 05:22:23 GMT"/>
+		    </widget>
+		    <packing>
+		      <property name="expand">False</property>
+		      <property name="homogeneous">True</property>
+		    </packing>
+		  </child>
+
+		  <child>
+		    <widget class="GtkToggleToolButton" id="toolbar_show_unknown">
+		      <property name="visible">True</property>
+		      <property name="label" translatable="yes">Show Unknown</property>
+		      <property name="use_underline">True</property>
+		      <property name="stock_id">gtk-find</property>
+		      <property name="visible_horizontal">True</property>
+		      <property name="visible_vertical">True</property>
+		      <property name="is_important">False</property>
+		      <property name="active">False</property>
+		      <signal name="toggled" handler="on_show_unknown_toggled" last_modification_time="Wed, 12 Mar 2008 18:24:46 GMT"/>
 		    </widget>
 		    <packing>
 		      <property name="expand">False</property>
@@ -662,6 +690,7 @@ Update Errors</property>
 </widget>
 
 <widget class="GtkAboutDialog" id="about_dialog">
+  <property name="border_width">5</property>
   <property name="visible">True</property>
   <property name="destroy_with_parent">True</property>
   <property name="name" translatable="yes">Inventory_firmware_gui</property>

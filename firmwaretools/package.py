@@ -168,6 +168,6 @@ class PciDevice(Device):
     def __init__(self, *args, **kargs):
         super(Device, self).__init__(*args, **kargs)
         assert(hasattr(self, "pciDbdf"))
-        self.uniqueInstance = "%s_%s" % (self.name, self.pciDbdf)
+        self.uniqueInstance = "pci_dev_at_domain_0x%04x_bus_0x%02x_dev_0x%02x_func_0x%01x" % self.pciDbdf
 
 

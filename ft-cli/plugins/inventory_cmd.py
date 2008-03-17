@@ -48,6 +48,12 @@ class InventoryCommand(ftcommands.YumCommand):
         return ['inventory']
 
     decorate(traceLog())
+    def addSubOptions(self, base, mode, cmdline, processedArgs):
+        base.optparser.add_option(
+            "--show-unknown", help="Show unknown devices.", 
+            action="store_true", dest="show_unknown", default=False)
+
+    decorate(traceLog())
     def doCommand(self, base, mode, cmdline, processedArgs):
         sys.stderr.write("Wait while we inventory system:\n")
 
@@ -58,6 +64,10 @@ class InventoryCommand(ftcommands.YumCommand):
                 sys.stderr.write("System inventory:\n")
                 sys.stderr.flush()
                 headerWasPrinted = True
+
+            if pkg.version == "unknown" and not base.opts.show_unknown :
+                continue
+
             print("\t%s = %s" % (str(pkg), pkg.version))
 
         return [0, "Done"]

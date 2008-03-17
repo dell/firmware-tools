@@ -139,7 +139,7 @@ class BaseCli(firmwaretools.FtBase):
         self.optparser.print_help()
 
     decorate(traceLog())
-    def updateFirmware(self):
+    def updateFirmware(self, showUnknown=False):
         print
 
         print "Running system inventory..."
@@ -150,6 +150,9 @@ class BaseCli(firmwaretools.FtBase):
         needUpdate = 0
         print "Searching storage directory for available BIOS updates..."
         for device in updateSet.iterDevices():
+            if device.version == "unknown" and not showUnknown:
+                continue
+
             print "Checking %s - %s" % (str(device), device.version)
             for availPkg in updateSet.iterAvailableUpdates(device):
                 print "\tAvailable: %s - %s" % (availPkg.name, availPkg.version)
