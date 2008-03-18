@@ -362,7 +362,8 @@ Reflash</property>
 		  <child>
 		    <widget class="GtkToggleToolButton" id="toolbar_show_unknown">
 		      <property name="visible">True</property>
-		      <property name="label" translatable="yes">Show Unknown</property>
+		      <property name="label" translatable="yes">Show
+Unknown</property>
 		      <property name="use_underline">True</property>
 		      <property name="stock_id">gtk-find</property>
 		      <property name="visible_horizontal">True</property>
