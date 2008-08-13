@@ -17,8 +17,7 @@ Release:        %{rpm_release}%{?dist}
 Summary:        Scripts and tools to manage firmware and BIOS updates
 
 Group:          Applications/System
-# License is actually GPL/OSL dual license (GPL Compatible), but rpmlint complains
-License:        GPLv2+ or OSL
+License:        GPLv2+ or OSL 2.1
 URL:            http://linux.dell.com/libsmbios/download/ 
 Source0:        http://linux.dell.com/libsmbios/download/%{name}/%{name}-%{version}/%{name}-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
