@@ -39,6 +39,7 @@ install-data-hook:
 	    file=$(DESTDIR)/$$i                     ;\
 	    perl -p -i -e 's|^__VERSION__\s*=.*|__VERSION__="$(RELEASE_VERSION)"|' $$file ;\
 	    perl -p -i -e 's|^LIBDIR\s*=.*|LIBDIR="$(libdir)"|' $$file        ;\
+	    perl -p -i -e 's|^LIBEXECDIR\s*=.*|LIBEXECDIR="$(libexecdir)"|' $$file        ;\
 	    perl -p -i -e 's|^DATADIR\s*=.*|DATADIR="$(datadir)"|' $$file        ;\
 	    perl -p -i -e 's|^SYSCONFDIR\s*=.*|SYSCONFDIR="$(sysconfdir)"|' $$file        ;\
 	    perl -p -i -e 's|^PYTHONDIR\s*=.*|PYTHONDIR="$(pythondir)"|' $$file           ;\
@@ -46,6 +47,7 @@ install-data-hook:
 	    perl -p -i -e 's|^PKGDATADIR\s*=.*|PKGDATADIR="$(pkgdatadir)"|' $$file        ;\
 	    perl -p -i -e 's|^PKGCONFDIR\s*=.*|PKGCONFDIR="$(pkgconfdir)/"|' $$file        ;\
 	    perl -p -i -e 's|^PKGGLADEDIR\s*=.*|PKGGLADEDIR="$(pkgdatadir)"|' $$file        ;\
+	    perl -p -i -e 's|^PKGLIBEXECDIR\s*=.*|PKGLIBEXECDIR="$(pkglibexecdir)"|' $$file        ;\
 	done
 
 install-exec-hook:
@@ -61,6 +63,7 @@ install-exec-hook:
 	    perl -p -i -e 's|^PKGDATADIR\s*=.*|PKGDATADIR="$(pkgdatadir)"|' $$file        ;\
 	    perl -p -i -e 's|^PKGCONFDIR\s*=.*|PKGCONFDIR="$(pkgconfdir)"|' $$file        ;\
 	    perl -p -i -e 's|^PKGGLADEDIR\s*=.*|PKGGLADEDIR="$(pkgdatadir)"|' $$file        ;\
+	    perl -p -i -e 's|^PKGLIBEXECDIR\s*=.*|PKGLIBEXECDIR="$(pkglibexecdir)"|' $$file        ;\
 	done
 
 TOPDIR := $(shell cd $(top_builddir);pwd)
