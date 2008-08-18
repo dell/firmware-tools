@@ -44,6 +44,9 @@ a framework for BIOS and firmware updates.
 
 
 %build
+# this line lets us build an RPM directly from a git tarball
+[ -e ./configure ] || ./autogen.sh
+
 %configure
 make -e %{?_smp_mflags} 
 
