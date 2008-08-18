@@ -3,7 +3,7 @@
 #  projects.
 
 AUTOMAKE_OPTIONS = subdir-objects
-SUBDIRS = 
+SUBDIRS =
 
 # dont move these 5 lines, as this is how we override the autoconf version and package name
 RELEASE_NAME=@RELEASE_NAME@
@@ -18,7 +18,7 @@ VERSION = $(RELEASE_VERSION)
 PACKAGE = $(RELEASE_NAME)
 
 CLEANFILES=$(RELEASE_NAME)-*.tar.gz $(RELEASE_NAME)-*.tar.bz2 $(RELEASE_NAME)-*.rpm _buildtemp version
-DISTCLEANFILES=*~ 
+DISTCLEANFILES=*~
 
 EXTRA_DIST =
 EXTRA_PROGRAMS=
@@ -38,6 +38,8 @@ install-data-hook:
 	for i in $(REPLACE_VARS_ON_INSTALL); do      \
 	    file=$(DESTDIR)/$$i                     ;\
 	    perl -p -i -e 's|^__VERSION__\s*=.*|__VERSION__="$(RELEASE_VERSION)"|' $$file ;\
+	    perl -p -i -e 's|^PACKAGE\s*=.*|PACKAGE="$(package)"|' $$file        ;\
+	    perl -p -i -e 's|^LOCALEDIR\s*=.*|LOCALEDIR="$(localedir)"|' $$file        ;\
 	    perl -p -i -e 's|^LIBDIR\s*=.*|LIBDIR="$(libdir)"|' $$file        ;\
 	    perl -p -i -e 's|^LIBEXECDIR\s*=.*|LIBEXECDIR="$(libexecdir)"|' $$file        ;\
 	    perl -p -i -e 's|^DATADIR\s*=.*|DATADIR="$(datadir)"|' $$file        ;\
@@ -54,6 +56,8 @@ install-exec-hook:
 	for i in $(REPLACE_VARS_ON_INSTALL); do      \
 	    file=$(DESTDIR)/$$i                     ;\
 	    perl -p -i -e 's|^__VERSION__\s*=.*|__VERSION__="$(RELEASE_VERSION)"|' $$file ;\
+	    perl -p -i -e 's|^PACKAGE\s*=.*|PACKAGE="$(package)"|' $$file        ;\
+	    perl -p -i -e 's|^LOCALEDIR\s*=.*|LOCALEDIR="$(localedir)"|' $$file        ;\
 	    perl -p -i -e 's|^LIBDIR\s*=.*|LIBDIR="$(libdir)"|' $$file        ;\
 	    perl -p -i -e 's|^LIBEXECDIR\s*=.*|LIBEXECDIR="$(libexecdir)"|' $$file        ;\
 	    perl -p -i -e 's|^DATADIR\s*=.*|DATADIR="$(datadir)"|' $$file        ;\
@@ -111,8 +115,8 @@ debmagic:
 	tar -C $(DEB_TMP_BUILDDIR) -xzf $(TARBALL)
 	cp -ar pkg/debian $(DEB_TMP_BUILDDIR)/$(RELEASE_STRING)/debian
 	chmod +x $(DEB_TMP_BUILDDIR)/$(RELEASE_STRING)/debian/rules
-	sed -e "s/#DISTTAG#/$(DISTTAG)/g" -e "s/#DIST#/$(DIST)/g" $(DEB_TMP_BUILDDIR)/$(RELEASE_STRING)/debian/changelog.in > $(DEB_TMP_BUILDDIR)/$(RELEASE_STRING)/debian/changelog 
-	rm $(DEB_TMP_BUILDDIR)/$(RELEASE_STRING)/debian/changelog.in 
+	sed -e "s/#DISTTAG#/$(DISTTAG)/g" -e "s/#DIST#/$(DIST)/g" $(DEB_TMP_BUILDDIR)/$(RELEASE_STRING)/debian/changelog.in > $(DEB_TMP_BUILDDIR)/$(RELEASE_STRING)/debian/changelog
+	rm $(DEB_TMP_BUILDDIR)/$(RELEASE_STRING)/debian/changelog.in
 	cd $(DEB_TMP_BUILDDIR)/$(RELEASE_STRING) ; \
 	./configure ; \
 	pdebuild --use-pdebuild-internal --buildresult $(TOPDIR)/dist/$(DIST) ; \
