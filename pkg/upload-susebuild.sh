@@ -11,8 +11,8 @@ if [ -z "$PROJECT" -o -z "$PACKAGE" ]; then
 fi
 
 osc co $PROJECT $PACKAGE
-rm $PROJECT/$PACKAGE/*.tar.gz
-rm $PROJECT/$PACKAGE/*.spec
+rm -f $PROJECT/$PACKAGE/*.tar.gz
+rm -f $PROJECT/$PACKAGE/*.spec
 cp ${PACKAGE}*.tar.gz $PROJECT/$PACKAGE
 cp */${PACKAGE}.spec $PROJECT/$PACKAGE
 pushd $PROJECT/$PACKAGE
