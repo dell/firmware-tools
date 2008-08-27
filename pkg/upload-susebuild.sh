@@ -17,5 +17,6 @@ cp ${PACKAGE}*.tar.gz $PROJECT/$PACKAGE
 cp */${PACKAGE}.spec $PROJECT/$PACKAGE
 pushd $PROJECT/$PACKAGE
 osc addremove
+yes | osc updatepacmetafromspec
 osc ci -m "scripted source update"
 popd
