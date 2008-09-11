@@ -21,7 +21,11 @@ License:        GPLv2+ or OSL 2.1
 URL:            http://linux.dell.com/libsmbios/download/ 
 Source0:        http://linux.dell.com/libsmbios/download/%{name}/%{name}-%{version}/%{name}-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+
+# SUSE doesnt have noarch python, so for SUSE, always build arch-dependent
+%if ! 0%{?suse_version}
 BuildArch:      noarch
+%endif
 
 BuildRequires:  python-devel, rpm-python
 Requires: rpm-python
