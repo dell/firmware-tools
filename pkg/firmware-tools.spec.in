@@ -11,14 +11,14 @@
 # per fedora python packaging guidelines
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
-Name:           firmware-tools 
-Version:        %{release_version} 
+Name:           firmware-tools
+Version:        %{release_version}
 Release:        %{rpm_release}%{?dist}
 Summary:        Scripts and tools to manage firmware and BIOS updates
 
 Group:          Applications/System
 License:        GPLv2+ or OSL 2.1
-URL:            http://linux.dell.com/libsmbios/download/ 
+URL:            http://linux.dell.com/libsmbios/download/
 Source0:        http://linux.dell.com/libsmbios/download/%{name}/%{name}-%{version}/%{name}-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
@@ -51,14 +51,24 @@ a framework for BIOS and firmware updates.
 # this line lets us build an RPM directly from a git tarball
 [ -e ./configure ] || ./autogen.sh
 
+# fix problems when buildsystem time is out of sync. ./configure will
+# fail if newly created files are older than the packaged files.
+# this should normally be a no-op on proper buildsystems.
+touch configure
+find . -type f -newer configure -print0 | xargs -r0 touch
+
 %configure
-make -e %{?_smp_mflags} 
+make -e %{?_smp_mflags}
 
 %check
 make -e %{?_smp_mflags} check
 
 %install
+# Fedora Packaging guidelines
 rm -rf $RPM_BUILD_ROOT
+# SUSE Packaging rpmlint
+mkdir $RPM_BUILD_ROOT
+
 make install DESTDIR=%{buildroot} INSTALL="%{__install} -p"
 
 mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/firmware/firmware.d/
@@ -76,7 +86,7 @@ rm -rf $RPM_BUILD_ROOT/usr/lib/yum-plugins
 rm -rf $RPM_BUILD_ROOT/etc/yum/pluginconf.d
 %endif
 
- 
+
 %clean
 rm -rf $RPM_BUILD_ROOT
 
