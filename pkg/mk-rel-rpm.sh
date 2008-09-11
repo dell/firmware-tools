@@ -37,7 +37,4 @@ for i in *.tar.{gz,bz2} *.zip *.src.rpm; do
     cp $i $DEST
 done
 
-[ -e ../*/upload-rpm-hook ] && . ../*/upload-rpm-hook
-/var/ftp/pub/yum/dell-repo/software/_tools/upload_rpm.sh $upload_rpm_args ${PACKAGE_NAME}-${PACKAGE_VERSION}-1*.src.rpm
-
 git push --tags origin master:master
