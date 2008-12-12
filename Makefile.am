@@ -17,7 +17,6 @@ dist_sbin_SCRIPTS = \
 nodist_pkgdata_DATA = glade/inventory_firmware_gui.glade
 
 pkgpython_PYTHON = \
-	firmwaretools/__init__.py       \
 	firmwaretools/bootstrap_pci.py  \
 	firmwaretools/dep_parser.py     \
 	firmwaretools/errors.py     \
@@ -32,7 +31,8 @@ pkgpython_PYTHON = \
 	firmwaretools/repository.py	\
 	firmwaretools/trace_decorator.py \
 	firmwaretools/peak_util_decorators.py	\
-	firmwaretools/compat_subprocess.py
+	firmwaretools/compat_subprocess.py	\
+	firmwaretools/generated/__init__.py
 
 clidir = $(datadir)/$(PACKAGE)
 cli_PYTHON = \
@@ -48,7 +48,25 @@ plugin_PYTHON = \
 	ft-cli/plugins/listplugins_cmd.py	\
 	ft-cli/plugins/update_cmd.py
 
-REPLACE_VARS_ON_INSTALL= 		   \
+__VERSION__=$(VERSION)
+PYTHONDIR=$(pythondir)
+PKGDATADIR=$(pkgdatadir)
+PKGGLADEDIR=$(pkgdatadir)
+SYSCONFDIR=$(sysconfdir)
+PKGPYTHONDIR=$(pkgpythondir)
+DATADIR=$(datadir)
+PKGCONFDIR=$(pkgconfdir)
+REPLACE_VARS+= __VERSION__ PYTHONDIR PKGDATADIR PKGGLADEDIR SYSCONFDIR PKGPYTHONDIR DATADIR PKGCONFDIR
+DATA_HOOK_REPLACE += 		   \
 	$(sbindir)/firmwaretool  	   \
-	$(sbindir)/inventory_firmware_gui  \
-	$(pkgpythondir)/__init__.py
+	$(sbindir)/inventory_firmware_gui
+
+EXTRA_DIST += firmwaretools/__init__.py
+DISTCLEANFILES +=   firmwaretools/generated/__init__.py
+firmwaretools/generated/__init__.py: firmwaretools/__init__.py configure Makefile config.status
+	mkdir -p $$(dirname $@) ||:
+	cp $< $@
+	for var in $(REPLACE_VARS)	;\
+	do	\
+		perl -p -i -e "s|^$$var\s*=.*|$$var=\"$${!var}\"|"  $@;\
+	done

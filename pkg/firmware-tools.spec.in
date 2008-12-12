@@ -2,10 +2,9 @@
 
 %define major @RELEASE_MAJOR@
 %define minor @RELEASE_MINOR@
-%define sub @RELEASE_SUBLEVEL@
-%define extralevel @RELEASE_RPM_EXTRALEVEL@
-%define release_name firmware-tools
-%define release_version %{major}.%{minor}.%{sub}%{extralevel}
+%define micro @RELEASE_MICRO@
+%define extra @RELEASE_RPM_EXTRA@
+%define release_version %{major}.%{minor}.%{micro}%{extra}
 %define rpm_release 1
 
 # per fedora python packaging guidelines
@@ -28,7 +27,7 @@ BuildArch:      noarch
 %endif
 
 BuildRequires:  python-devel, rpm-python
-Requires: rpm-python
+Requires: rpm-python, pciutils
 Provides: firmware_inventory(pci) = 0:%{release_version}
 
 # packages that dont conform to latest ABI
@@ -57,7 +56,7 @@ a framework for BIOS and firmware updates.
 touch configure
 find . -type f -newer configure -print0 | xargs -r0 touch
 
-%configure
+%configure RELEASE_MAJOR=%{major} RELEASE_MINOR=%{minor} RELEASE_MICRO=%{micro} RELEASE_EXTRA=%{extra}
 make -e %{?_smp_mflags}
 
 %check
@@ -81,11 +80,6 @@ ln -s firmwaretool $RPM_BUILD_ROOT/%{_sbindir}/bootstrap_firmware
 ln -s firmwaretool $RPM_BUILD_ROOT/%{_sbindir}/update_firmware
 ln -s %{_sbindir}/firmwaretool $RPM_BUILD_ROOT/%{_bindir}/update_firmware
 
-%if "%{enable_yum_plugins}" != "1"
-rm -rf $RPM_BUILD_ROOT/usr/lib/yum-plugins
-rm -rf $RPM_BUILD_ROOT/etc/yum/pluginconf.d
-%endif
-
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -102,11 +96,6 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{_sysconfdir}/firmware/firmware.d
 %config(noreplace) %{_sysconfdir}/firmware/firmware.conf
 %{_datadir}/firmware/
-
-%if "%{enable_yum_plugins}" == "1"
-%config(noreplace) %{_sysconfdir}/yum/pluginconf.d/*
-%{_exec_prefix}/lib/yum-plugins/*
-%endif
 
 
 %changelog
