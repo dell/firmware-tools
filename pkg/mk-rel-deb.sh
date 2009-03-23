@@ -11,19 +11,25 @@ umask 002
 [ -n "$APT_REPO" ] || 
     APT_REPO=/var/ftp/pub/yum/dell-repo/software/debian/incoming
 
-. version.mk
-RELEASE_VERSION=${RELEASE_MAJOR}.${RELEASE_MINOR}.${RELEASE_SUBLEVEL}${RELEASE_EXTRALEVEL}
-RELEASE_STRING=${RELEASE_NAME}-${RELEASE_VERSION}
-
 set -e
 
-make distclean
+chmod -R +w _builddir ||:
+rm -rf _builddir
+
+./autogen.sh
+
+mkdir _builddir
+pushd _builddir
+../configure
+
+eval "$(make get-version)"
 make deb
 
-# need to port the following to pbuilder
-mkdir -p ${APT_REPO}/etch-i386/${RELEASE_NAME}/${RELEASE_VERSION}-${DEB_RELEASE}/
 
-DEST=${APT_REPO}/etch-i386/${RELEASE_NAME}/${RELEASE_VERSION}-${DEB_RELEASE}/
+# need to port the following to pbuilder
+mkdir -p ${APT_REPO}/etch-i386/${PACKAGE_NAME}/${PACKAGE_VERSION}-${DEB_RELEASE}/
+
+DEST=${APT_REPO}/etch-i386/${PACKAGE_NAME}/${PACKAGE_VERSION}-${DEB_RELEASE}/
 for file in build/*.deb build/*.dsc build/*.diff.gz build/*.tar.gz
 do
     [ -e $DEST/$(basename $file) ] || cp $file $DEST/

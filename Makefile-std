@@ -2,19 +2,6 @@
 #  This is a template of all of the 'Standard' stuff that we use in all our
 #  projects.
 
-
-RELEASE_MAJOR=@RELEASE_MAJOR@
-RELEASE_MINOR=@RELEASE_MINOR@
-RELEASE_MICRO=@RELEASE_MICRO@
-RELEASE_EXTRA=@RELEASE_EXTRA@
-
-# override built-in defs which end up wrong
-VERSION = $(RELEASE_MAJOR).$(RELEASE_MINOR).$(RELEASE_MICRO)$(RELEASE_EXTRA)
-# note that we add a "-" here. normal package_string has a space.
-PACKAGE_STRING = $(PACKAGE)-$(VERSION)
-PACKAGE_VERSION = $(VERSION)
-PACKAGE = $(PACKAGE_NAME)
-
 CLEANFILES=$(PACKAGE_NAME)-*.tar.gz $(PACKAGE_NAME)-*.tar.bz2 $(PACKAGE_NAME)-*.rpm _buildtemp version
 DISTCLEANFILES=*~
 
@@ -23,26 +10,34 @@ EXTRA_PROGRAMS=
 
 CLEANFILES += $(EXTRA_PROGRAMS)
 CLEANFILES += *.pyc */*.pyc */*/*.pyc */*/*/*.pyc
-CLEANFILES += pkg/$(PACKAGE).spec
+DISTCLEANFILES += pkg/$(PACKAGE).spec
+
+clean-local:
+	-test -z "$(CLEANFILES)" || rm -rf $(CLEANFILES)
+
+distclean-local:
+	-test -z "$(DISTCLEANFILES)" || rm -rf $(DISTCLEANFILES)
 
 .PHONY: git-tag
 git-tag:
-	git tag -u libsmbios -m "tag for official release: libsmbios $(PACKAGE_STRING)" v$(PACKAGE_VERSION)
+	git tag -u libsmbios -m "tag for official release: $(PACKAGE_STRING)" v$(PACKAGE_VERSION)
 
 .PHONY: get-version
 get-version:
-	@echo PACKAGE_STRING=$(PACKAGE_STRING)
-	@echo PACKAGE_VERSION=$(PACKAGE_VERSION)
-	@echo PACKAGE=$(PACKAGE)
+	@echo 'PACKAGE_STRING="$(PACKAGE_STRING)"'
+	@echo 'PACKAGE_VERSION="$(PACKAGE_VERSION)"'
+	@echo 'PACKAGE="$(PACKAGE)"'
 
 ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+	(GIT_DIR=$(top_srcdir)/.git git log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
 
 AUTHORS:
-	(GIT_DIR=$(top_srcdir)/.git git-log | grep ^Author | sort |uniq > .authors.tmp && mv .authors.tmp AUTHORS; rm -f .authors.tmp) || (touch AUTHORS; echo 'git directory not found: installing possibly empty AUTHORS.' >&2)
+	(GIT_DIR=$(top_srcdir)/.git git log | grep ^Author | sort |uniq > .authors.tmp && mv .authors.tmp AUTHORS; rm -f .authors.tmp) || (touch AUTHORS; echo 'git directory not found: installing possibly empty AUTHORS.' >&2)
 
 REPLACE_VARS=GETTEXT_PACKAGE PACKAGE_VERSION PACKAGE localedir libdir libexecdir datadir sysconfdir pythondir pkgpythondir pkgdatadir pkgconfdir pkggladedir pkglibexecdir
 export $(REPLACE_VARS)
+# compat for RHEL3, dont ask
+export GETTEXT_PACKAGE
 
 DATA_HOOK_REPLACE=
 install-data-hook:
@@ -71,9 +66,9 @@ PROJECT=home:$(USER)
 upload_buildservice: dist
 	[ -n "$(PROJECT)" ] || (echo "Must specify PROJECT"; exit 1)
 	osc co $(PROJECT) $(PACKAGE)
-	rm -f $(PROJECT)/$(PACKAGE)/*.tar.gz
+	rm -f $(PROJECT)/$(PACKAGE)/*.tar.bz2
 	rm -f $(PROJECT)/$(PACKAGE)/*.spec
-	cp ${PACKAGE}*.tar.gz $(PROJECT)/$(PACKAGE)
+	cp ${PACKAGE}*.tar.bz2 $(PROJECT)/$(PACKAGE)
 	cp */${PACKAGE}.spec $(PROJECT)/$(PACKAGE)
 	cd $(PROJECT)/$(PACKAGE); osc addremove
 	cd $(PROJECT)/$(PACKAGE); yes | osc updatepacmetafromspec
