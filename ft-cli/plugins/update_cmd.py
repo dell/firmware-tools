@@ -49,6 +49,14 @@ class UpdateCommand(ftcommands.YumCommand):
         base.optparser.add_option("--yes", "-y", action="store_const", const=0, dest="interactive", default=1, help="Default all answers to 'yes'.")
         base.optparser.add_option("--test", "-t", action="store_const", const=2, dest="interactive", help="Perform test but do not actually update.")
         base.optparser.add_option( "--show-unknown", help="Show unknown devices.", action="store_true", dest="show_unknown", default=False)
+        base.optparser.add_option( "--storage-topdir", help="Override configured storage topdir.", action="store", dest="storage_topdir", default=None)
+
+    decorate(traceLog())
+    def doCheck(self, base, mode, cmdline, processedArgs):
+        moduleLog.info("hello world from update module doCheck()")
+        if base.opts.storage_topdir is not None:
+            moduleLog.info("overriding storage topdir. Original: %s  New: %s" % (base.conf.storageTopdir, base.opts.storage_topdir))
+            base.conf.storageTopdir = base.opts.storage_topdir
 
     decorate(traceLog())
     def doCommand(self, base, mode, cmdline, processedArgs):
