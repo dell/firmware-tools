@@ -22,9 +22,9 @@ AC_INIT([firmware-tools],
 
 ####################################
 
-AC_PREREQ(2.61)
+AC_PREREQ(2.59)
 AC_CONFIG_AUX_DIR([pkg])
-AM_INIT_AUTOMAKE([1.9 subdir-objects tar-ustar dist-bzip2 dist-lzma no-define foreign])
+AM_INIT_AUTOMAKE([1.9 subdir-objects tar-ustar dist-bzip2 no-define foreign])
 AM_MAINTAINER_MODE
 
 # Checks for programs.
@@ -49,6 +49,6 @@ pkgpyexecdir=\${pyexecdir}/firmwaretools
 
 # generate files and exit
 AC_CONFIG_FILES([Makefile])
-AC_CONFIG_FILES([pkg/${PACKAGE_NAME}.spec], [], [PACKAGE_NAME='$PACKAGE_NAME'])
+AC_CONFIG_FILES([pkg/firmware-tools.spec])
 AC_OUTPUT
 
