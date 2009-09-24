@@ -75,8 +75,10 @@ def makePciDevice(devDir):
     kargs["pciSubDevice"] = int(getFile(os.path.join(devDir, "subsystem_device")),16)
     kargs["pciClass"] = int(getFile(os.path.join(devDir, "class")),16)
 
+    shortname = None
     name = "pci_firmware(ven_0x%04x_dev_0x%04x" % (kargs["pciVendor"], kargs["pciDevice"])
     if kargs["pciSubVendor"] and kargs["pciSubDevice"]:
+        shortname = name + ")"
         name = name + "_subven_0x%04x_subdev_0x%04x" % (kargs["pciSubVendor"], kargs["pciSubDevice"])
     name = name + ")"
 
@@ -99,13 +101,23 @@ def makePciDevice(devDir):
     else:
         displayname = "unknown device"
 
-    return package.PciDevice(
-        name=name,
-        version='unknown',
-        displayname=displayname,
-        lspciname=lspciname,
-        **kargs
-        )
+    if shortname is not None:
+        return package.PciDevice(
+            name=name,
+            shortname=shortname,
+            version='unknown',
+            displayname=displayname,
+            lspciname=lspciname,
+            **kargs
+            )
+    else:
+        return package.PciDevice(
+            name=name,
+            version='unknown',
+            displayname=displayname,
+            lspciname=lspciname,
+            **kargs
+            )
 
 if __name__ == "__main__":
     for p in getPciDevs():

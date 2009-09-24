@@ -63,10 +63,23 @@ class BootstrapCommand(ftcommands.YumCommand):
                 if venId and sysId:
                     out = out + ",%s" % parse(pkg.name + "/system(ven_0x%04x_dev_0x%04x)" % (venId, sysId))
                 out = out + ",%s" % parse(pkg.name)
+                try:
+                    if venId and sysId:
+                        out = out + ",%s" % parse(pkg.shortname + "/system(ven_0x%04x_dev_0x%04x)" % (venId, sysId))
+                    out = out + ",%s" % parse(pkg.shortname)
+                except AttributeError:
+                    pass
             else:
                 if venId and sysId:
                     print("%s/system(ven_0x%04x_dev_0x%04x)" % (parse(pkg.name), venId, sysId))
                 print("%s" % parse(pkg.name))
+                try:
+                    if venId and sysId:
+                        print("%s/system(ven_0x%04x_dev_0x%04x)" % (parse(pkg.shortname), venId, sysId))
+                    print("%s" % parse(pkg.shortname))
+                except AttributeError:
+                    pass
+
 
         # strip leading comma:
         out = out[1:]
