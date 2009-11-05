@@ -30,6 +30,7 @@ plugin_type = (plugins.TYPE_CLI,)
 requires_api_version = "2.0"
 
 moduleLog = getLog()
+moduleVerboseLog = getLog(prefix="verbose.")
 
 def config_hook(conduit, *args, **kargs):
     conduit.getOptParser().addEarlyParse("--update")
@@ -53,7 +54,7 @@ class UpdateCommand(ftcommands.YumCommand):
 
     decorate(traceLog())
     def doCheck(self, base, mode, cmdline, processedArgs):
-        moduleLog.info("hello world from update module doCheck()")
+        moduleVerboseLog.info("hello world from update module doCheck()")
         if base.opts.storage_topdir is not None:
             moduleLog.info("overriding storage topdir. Original: %s  New: %s" % (base.conf.storageTopdir, base.opts.storage_topdir))
             base.conf.storageTopdir = base.opts.storage_topdir
