@@ -23,7 +23,7 @@ import errors
 API_VERSION = '2.0'
 
 # plugin can raise this to disable plugin during load
-class DisablePlugin(Exception): pass
+class DisablePlugin(ImportError): pass
 
 NEXT_AVAIL_TYPE_NUM = 0
 def registerPluginType(name):
