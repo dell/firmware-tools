@@ -25,7 +25,6 @@ AC_INIT([firmware-tools],
 AC_PREREQ(2.59)
 AC_CONFIG_AUX_DIR([pkg])
 AM_INIT_AUTOMAKE([1.9 subdir-objects tar-ustar dist-bzip2 no-define foreign])
-AM_MAINTAINER_MODE
 
 # Checks for programs.
 AC_PROG_INSTALL
