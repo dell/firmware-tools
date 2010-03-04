@@ -91,12 +91,12 @@ AM_RPM_DEFINES = --define "_topdir $(TOPDIR)" \
 		$(RPM_DEFINES)
 
 .PHONY: rpm srpm
-rpm: dist
+rpm: pkg/$(PACKAGE_NAME).spec dist
 	mkdir -p $(BUILDDIR)
 	rpmbuild $(AM_RPM_DEFINES) -ba --nodeps $(SPECFILE)
 	rm -rf $(BUILDDIR)
 
-srpm: dist
+srpm: pkg/$(PACKAGE_NAME).spec dist
 	mkdir -p $(BUILDDIR)
 	rpmbuild $(AM_RPM_DEFINES) -bs --nodeps $(SPECFILE)
 	rm -rf $(BUILDDIR)
