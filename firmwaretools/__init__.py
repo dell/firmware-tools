@@ -45,6 +45,7 @@ PKGPYTHONDIR=mkselfrelpath("..", "firmwaretools")
 PKGDATADIR=mkselfrelpath("..", "ft-cli")
 DATADIR=mkselfrelpath("..", "ft-cli")
 PKGCONFDIR=os.path.join(SYSCONFDIR,"firmware")
+LOCALSTATEDIR=mkselfrelpath("..", "var")
 # end build system subs
 
 PID_FILE = '/var/run/ft.pid'
@@ -152,6 +153,7 @@ class FtBase(object):
             "pkgpythondir": PKGPYTHONDIR,
             "pkgdatadir": PKGDATADIR,
             "pkgconfdir": PKGCONFDIR,
+            "localstatedir": LOCALSTATEDIR,
         }
         self._ini = ConfigParser.SafeConfigParser(defaults)
         for i in cfgFiles:
