@@ -91,6 +91,12 @@ class SystemInventory(object):
             else:
                 if details["device"].name == name:
                     yield details["device"]
+                else:
+                    try:
+                        if details["device"].shortname == name:
+                            yield details["device"]
+                    except AttributeError:
+                        pass
 
     decorate(traceLog())
     def addAvailablePackage(self, package):
