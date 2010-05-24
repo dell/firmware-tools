@@ -36,25 +36,17 @@ AUTHORS:
 
 REPLACE_VARS=GETTEXT_PACKAGE PACKAGE_VERSION PACKAGE localedir libdir libexecdir datadir sysconfdir pythondir pkgpythondir pkgdatadir pkgconfdir pkggladedir pkglibexecdir
 
+define replace_vars_in_file
+	$(foreach VAR,$(REPLACE_VARS),perl -p -i -e "s|^$(VAR)\s*=.*|$(VAR)=\"$($(VAR))\"|"  $(1);)
+endef
+
 DATA_HOOK_REPLACE=
 install-data-hook:
-	for i in $(DATA_HOOK_REPLACE); do      \
-	    file=$(DESTDIR)/$$i                     ;\
-	    for var in $(REPLACE_VARS)	;\
-	    do	\
-	        perl -p -i -e "s|^$$var\s*=.*|$$var=\"$${!var}\"|"  $$file;\
-	    done	;\
-	done
+	$(foreach FILE,$(DATA_HOOK_REPLACE),$(call replace_vars_in_file,$(addprefix $(DESTDIR)/,$(FILE))))
 
 EXEC_HOOK_REPLACE=
 install-exec-hook:
-	for i in $(EXEC_HOOK_REPLACE); do      \
-	    file=$(DESTDIR)/$$i                     ;\
-	    for var in $(REPLACE_VARS)	;\
-	    do	\
-	        perl -p -i -e "s|^$$var\s*=.*|$$var=\"$${!var}\"|"  $$file;\
-	    done	;\
-	done
+	$(foreach FILE,$(EXEC_HOOK_REPLACE),$(call replace_vars_in_file,$(addprefix $(DESTDIR)/,$(FILE))))
 
 TOPDIR := $(shell cd $(top_builddir);pwd)
 BUILDDIR = $(TOPDIR)/_rpmbuild
