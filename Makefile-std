@@ -59,21 +59,6 @@ install-exec-hook:
 	    done	;\
 	done
 
-# set default project. can be overridden on cmdline with 'make -e ...'
-PROJECT=home:$(USER)
-
-.PHONY: upload_buildservice
-upload_buildservice: dist
-	[ -n "$(PROJECT)" ] || (echo "Must specify PROJECT"; exit 1)
-	osc co $(PROJECT) $(PACKAGE)
-	rm -f $(PROJECT)/$(PACKAGE)/*.tar.bz2
-	rm -f $(PROJECT)/$(PACKAGE)/*.spec
-	cp ${PACKAGE}*.tar.bz2 $(PROJECT)/$(PACKAGE)
-	cp */${PACKAGE}.spec $(PROJECT)/$(PACKAGE)
-	cd $(PROJECT)/$(PACKAGE); osc addremove
-	cd $(PROJECT)/$(PACKAGE); yes | osc updatepacmetafromspec
-	cd $(PROJECT)/$(PACKAGE); osc ci -m "scripted source update"
-
 TOPDIR := $(shell cd $(top_builddir);pwd)
 BUILDDIR = $(TOPDIR)/_rpmbuild
 RPMDIR = $(TOPDIR)
@@ -101,36 +86,3 @@ srpm: pkg/$(PACKAGE_NAME).spec dist
 	rpmbuild $(AM_RPM_DEFINES) -bs --nodeps $(SPECFILE)
 	rm -rf $(BUILDDIR)
 
-# This updates the debian version information, similar to how specfile for RPM
-# is updated. It has to be manually invoked becuase it wont work for rpm builds.
-CHANGELOG=pkg/debian/changelog
-CHANGELOG_TEXT="Placeholder changelog entry. Please update this for release."
-changelog: $(CHANGELOG)
-.PHONY: $(CHANGELOG)
-$(CHANGELOG): version.mk
-	cd pkg/ && fakeroot debchange -v $(PACKAGE_VERSION)-$(DEB_RELEASE) $(CHANGELOG_TEXT)
-
-TARBALL=$(PACKAGE_STRING).tar.gz
-
-debmagic:
-	[ -n "$$DEB_TMP_BUILDDIR" ] || (echo "Must set DEB_TMP_BUILDDIR=/tmp/... for deb and sdeb targets"; exit 1)
-	[ -n "$$DIST" ] || (echo "Must set DIST={gutsy,hardy,sid,...} for deb and sdeb targets"; exit 1)
-	[ -n "$$DIST" ] || echo "Remember to set DISTTAG='~gutsy1' for deb and sdeb targets for backports"
-	mkdir -p dist/$(DIST)
-	cp $(TARBALL) $(DEB_TMP_BUILDDIR)/$(PACKAGE_NAME)_$(PACKAGE_VERSION).orig.tar.gz
-	tar -C $(DEB_TMP_BUILDDIR) -xzf $(TARBALL)
-	cp -ar pkg/debian $(DEB_TMP_BUILDDIR)/$(PACKAGE_STRING)/debian
-	chmod +x $(DEB_TMP_BUILDDIR)/$(PACKAGE_STRING)/debian/rules
-	sed -e "s/#DISTTAG#/$(DISTTAG)/g" -e "s/#DIST#/$(DIST)/g" $(DEB_TMP_BUILDDIR)/$(PACKAGE_STRING)/debian/changelog.in > $(DEB_TMP_BUILDDIR)/$(PACKAGE_STRING)/debian/changelog
-	rm $(DEB_TMP_BUILDDIR)/$(PACKAGE_STRING)/debian/changelog.in
-	cd $(DEB_TMP_BUILDDIR)/$(PACKAGE_STRING) ; \
-	./configure ; \
-	pdebuild --use-pdebuild-internal --buildresult $(TOPDIR)/dist/$(DIST) ; \
-	dpkg-buildpackage -D -S -sa -rfakeroot ; \
-	mv ../$(PACKAGE_NAME)_* $(TOPDIR)/dist/$(DIST) ; \
-	cd -
-
-debs:
-	tmp_dir=`mktemp -d /tmp/firmware-tools.XXXXXXXX` ; \
-	make debmagic DEB_TMP_BUILDDIR=$${tmp_dir} DIST=$(DIST) DISTTAG=$(DISTTAG) ; \
-	rm -rf $${tmp_dir}
