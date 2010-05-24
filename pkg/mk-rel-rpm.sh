@@ -16,18 +16,14 @@ set -e
 chmod -R +w _builddir ||:
 rm -rf _builddir
 
-#git clean -d
-./autogen.sh
-
 mkdir _builddir
 pushd _builddir
-../configure
+../autogen.sh
 make -e distcheck
 make -e srpm
 
-. version
-
-git tag -u libsmbios -m "tag for official release: $PACKAGE_STRING" v${PACKAGE_VERSION}
+make git-tag
+eval "$(make get-version)"
 
 DEST=$LIBSMBIOS_TOPDIR/download/${PACKAGE_NAME}/$PACKAGE_NAME-$PACKAGE_VERSION/
 mkdir -p $DEST
