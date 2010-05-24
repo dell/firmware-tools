@@ -16,21 +16,27 @@ set -e
 chmod -R +w _builddir ||:
 rm -rf _builddir
 
+#git clean -d
+./autogen.sh
+
 mkdir _builddir
 pushd _builddir
-../autogen.sh
-make rpm RPM_DEFINES="--without unit-tests"
-make distcheck
+../configure
+make -e distcheck
+make -e srpm
 
-make git-tag
-eval "$(make get-version)"
+. version
 
-DEST=$LIBSMBIOS_TOPDIR/download/$PACKAGE/$PACKAGE-$PACKAGE_VERSION/
+git tag -u libsmbios -m "tag for official release: $PACKAGE_STRING" v${PACKAGE_VERSION}
+
+DEST=$LIBSMBIOS_TOPDIR/download/${PACKAGE_NAME}/$PACKAGE_NAME-$PACKAGE_VERSION/
 mkdir -p $DEST
 for i in *.tar.{gz,bz2} *.zip *.src.rpm; do
     [ -e $i ] || continue
     [ ! -e $DEST/$(basename $i) ] || continue
     cp $i $DEST
 done
+
+/var/ftp/pub/yum/dell-repo/software/_tools/upload_rpm.sh ${PACKAGE_NAME}-${PACKAGE_VERSION}-1*.src.rpm
 
 git push --tags origin master:master

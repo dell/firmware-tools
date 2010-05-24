@@ -48,6 +48,6 @@ pkgpyexecdir=\${pyexecdir}/firmwaretools
 
 # generate files and exit
 AC_CONFIG_FILES([Makefile])
-AC_CONFIG_FILES([pkg/firmware-tools.spec])
+AC_CONFIG_FILES([pkg/${PACKAGE_NAME}.spec])
 AC_OUTPUT
 
