@@ -54,7 +54,6 @@ class UpdateCommand(ftcommands.YumCommand):
 
     decorate(traceLog())
     def doCheck(self, base, mode, cmdline, processedArgs):
-        moduleVerboseLog.info("hello world from update module doCheck()")
         if base.opts.storage_topdir is not None:
             moduleLog.info("overriding storage topdir. Original: %s  New: %s" % (base.conf.storageTopdir, base.opts.storage_topdir))
             base.conf.storageTopdir = base.opts.storage_topdir
