@@ -47,6 +47,18 @@ def iterPackages_DEBUG(self, cb=(nullFunc, None)):
         displayname="ReallyFast Network Controller",
         name="debug_pci_firmware_ven_crappy_dev_slow",
         version="1.1")
+
+    # in fake mode, this pkg should never show up.
+    from ConfigParser import ConfigParser
+    conf = ConfigParser() 
+    conf.add_section("package")
+    conf.set("package", "limit_system_support", "nonexistent_system")
+    yield  mockpackage.MockRepositoryPackage(
+        displayname="ReallyFast Network Controller",
+        name="debug_pci_firmware_ven_crappy_dev_slow",
+        version="1.2",
+        conf = conf)
+
     yield mockpackage.MockRepositoryPackage(
         displayname="Pokey Modem -- Enhanced 1200baud",
         name="debug_pci_firmware_ven_0x0c64_dev_0xrocked",
