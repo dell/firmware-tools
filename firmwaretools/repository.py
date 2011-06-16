@@ -109,7 +109,8 @@ class SystemInventory(object):
     decorate(traceLog())
     def iterAvailableUpdates(self, device):
         for pkg in self.deviceList[device.uniqueInstance]["available_updates"]:
-            yield pkg
+            if self.checkRules(device, pkg, self.deviceList, runSoftRules=False, cb=None):
+                yield pkg
 
     decorate(traceLog())
     def getSuggestedUpdatePackageForDevice(self, device):
@@ -204,14 +205,14 @@ class SystemInventory(object):
         return self.allowReflash
 
     decorate(traceLog())
-    def checkRules(self, device, candidate, unionInventory, cb=None):
+    def checkRules(self, device, candidate, unionInventory, cb=None, runSoftRules=True):
         # is candidate newer than what is installed
-        if not self.allowDowngrade and device.compareVersion(candidate) > 0:
+        if runSoftRules and not self.allowDowngrade and device.compareVersion(candidate) > 0:
             ft.callCB(cb, who="checkRules", what="package_not_newer", package=candidate, device=device)
             return 0
 
         # is candidate newer than what is installed
-        if not self.allowReflash and device.compareVersion(candidate) == 0:
+        if runSoftRules and not self.allowReflash and device.compareVersion(candidate) == 0:
             ft.callCB(cb, who="checkRules", what="package_same_version", package=candidate, device=device)
             return 0
 
@@ -247,16 +248,16 @@ class SystemInventory(object):
         workToDo = 1
         while workToDo:
             workToDo = 0
-            for deviceUniqueInstance, details in self.deviceList.items():
-                for candidate in details["available_updates"]:
+            for device in self.iterDevices():
+                for candidate in self. iterAvailableUpdates(device):
                     # check if this package is better than the current best
-                    if unionInventory[deviceUniqueInstance].compareVersion(candidate) >= 0:
+                    if unionInventory[device.uniqueInstance].compareVersion(candidate) >= 0:
                         continue
 
-                    if self.checkRules(details["device"], candidate, unionInventory, cb=cb):
-                        self.deviceList[deviceUniqueInstance]["update"] = candidate
+                    if self.checkRules(device, candidate, unionInventory, cb=cb):
+                        self.deviceList[device.uniqueInstance]["update"] = candidate
                         # update union inventory
-                        unionInventory[deviceUniqueInstance] = candidate
+                        unionInventory[device.uniqueInstance] = candidate
                         # need another run-through in case this fixes deps for another package
                         workToDo = 1
 

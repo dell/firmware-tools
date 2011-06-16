@@ -407,7 +407,8 @@ class InventoryFirmware:
             device = model.get_value(parentIter,self.INVENTORY_COLUMN_DEVICE)
             text = str(pyobj.version)
 
-            renderers[1].set_property("text", _("Available Version: %s") % text)
+            radio_text = _("Available Version: %s") % text
+            default_radio_text = radio_text
             renderers[0].set_property('activatable', True)
 
             if not model.get_value(parentIter, self.INVENTORY_COLUMN_DEVICE_ENABLE_UPDATE):
@@ -415,27 +416,29 @@ class InventoryFirmware:
 
             if self.updateSet.getSuggestedUpdatePackageForDevice(device) == pyobj:
                 # TODO: picture?
-                renderers[1].set_property("text", _("Available Version: %s  (suggested)") % text)
+                radio_text = radio_text + _(" (suggested)")
 
             if flags & self.FLAG_REFLASH:
                 # TODO: picture?
-                renderers[1].set_property("text", _("Available Version: %s  (reflash)") % text)
+                radio_text = radio_text + _(" (reflash)")
                 if not self.updateSet.allowReflash:
                     renderers[0].set_property('activatable', False)
-                    renderers[1].set_property("text", _("Available Version: %s  (reflash disabled per policy)") % text)
+                    radio_text = default_radio_text + _(" (reflash disabled per policy)")
                 if not pyobj.getCapability("can_reflash"):
                     renderers[0].set_property('activatable', False)
-                    renderers[1].set_property("text", _("Available Version: %s  (reflash disabled due to package limitations)") % text)
+                    radio_text = default_radio_text + _(" (reflash disabled due to package limitations)")
 
             if flags & self.FLAG_DOWNGRADE:
                 # TODO: picture?
-                renderers[1].set_property("text", _("Available Version: %s  (downgrade)") % text)
+                radio_text = radio_text + _(" (downgrade)")
                 if not self.updateSet.allowDowngrade:
                     renderers[0].set_property('activatable', False)
-                    renderers[1].set_property("text", _("Available Version: %s  (downgrade disabled per policy)") % text)
+                    radio_text = default_radio_text + _(" (downgrade disabled per policy)")
                 if not pyobj.getCapability("can_downgrade"):
                     renderers[0].set_property('activatable', False)
-                    renderers[1].set_property("text", _("Available Version: %s  (downgrade disabled due to package limitations)") % text)
+                    radio_text = default_radio_text + _(" (downgrade disabled due to package limitations)")
+
+            renderers[1].set_property("text", radio_text)
 
 
     def cell_data_func_iv_version(self, column, cell, model, iter):
