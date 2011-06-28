@@ -108,8 +108,12 @@ class SystemInventory(object):
 
     decorate(traceLog())
     def iterAvailableUpdates(self, device):
+        unionInventory = {}
+        for deviceUniqueInstance, details in self.deviceList.items():
+            unionInventory[deviceUniqueInstance] = details["device"]
+
         for pkg in self.deviceList[device.uniqueInstance]["available_updates"]:
-            if self.checkRules(device, pkg, self.deviceList, runSoftRules=False, cb=None):
+            if self.checkRules(device, pkg, unionInventory, runSoftRules=False, cb=None):
                 yield pkg
 
     decorate(traceLog())
