@@ -316,8 +316,8 @@ class TestCase(unittest.TestCase):
             )
 
         systemInventory = [p,q,r]
-        r = repository.Repository(datafiles)
-        updateSet = generateUpdateSet(r, systemInventory)
+        repo = repository.Repository(datafiles)
+        updateSet = generateUpdateSet(repo, systemInventory)
 
         self.assertEqual( updateSet.getUpdatePackageForDevice(p).name, "test_requires" )
         self.assertEqual( updateSet.getUpdatePackageForDevice(p).version, "a09" )
