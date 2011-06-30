@@ -20,6 +20,14 @@ try:
 except ImportError:
     from peak_util_decorators import rewrap, decorate
 
+
+class NullHandler(logging.Handler):
+    def emit(self, record):
+        pass
+
+null_handler = NullHandler()
+
+
 # defaults to module verbose log
 # does a late binding on log. Forwards all attributes to logger.
 # works around problem where reconfiguring the logging module means loggers
@@ -34,6 +42,9 @@ class getLog(object):
 
     def __getattr__(self, name):
         logger = logging.getLogger(self.name)
+        # add null handlers so we can suppress usless "no handlers could be found for..." messages
+        if not null_handler in logger.handlers:
+            logger.addHandler(null_handler)
         return getattr(logger, name)
 
 # emulates logic in logging module to ensure we only log
@@ -62,9 +73,9 @@ def traceLog(log = None):
 
             l2 = kw.get('logger', log)
             if l2 is None:
-                l2 = logging.getLogger("trace.%s" % func.__module__)
+                l2 = getLog("trace.%s" % func.__module__)
             if isinstance(l2, basestring):
-                l2 = logging.getLogger(l2)
+                l2 = getLog(l2)
 
             message = "ENTER %s(" % func_name
             for arg in args:
