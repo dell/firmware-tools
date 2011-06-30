@@ -25,27 +25,46 @@ class NullHandler(logging.Handler):
     def emit(self, record):
         pass
 
-null_handler = NullHandler()
+#initialize this late because if it get initialized but unused we throw an exception on exit
+null_handler = None
 
 
-# defaults to module verbose log
+# defaults to module log
 # does a late binding on log. Forwards all attributes to logger.
 # works around problem where reconfiguring the logging module means loggers
 # configured before reconfig dont output.
 class getLog(object):
     def __init__(self, name=None, prefix="", *args, **kargs):
+        # name the log per the module name if not supplied
         if name is None:
             frame = sys._getframe(1)
             name = frame.f_globals["__name__"]
+        object.__setattr__(self, "name", prefix + name)
 
-        self.name = prefix + name
-
+    # forward all attribute access to the logger
     def __getattr__(self, name):
+        # get logger her so it gets instantiated as late as possible
         logger = logging.getLogger(self.name)
+        global null_handler
+        if null_handler is None:
+            null_handler = NullHandler()
         # add null handlers so we can suppress usless "no handlers could be found for..." messages
         if not null_handler in logger.handlers:
             logger.addHandler(null_handler)
-        return getattr(logger, name)
+        return getattr( logger, name )
+
+    # forward all attribute access to the logger
+    def __setattr__(self, name, value):
+        # get logger her so it gets instantiated as late as possible
+        logger = logging.getLogger(self.name)
+        global null_handler
+        if null_handler is None:
+            null_handler = NullHandler()
+        # add null handlers so we can suppress usless "no handlers could be found for..." messages
+        if not null_handler in logger.handlers:
+            logger.addHandler(null_handler)
+        return setattr( logger, name, value )
+
 
 # emulates logic in logging module to ensure we only log
 # messages that logger is enabled to produce.
