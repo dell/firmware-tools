@@ -14,11 +14,11 @@ try:
     import gettext
     import sys
     if sys.version_info[0] == 2:
-        t = gettext.translation('yum')
+        t = gettext.translation('firmwaretools')
         _ = t.ugettext
     else:
-        gettext.bindtextdomain('yum', '/usr/share/locale')
-        gettext.textdomain('yum')
+        gettext.bindtextdomain('firmwaretools', '/usr/share/locale')
+        gettext.textdomain('firmwaretools')
         _ = gettext.gettext
 
 except:
