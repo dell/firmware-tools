@@ -26,7 +26,8 @@ def getSelectionPaths(treeview):
     treeselection.selected_foreach(func, paths)
     return paths
 
-decorate(traceLog())
+# too verbose to trace
+#decorate(traceLog())
 def gtkYield():
     # process gui events during long-running loops
     # so that we are more responsive
@@ -36,7 +37,8 @@ def gtkYield():
 
 decorate(traceLog())
 def runLongProcessGtk(function, args=None, kargs=None, waitLoopFunction=None):
-    decorate(traceLog())
+    # too verbose to trace
+    #decorate(traceLog())
     def myFunc():
         # can access outer function variables
         if waitLoopFunction is not None:
